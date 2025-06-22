@@ -3,24 +3,33 @@ CFLAGS = -Wall -Wextra -O2 -fobjc-arc
 FRAMEWORKS = -framework Foundation -framework PDFKit -framework CoreGraphics -framework ImageIO -framework CoreServices
 TARGET = pdf22md
 
-# Define source directory
+# Version from git tag or fallback
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+
+# Define directories
 SRC_DIR = src
+BUILD_DIR = build
+
+# Source and object files
 SOURCES = $(wildcard $(SRC_DIR)/*.m)
-OBJECTS = $(SOURCES:.m=.o)
+OBJECTS = $(patsubst $(SRC_DIR)/%.m,$(BUILD_DIR)/%.o,$(SOURCES))
 
 # Default prefix for installation
 PREFIX ?= /usr/local
 
-all: $(TARGET)
+all: $(BUILD_DIR) $(TARGET)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $(FRAMEWORKS) -o $(TARGET) $(OBJECTS)
 
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.m
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.m | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -c $< -o $@
 
 clean:
-	rm -f $(OBJECTS) $(TARGET)
+	rm -rf $(BUILD_DIR) $(TARGET)
 
 install: $(TARGET)
 	install -d $(DESTDIR)$(PREFIX)/bin

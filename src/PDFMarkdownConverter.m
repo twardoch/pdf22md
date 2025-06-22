@@ -46,6 +46,7 @@
         
         // Process all pages in parallel
         NSInteger pageCount = [self.pdfDocument pageCount];
+        fprintf(stderr, "DEBUG: PDFMarkdownConverter - Starting conversion of %ld pages\n", (long)pageCount);
         
         // Create thread-safe temporary storage
         NSMutableArray<NSMutableArray<id<ContentElement>> *> *pageElementsArray = [NSMutableArray arrayWithCapacity:pageCount];
@@ -62,8 +63,10 @@
         __block BOOL processingFailed = NO;
         
         // Process pages in parallel using dispatch_apply
+        fprintf(stderr, "DEBUG: PDFMarkdownConverter - Starting dispatch_apply for %ld pages\n", (long)pageCount);
         dispatch_apply(pageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t pageIndex) {
             @autoreleasepool {
+                fprintf(stderr, "DEBUG: PDFMarkdownConverter - Processing page %zu\n", pageIndex);
                 // Check if processing has already failed
                 @synchronized(lock) {
                     if (processingFailed) return;
@@ -82,6 +85,7 @@
                                                                                      dpi:dpi];
                 
                 NSArray<id<ContentElement>> *pageElements = [processor extractContentElements];
+                fprintf(stderr, "DEBUG: PDFMarkdownConverter - Page %zu extracted %lu elements\n", pageIndex, (unsigned long)[pageElements count]);
                 
                 // Store results in thread-safe arrays
                 pageElementsArray[pageIndex] = [pageElements mutableCopy];
@@ -173,8 +177,16 @@
             }
         }
         
-        // Generate markdown
+        // Generate markdown with YAML frontmatter
         NSMutableString *markdown = [NSMutableString string];
+        
+        // Add YAML frontmatter with metadata
+        NSString *yamlFrontmatter = [self generateYAMLFrontmatter];
+        if (yamlFrontmatter) {
+            [markdown appendString:yamlFrontmatter];
+            [markdown appendString:@"\n"];
+        }
+        
         for (id<ContentElement> element in self.allElements) {
             NSString *elementMarkdown = [element markdownRepresentation];
             if (elementMarkdown) {
@@ -286,6 +298,149 @@
         
         return x1 < x2 ? NSOrderedAscending : NSOrderedDescending;
     }];
+}
+
+- (NSString *)generateYAMLFrontmatter {
+    NSMutableString *yaml = [NSMutableString string];
+    
+    // Get PDF metadata
+    NSDictionary *docAttributes = [self.pdfDocument documentAttributes];
+    
+    [yaml appendString:@"---\n"];
+    
+    // Title
+    NSString *title = docAttributes[PDFDocumentTitleAttribute];
+    if (title && title.length > 0) {
+        [yaml appendFormat:@"title: \"%@\"\n", [self escapeYAMLString:title]];
+    }
+    
+    // Author
+    NSString *author = docAttributes[PDFDocumentAuthorAttribute];
+    if (author && author.length > 0) {
+        [yaml appendFormat:@"author: \"%@\"\n", [self escapeYAMLString:author]];
+    }
+    
+    // Subject
+    NSString *subject = docAttributes[PDFDocumentSubjectAttribute];
+    if (subject && subject.length > 0) {
+        [yaml appendFormat:@"subject: \"%@\"\n", [self escapeYAMLString:subject]];
+    }
+    
+    // Keywords
+    NSArray *keywords = docAttributes[PDFDocumentKeywordsAttribute];
+    if (keywords && [keywords isKindOfClass:[NSArray class]] && keywords.count > 0) {
+        [yaml appendString:@"keywords:\n"];
+        for (NSString *keyword in keywords) {
+            if ([keyword isKindOfClass:[NSString class]]) {
+                [yaml appendFormat:@"  - \"%@\"\n", [self escapeYAMLString:keyword]];
+            }
+        }
+    }
+    
+    // Creator (PDF producer software)
+    NSString *creator = docAttributes[PDFDocumentCreatorAttribute];
+    if (creator && creator.length > 0) {
+        [yaml appendFormat:@"creator: \"%@\"\n", [self escapeYAMLString:creator]];
+    }
+    
+    // Producer
+    NSString *producer = docAttributes[PDFDocumentProducerAttribute];
+    if (producer && producer.length > 0) {
+        [yaml appendFormat:@"producer: \"%@\"\n", [self escapeYAMLString:producer]];
+    }
+    
+    // Creation date
+    NSDate *creationDate = docAttributes[PDFDocumentCreationDateAttribute];
+    if (creationDate) {
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
+        [yaml appendFormat:@"created: %@\n", [formatter stringFromDate:creationDate]];
+    }
+    
+    // Modification date
+    NSDate *modDate = docAttributes[PDFDocumentModificationDateAttribute];
+    if (modDate) {
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
+        [yaml appendFormat:@"modified: %@\n", [formatter stringFromDate:modDate]];
+    }
+    
+    // PDF specific metadata
+    [yaml appendString:@"pdf_metadata:\n"];
+    [yaml appendFormat:@"  page_count: %ld\n", (long)[self.pdfDocument pageCount]];
+    
+    // PDF version
+    NSString *pdfVersion = [self extractPDFVersion];
+    if (pdfVersion) {
+        [yaml appendFormat:@"  version: \"%@\"\n", pdfVersion];
+    }
+    
+    // PDF outline (bookmarks/TOC)
+    PDFOutline *outline = [self.pdfDocument outlineRoot];
+    if (outline && [outline numberOfChildren] > 0) {
+        [yaml appendString:@"  outline:\n"];
+        [self appendOutlineToYAML:yaml outline:outline indent:@"    "];
+    }
+    
+    // Conversion metadata
+    [yaml appendString:@"conversion:\n"];
+    [yaml appendString:@"  tool: \"pdf22md\"\n"];
+    [yaml appendFormat:@"  version: \"%s\"\n", VERSION];
+    
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
+    [yaml appendFormat:@"  date: %@\n", [formatter stringFromDate:[NSDate date]]];
+    
+    [yaml appendString:@"---\n"];
+    
+    return yaml;
+}
+
+- (NSString *)escapeYAMLString:(NSString *)string {
+    // Escape quotes and backslashes for YAML
+    NSString *escaped = [string stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@"\n" withString:@"\\n"];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@"\r" withString:@"\\r"];
+    return escaped;
+}
+
+- (NSString *)extractPDFVersion {
+    // Try to extract PDF version from document attributes or metadata
+    // This is a simplified approach - actual PDF version extraction might require
+    // reading the PDF header directly
+    NSDictionary *attributes = [self.pdfDocument documentAttributes];
+    for (NSString *key in attributes) {
+        id value = attributes[key];
+        if ([value isKindOfClass:[NSString class]] && 
+            [value rangeOfString:@"PDF-" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+            return value;
+        }
+    }
+    return nil;
+}
+
+- (void)appendOutlineToYAML:(NSMutableString *)yaml outline:(PDFOutline *)outline indent:(NSString *)indent {
+    for (NSUInteger i = 0; i < [outline numberOfChildren]; i++) {
+        PDFOutline *child = [outline childAtIndex:i];
+        NSString *label = [child label];
+        if (label && label.length > 0) {
+            [yaml appendFormat:@"%@- title: \"%@\"\n", indent, [self escapeYAMLString:label]];
+            
+            PDFDestination *destination = [child destination];
+            if (destination) {
+                PDFPage *page = [destination page];
+                NSInteger pageIndex = [self.pdfDocument indexForPage:page];
+                [yaml appendFormat:@"%@  page: %ld\n", indent, (long)(pageIndex + 1)];
+            }
+            
+            if ([child numberOfChildren] > 0) {
+                [yaml appendFormat:@"%@  children:\n", indent];
+                NSString *newIndent = [indent stringByAppendingString:@"    "];
+                [self appendOutlineToYAML:yaml outline:child indent:newIndent];
+            }
+        }
+    }
 }
 
 @end

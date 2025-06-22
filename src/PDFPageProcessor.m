@@ -15,6 +15,8 @@ typedef struct {
     BOOL inTextObject;
     BOOL hasPath;
     CGRect pathBounds;
+    NSInteger operatorCount;
+    NSInteger maxOperators;
 } PDFScannerState;
 
 // PDF operator callbacks
@@ -140,40 +142,15 @@ static void op_TJ(CGPDFScannerRef scanner, void *info) {
     }
 }
 
-static void op_Do(CGPDFScannerRef scanner, void *info) {
+static void op_Do(CGPDFScannerRef scanner __attribute__((unused)), void *info) {
     // Draw XObject (potentially an image)
     PDFScannerState *state = (PDFScannerState *)info;
     
     const char *name;
     if (CGPDFScannerPopName(scanner, &name)) {
-        // In a full implementation, we would look up this XObject
-        // and extract the image if it's an image XObject
-        // For now, we'll create a placeholder
-        
-        CGPDFContentStreamRef contentStream = CGPDFScannerGetContentStream(scanner);
-        if (contentStream) {
-            // This is simplified - in reality we'd need to look up the XObject
-            // from the page's resource dictionary
-            ImageElement *element = [[ImageElement alloc] init];
-            element.bounds = CGRectMake(state->ctm.tx, state->ctm.ty, 100, 100); // Placeholder
-            element.pageIndex = state->processor->_pageIndex;
-            element.isVectorSource = NO;
-            
-            // Create a placeholder image
-            CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-            CGContextRef context = CGBitmapContextCreate(NULL, 100, 100, 8, 0, colorSpace,
-                                                        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-            CGColorSpaceRelease(colorSpace);
-            
-            if (context) {
-                CGContextSetRGBFillColor(context, 0.9, 0.9, 0.9, 1.0);
-                CGContextFillRect(context, CGRectMake(0, 0, 100, 100));
-                element.image = CGBitmapContextCreateImage(context);
-                CGContextRelease(context);
-                
-                [state->elements addObject:element];
-            }
-        }
+        // Skip image processing for now - just log it
+        // This avoids potential hanging issues with image extraction
+        fprintf(stderr, "DEBUG: op_Do called for page %ld, XObject: %s (skipping image extraction)\n", (long)state->processor->_pageIndex, name);
     }
 }
 
@@ -184,7 +161,8 @@ static void op_m(CGPDFScannerRef scanner, void *info) {
     CGPDFReal x, y;
     if (CGPDFScannerPopNumber(scanner, &y) &&
         CGPDFScannerPopNumber(scanner, &x)) {
-        [state->pathPoints addObject:[NSValue valueWithPoint:NSMakePoint(x, y)]];
+        CGPoint point = CGPointMake(x, y);
+        [state->pathPoints addObject:[NSValue valueWithBytes:&point objCType:@encode(CGPoint)]];
         state->hasPath = YES;
         
         // Update path bounds
@@ -273,9 +251,11 @@ static void op_B(CGPDFScannerRef scanner, void *info) {
 }
 
 - (NSArray<id<ContentElement>> *)extractContentElements {
+    fprintf(stderr, "DEBUG: PDFPageProcessor - extractContentElements starting for page %ld\n", (long)self.pageIndex);
     NSMutableArray<id<ContentElement>> *elements = [NSMutableArray array];
     
     if (!self.cgPdfPage) {
+        fprintf(stderr, "DEBUG: PDFPageProcessor - No cgPdfPage for page %ld\n", (long)self.pageIndex);
         return elements;
     }
     
@@ -287,14 +267,19 @@ static void op_B(CGPDFScannerRef scanner, void *info) {
     state.ctm = CGAffineTransformIdentity;
     state.fontSize = 12.0;
     state.fontName = @"Helvetica";
+    state.operatorCount = 0;
+    state.maxOperators = 100000; // Safety limit
     
     // Get content stream
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Creating content stream for page %ld\n", (long)self.pageIndex);
     CGPDFContentStreamRef contentStream = CGPDFContentStreamCreateWithPage(self.cgPdfPage);
     if (!contentStream) {
+        fprintf(stderr, "DEBUG: PDFPageProcessor - Failed to create content stream for page %ld\n", (long)self.pageIndex);
         return elements;
     }
     
     // Create operator table
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Creating operator table for page %ld\n", (long)self.pageIndex);
     CGPDFOperatorTableRef operatorTable = CGPDFOperatorTableCreate();
     
     // Register text operators
@@ -323,16 +308,20 @@ static void op_B(CGPDFScannerRef scanner, void *info) {
     CGPDFOperatorTableSetCallback(operatorTable, "b*", &op_B);
     
     // Create scanner
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Creating scanner for page %ld\n", (long)self.pageIndex);
     CGPDFScannerRef scanner = CGPDFScannerCreate(contentStream, operatorTable, &state);
     
     // Scan the page
-    CGPDFScannerScan(scanner);
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Starting scan for page %ld\n", (long)self.pageIndex);
+    BOOL scanResult = CGPDFScannerScan(scanner);
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Scan completed for page %ld, result: %d\n", (long)self.pageIndex, scanResult);
     
     // Clean up
     CGPDFScannerRelease(scanner);
     CGPDFOperatorTableRelease(operatorTable);
     CGPDFContentStreamRelease(contentStream);
     
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Returning %lu elements for page %ld\n", (unsigned long)[elements count], (long)self.pageIndex);
     return elements;
 }
 

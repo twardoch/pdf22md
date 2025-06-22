@@ -1,0 +1,2514 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.github/
+  workflows/
+    build-release.yml
+    release.yml
+docs/
+  PARALLEL_PROCESSING.md
+src/
+  AssetExtractor.h
+  AssetExtractor.m
+  ContentElement.h
+  ContentElement.m
+  main.m
+  PDFMarkdownConverter.h
+  PDFMarkdownConverter.m
+  PDFPageProcessor.h
+  PDFPageProcessor.m
+.gitignore
+AGENTS.md
+CHANGELOG.md
+CLAUDE.md
+LICENSE
+Makefile
+README.md
+release.sh
+TODO.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".github/workflows/release.yml">
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for version tags
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    
+    - name: Get version from tag
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Build universal binary
+      run: |
+        # Build for Intel
+        make clean
+        make VERSION="${{ steps.version.outputs.VERSION }}" CFLAGS="-Wall -Wextra -O2 -fobjc-arc -arch x86_64"
+        mv pdf22md pdf22md-x86_64
+        
+        # Build for Apple Silicon
+        make clean
+        make VERSION="${{ steps.version.outputs.VERSION }}" CFLAGS="-Wall -Wextra -O2 -fobjc-arc -arch arm64"
+        mv pdf22md pdf22md-arm64
+        
+        # Create universal binary
+        lipo -create -output pdf22md pdf22md-x86_64 pdf22md-arm64
+        chmod +x pdf22md
+        
+        # Verify universal binary
+        lipo -info pdf22md
+        ./pdf22md -v
+    
+    - name: Create distribution package
+      run: |
+        # Create directory structure
+        mkdir -p dist/usr/local/bin
+        mkdir -p dist/usr/local/share/man/man1
+        mkdir -p dist/usr/local/share/doc/pdf22md
+        
+        # Copy files
+        cp pdf22md dist/usr/local/bin/
+        cp LICENSE dist/usr/local/share/doc/pdf22md/
+        cp README.md dist/usr/local/share/doc/pdf22md/
+        cp docs/PARALLEL_PROCESSING.md dist/usr/local/share/doc/pdf22md/ || true
+        
+        # Create man page
+        cat > dist/usr/local/share/man/man1/pdf22md.1 << EOF
+        .TH PDF22MD 1 "$(date +'%B %Y')" "pdf22md ${{ steps.version.outputs.VERSION }}" "User Commands"
+        .SH NAME
+        pdf22md \- Convert PDF documents to Markdown format
+        .SH SYNOPSIS
+        .B pdf22md
+        [\fB\-i\fR \fIinput.pdf\fR]
+        [\fB\-o\fR \fIoutput.md\fR]
+        [\fB\-a\fR \fIassets_folder\fR]
+        [\fB\-d\fR \fIdpi\fR]
+        [\fB\-v\fR]
+        [\fB\-h\fR]
+        .SH DESCRIPTION
+        .B pdf22md
+        is a high-performance PDF to Markdown converter for macOS that uses Grand Central Dispatch (GCD) for parallel processing.
+        .SH OPTIONS
+        .TP
+        .BR \-i " " \fIpath\fR
+        Input PDF file (default: stdin)
+        .TP
+        .BR \-o " " \fIpath\fR
+        Output Markdown file (default: stdout)
+        .TP
+        .BR \-a " " \fIpath\fR
+        Assets folder for extracted images
+        .TP
+        .BR \-d " " \fIdpi\fR
+        DPI for rasterizing vector graphics (default: 144)
+        .TP
+        .BR \-v
+        Display version information
+        .TP
+        .BR \-h
+        Display help message
+        .SH EXAMPLES
+        .TP
+        Convert a PDF file to Markdown:
+        .B pdf22md -i document.pdf -o document.md
+        .TP
+        Convert with images saved to an assets folder:
+        .B pdf22md -i report.pdf -o report.md -a ./assets
+        .TP
+        Use with pipes:
+        .B cat document.pdf | pdf22md > document.md
+        .SH AUTHOR
+        Adam Twardoch
+        .SH LICENSE
+        MIT License
+        EOF
+    
+    - name: Create installer package
+      run: |
+        # Create package info
+        mkdir -p package_resources
+        
+        # Create postinstall script
+        cat > package_resources/postinstall << 'EOF'
+        #!/bin/bash
+        # Update man database
+        if command -v makewhatis >/dev/null 2>&1; then
+            makewhatis /usr/local/share/man
+        fi
+        exit 0
+        EOF
+        chmod +x package_resources/postinstall
+        
+        # Build the package
+        pkgbuild --root dist \
+                 --identifier com.twardoch.pdf22md \
+                 --version "${{ steps.version.outputs.VERSION }}" \
+                 --scripts package_resources \
+                 --ownership recommended \
+                 pdf22md-${{ steps.version.outputs.VERSION }}.pkg
+        
+        # Create a distribution XML for productbuild (optional, for more control)
+        cat > distribution.xml << EOF
+        <?xml version="1.0" encoding="utf-8" standalone="yes"?>
+        <installer-gui-script minSpecVersion="2.0">
+            <title>pdf22md ${{ steps.version.outputs.VERSION }}</title>
+            <organization>com.twardoch</organization>
+            <domains enable_localSystem="true"/>
+            <options customize="never" require-scripts="true" rootVolumeOnly="true"/>
+            <pkg-ref id="com.twardoch.pdf22md">
+                <bundle-version>
+                    <bundle CFBundleVersion="${{ steps.version.outputs.VERSION }}" id="com.twardoch.pdf22md" path="pdf22md"/>
+                </bundle-version>
+            </pkg-ref>
+            <choices-outline>
+                <line choice="default">
+                    <line choice="com.twardoch.pdf22md"/>
+                </line>
+            </choices-outline>
+            <choice id="default" title="pdf22md" description="PDF to Markdown converter"/>
+            <choice id="com.twardoch.pdf22md" visible="false">
+                <pkg-ref id="com.twardoch.pdf22md"/>
+            </choice>
+            <pkg-ref id="com.twardoch.pdf22md" version="${{ steps.version.outputs.VERSION }}" onConclusion="none">pdf22md-${{ steps.version.outputs.VERSION }}.pkg</pkg-ref>
+        </installer-gui-script>
+        EOF
+        
+        # Sign the package if certificates are available
+        if security find-identity -p basic -v | grep -q "Developer ID Installer"; then
+            INSTALLER_CERT=$(security find-identity -p basic -v | grep "Developer ID Installer" | head -1 | awk '{print $2}')
+            productsign --sign "$INSTALLER_CERT" \
+                        pdf22md-${{ steps.version.outputs.VERSION }}.pkg \
+                        pdf22md-${{ steps.version.outputs.VERSION }}-signed.pkg
+            mv pdf22md-${{ steps.version.outputs.VERSION }}-signed.pkg pdf22md-${{ steps.version.outputs.VERSION }}.pkg
+        fi
+    
+    - name: Create release archives
+      run: |
+        # Create tarball with binary and docs
+        mkdir -p pdf22md-${{ steps.version.outputs.VERSION }}
+        cp pdf22md pdf22md-${{ steps.version.outputs.VERSION }}/
+        cp README.md LICENSE pdf22md-${{ steps.version.outputs.VERSION }}/
+        cp -r docs pdf22md-${{ steps.version.outputs.VERSION }}/ || true
+        tar -czf pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz pdf22md-${{ steps.version.outputs.VERSION }}
+        
+        # Create zip for those who prefer it
+        zip -r pdf22md-${{ steps.version.outputs.VERSION }}-macos.zip pdf22md-${{ steps.version.outputs.VERSION }}
+    
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        # Get previous tag
+        PREVIOUS_TAG=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -2 | head -1)
+        
+        # Generate changelog
+        if [ -n "$PREVIOUS_TAG" ]; then
+          echo "## What's Changed" > release_notes.md
+          echo "" >> release_notes.md
+          git log --pretty=format:"* %s (%h)" ${PREVIOUS_TAG}..HEAD >> release_notes.md
+        else
+          echo "## Initial Release" > release_notes.md
+          echo "" >> release_notes.md
+          echo "First release of pdf22md!" >> release_notes.md
+        fi
+        
+        echo "" >> release_notes.md
+        echo "## Installation" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Using the installer package (recommended):" >> release_notes.md
+        echo '```bash' >> release_notes.md
+        echo "curl -LO https://github.com/twardoch/pdf22md/releases/download/${{ steps.version.outputs.TAG }}/pdf22md-${{ steps.version.outputs.VERSION }}.pkg" >> release_notes.md
+        echo "sudo installer -pkg pdf22md-${{ steps.version.outputs.VERSION }}.pkg -target /" >> release_notes.md
+        echo '```' >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Manual installation:" >> release_notes.md
+        echo '```bash' >> release_notes.md
+        echo "curl -LO https://github.com/twardoch/pdf22md/releases/download/${{ steps.version.outputs.TAG }}/pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz" >> release_notes.md
+        echo "tar -xzf pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz" >> release_notes.md
+        echo "sudo cp pdf22md-${{ steps.version.outputs.VERSION }}/pdf22md /usr/local/bin/" >> release_notes.md
+        echo '```' >> release_notes.md
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: pdf22md ${{ steps.version.outputs.VERSION }}
+        body_path: release_notes.md
+        files: |
+          pdf22md-${{ steps.version.outputs.VERSION }}.pkg
+          pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz
+          pdf22md-${{ steps.version.outputs.VERSION }}-macos.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Update Homebrew formula
+      run: |
+        # This would typically update a homebrew tap repository
+        # For now, we'll just output what should be done
+        echo "To update Homebrew formula:"
+        echo "1. Update the url to: https://github.com/twardoch/pdf22md/archive/refs/tags/${{ steps.version.outputs.TAG }}.tar.gz"
+        echo "2. Update the sha256 hash"
+        echo "3. Update the version in the formula"
+</file>
+
+<file path="CHANGELOG.md">
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- Semantic versioning support based on git tags
+- Version display option (-v, -V) in the command-line tool
+- Release automation script (release.sh) for macOS
+- GitHub Actions workflow for automated releases
+- Package installer (.pkg) generation for macOS
+- Universal binary support (Intel and Apple Silicon)
+- Man page generation in release packages
+- MIT License file for open-source compliance
+- GitHub issue templates for bug reports and feature requests
+- Comprehensive .gitignore file with proper exclusions
+- Build directory structure to separate source from build artifacts
+- CHANGELOG.md to track version history
+- Professional project documentation standards
+
+### Changed
+- Makefile now supports VERSION variable for build-time versioning
+- Makefile now uses a dedicated `build/` directory for object files
+- .gitignore updated to properly exclude build artifacts and editor files
+- GitHub Actions workflow fixed to use correct binary name
+- Project structure reorganized following professional standards
+
+### Fixed
+- Build artifacts (.o files) no longer pollute the repository root
+- GitHub Actions workflow now correctly references the pdf22md binary
+- Make variable in .gitignore replaced with actual filename
+
+### Removed
+- Object files from repository root (moved to build directory)
+
+## [1.0.0] - 2024-01-01
+
+### Added
+- Initial release of pdf22md
+- PDF to Markdown conversion with parallel processing
+- Intelligent heading detection based on font size analysis
+- Asset extraction with smart image format selection (JPEG/PNG)
+- Support for both file and stdin/stdout I/O
+- Customizable DPI for vector graphics rasterization
+- Grand Central Dispatch (GCD) for multi-core performance
+- Comprehensive documentation
+</file>
+
+<file path="LICENSE">
+MIT License
+
+Copyright (c) 2024 Adam Twardoch
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</file>
+
+<file path="release.sh">
+#!/bin/bash
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+# Function to get the latest semver tag
+get_latest_tag() {
+    git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1
+}
+
+# Function to increment version
+increment_version() {
+    local version=$1
+    local major=$(echo $version | cut -d. -f1)
+    local minor=$(echo $version | cut -d. -f2)
+    local patch=$(echo $version | cut -d. -f3)
+    
+    # Increment minor version
+    minor=$((minor + 1))
+    patch=0
+    
+    echo "${major}.${minor}.${patch}"
+}
+
+# Parse command line arguments
+VERSION=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --v)
+            VERSION="$2"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage: $0 [--v VERSION]"
+            echo "  --v VERSION   Specify version (e.g., 1.2.3)"
+            echo "  -h, --help    Show this help message"
+            echo ""
+            echo "If no version is specified, the script will increment the minor version"
+            echo "of the latest git tag, or use 1.0.0 if no tags exist."
+            exit 0
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+# Determine version
+if [ -z "$VERSION" ]; then
+    LATEST_TAG=$(get_latest_tag)
+    if [ -z "$LATEST_TAG" ]; then
+        VERSION="1.0.0"
+        print_info "No previous tags found. Using version $VERSION"
+    else
+        # Remove 'v' prefix
+        CURRENT_VERSION=${LATEST_TAG#v}
+        VERSION=$(increment_version $CURRENT_VERSION)
+        print_info "Latest tag: $LATEST_TAG"
+        print_info "New version: $VERSION"
+    fi
+else
+    # Validate version format
+    if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+        print_error "Invalid version format. Please use semantic versioning (e.g., 1.2.3)"
+        exit 1
+    fi
+fi
+
+TAG="v$VERSION"
+
+# Check if we're on macOS
+if [[ "$OSTYPE" != "darwin"* ]]; then
+    print_error "This script must be run on macOS"
+    exit 1
+fi
+
+# Check if git is clean
+if ! git diff-index --quiet HEAD --; then
+    print_warning "You have uncommitted changes. Committing them now..."
+    git add -A
+    git commit -m "Release version $VERSION"
+fi
+
+# Check if tag already exists
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+    print_error "Tag $TAG already exists"
+    exit 1
+fi
+
+print_info "Building pdf22md version $VERSION..."
+
+# Clean and build with version
+make clean
+make VERSION="$VERSION"
+
+# Test the binary
+if ! ./pdf22md -v | grep -q "$VERSION"; then
+    print_error "Version check failed"
+    exit 1
+fi
+
+print_info "Build successful!"
+
+# Create git tag
+print_info "Creating git tag $TAG..."
+git tag -a "$TAG" -m "Release version $VERSION"
+
+# Push commits and tags
+print_info "Pushing to remote..."
+git push origin main
+git push origin "$TAG"
+
+print_info "✅ Release $VERSION completed successfully!"
+print_info ""
+print_info "The GitHub Actions workflow will now:"
+print_info "  1. Build the universal binary for Intel and Apple Silicon"
+print_info "  2. Create a .pkg installer"
+print_info "  3. Create a GitHub release with the artifacts"
+print_info ""
+print_info "Check the Actions tab on GitHub to monitor the release process."
+</file>
+
+<file path=".github/workflows/build-release.yml">
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ created ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build the tool
+      run: make
+
+    - name: Run a basic check
+      run: ./pdf22md -h
+
+  create-release:
+    if: github.event_name == 'release'
+    runs-on: macos-latest
+    needs: build
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build the binary
+      run: make
+
+    - name: Create Tarball Archive
+      run: |
+        tar -czvf pdf22md-macos-x86_64.tar.gz pdf22md
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./pdf22md-macos-x86_64.tar.gz
+        asset_name: pdf22md-macos-x86_64.tar.gz
+        asset_content_type: application/gzip
+</file>
+
+<file path="docs/PARALLEL_PROCESSING.md">
+# Parallel Processing in `pdf22md`
+
+This document outlines the implementation of parallel processing in the `pdf22md` command-line tool for converting PDF documents to Markdown format.
+
+## 1. Objective
+
+The goal was to accelerate the conversion of multi-page PDF documents by processing multiple pages concurrently and saving extracted images in parallel.
+
+## 2. Technology: Grand Central Dispatch (GCD)
+
+Similar to `pdfupng`, we utilized Apple's **Grand Central Dispatch (GCD)** framework with the `dispatch_apply` function for parallel execution.
+
+## 3. Implementation Details
+
+### 3.1. Parallel Page Processing
+
+The core changes were made within the `convertWithAssetsFolderPath:rasterizedDPI:completion:` method in `PDFMarkdownConverter.m`.
+
+#### From Sequential to Concurrent
+
+The original implementation used a sequential `for` loop:
+
+```objc
+for (NSInteger pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+    PDFPage *page = [self.pdfDocument pageAtIndex:pageIndex];
+    // ... process page ...
+}
+```
+
+This was replaced with:
+
+```objc
+dispatch_apply(pageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t pageIndex) {
+    @autoreleasepool {
+        PDFPage *page = [self.pdfDocument pageAtIndex:pageIndex];
+        // ... process page ...
+    }
+});
+```
+
+### 3.2. Thread Safety Measures
+
+1. **Temporary Storage Arrays**: Instead of directly modifying shared arrays (`allElements`, `fontStats`), we create temporary per-page storage:
+
+```objc
+NSMutableArray<NSMutableArray<id<ContentElement>> *> *pageElementsArray = [NSMutableArray arrayWithCapacity:pageCount];
+NSMutableArray<NSMutableDictionary *> *pageFontStatsArray = [NSMutableArray arrayWithCapacity:pageCount];
+```
+
+2. **Error Handling**: A shared boolean flag with synchronized access:
+
+```objc
+__block BOOL processingFailed = NO;
+NSObject *lock = [[NSObject alloc] init];
+
+// Inside parallel block
+@synchronized(lock) {
+    if (processingFailed) return;
+}
+```
+
+3. **Result Merging**: After parallel processing completes, results are merged sequentially:
+
+```objc
+for (NSInteger i = 0; i < pageCount; i++) {
+    [self.allElements addObjectsFromArray:pageElementsArray[i]];
+    // Merge font statistics...
+}
+```
+
+### 3.3. Parallel Image Saving
+
+Image saving was also parallelized:
+
+```objc
+dispatch_apply(imageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t index) {
+    @autoreleasepool {
+        ImageElement *imageElement = imageElements[index];
+        NSString *savedPath = [assetExtractor saveImage:imageElement.image ...];
+        if (savedPath) {
+            @synchronized(imageElement) {
+                imageElement.assetRelativePath = savedPath;
+            }
+        }
+    }
+});
+```
+
+### 3.4. Memory Management
+
+Each parallel operation is wrapped in `@autoreleasepool` to ensure prompt deallocation of temporary objects and prevent memory spikes.
+
+## 4. Performance Benefits
+
+- **Multi-core Utilization**: Pages are processed on multiple CPU cores simultaneously
+- **Reduced Total Time**: For PDFs with many pages, the speedup is nearly linear with the number of cores
+- **Efficient Memory Usage**: Autoreleasepool prevents memory accumulation
+- **Scalability**: The implementation automatically adapts to the available hardware
+
+## 5. Considerations
+
+- **Thread Safety**: All shared resources are protected with appropriate synchronization
+- **Memory Overhead**: Each parallel task has its own memory footprint, but autoreleasepool keeps it manageable
+- **I/O Bottlenecks**: Image saving may be limited by disk I/O speed rather than CPU
+</file>
+
+<file path="src/AssetExtractor.h">
+#import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface AssetExtractor : NSObject
+
+- (nullable instancetype)initWithAssetFolder:(NSString *)folderPath;
+
+- (nullable NSString *)saveImage:(CGImageRef)image
+                  isVectorSource:(BOOL)isVector
+                      withBaseName:(NSString *)baseName;
+
+@end
+
+NS_ASSUME_NONNULL_END
+</file>
+
+<file path="src/AssetExtractor.m">
+#import "AssetExtractor.h"
+#import <ImageIO/ImageIO.h>
+
+@interface AssetExtractor ()
+@property (nonatomic, strong) NSString *assetFolderPath;
+@property (nonatomic, strong) NSFileManager *fileManager;
+@end
+
+@implementation AssetExtractor
+
+- (nullable instancetype)initWithAssetFolder:(NSString *)folderPath {
+    self = [super init];
+    if (self) {
+        _assetFolderPath = folderPath;
+        _fileManager = [NSFileManager defaultManager];
+        
+        // Create assets folder if it doesn't exist
+        NSError *error = nil;
+        BOOL isDirectory = NO;
+        BOOL exists = [_fileManager fileExistsAtPath:folderPath isDirectory:&isDirectory];
+        
+        if (exists && !isDirectory) {
+            NSLog(@"Asset path exists but is not a directory: %@", folderPath);
+            return nil;
+        }
+        
+        if (!exists) {
+            if (![_fileManager createDirectoryAtPath:folderPath
+                         withIntermediateDirectories:YES
+                                          attributes:nil
+                                               error:&error]) {
+                NSLog(@"Failed to create assets folder: %@", error);
+                return nil;
+            }
+        }
+    }
+    return self;
+}
+
+- (nullable NSString *)saveImage:(CGImageRef)image
+                  isVectorSource:(BOOL)isVector
+                      withBaseName:(NSString *)baseName {
+    if (!image) {
+        return nil;
+    }
+    
+    // Analyze image to determine optimal format
+    BOOL shouldUseJPEG = [self shouldUseJPEGForImage:image];
+    
+    NSString *extension = shouldUseJPEG ? @"jpg" : @"png";
+    NSString *fileName = [NSString stringWithFormat:@"%@.%@", baseName, extension];
+    NSString *fullPath = [self.assetFolderPath stringByAppendingPathComponent:fileName];
+    
+    // Create destination
+    NSURL *fileURL = [NSURL fileURLWithPath:fullPath];
+    CGImageDestinationRef destination = CGImageDestinationCreateWithURL((__bridge CFURLRef)fileURL,
+                                                                       shouldUseJPEG ? (__bridge CFStringRef)@"public.jpeg" : (__bridge CFStringRef)@"public.png",
+                                                                       1, NULL);
+    if (!destination) {
+        NSLog(@"Failed to create image destination");
+        return nil;
+    }
+    
+    // Set compression options
+    NSDictionary *properties = nil;
+    if (shouldUseJPEG) {
+        properties = @{(__bridge NSString *)kCGImageDestinationLossyCompressionQuality: @0.85};
+    }
+    
+    // Add image to destination
+    CGImageDestinationAddImage(destination, image, (__bridge CFDictionaryRef)properties);
+    
+    // Finalize
+    BOOL success = CGImageDestinationFinalize(destination);
+    CFRelease(destination);
+    
+    if (!success) {
+        NSLog(@"Failed to save image to %@", fullPath);
+        return nil;
+    }
+    
+    // Return relative path (just the filename since it's in the assets folder)
+    return fileName;
+}
+
+- (BOOL)shouldUseJPEGForImage:(CGImageRef)image {
+    // Get image properties
+    size_t width = CGImageGetWidth(image);
+    size_t height = CGImageGetHeight(image);
+    CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo(image);
+    
+    // If image has alpha channel, use PNG
+    if (alphaInfo != kCGImageAlphaNone &&
+        alphaInfo != kCGImageAlphaNoneSkipFirst &&
+        alphaInfo != kCGImageAlphaNoneSkipLast) {
+        return NO;
+    }
+    
+    // For small images, use PNG
+    if (width * height < 10000) { // Less than 100x100
+        return NO;
+    }
+    
+    // Analyze color complexity by sampling pixels
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    size_t bytesPerRow = width * 4;
+    size_t sampleSize = MIN(width * height, 10000); // Sample up to 10k pixels
+    
+    unsigned char *pixelData = calloc(sampleSize * 4, sizeof(unsigned char));
+    if (!pixelData) {
+        CGColorSpaceRelease(colorSpace);
+        return YES; // Default to JPEG if we can't analyze
+    }
+    
+    CGContextRef context = CGBitmapContextCreate(pixelData, width, 1, 8, bytesPerRow, colorSpace,
+                                                kCGImageAlphaNoneSkipLast | kCGBitmapByteOrder32Big);
+    CGColorSpaceRelease(colorSpace);
+    
+    if (!context) {
+        free(pixelData);
+        return YES;
+    }
+    
+    // Sample middle row
+    CGContextDrawImage(context, CGRectMake(0, 0, width, 1), image);
+    CGContextRelease(context);
+    
+    // Count unique colors in sample
+    NSMutableSet *uniqueColors = [NSMutableSet set];
+    for (size_t i = 0; i < width * 4; i += 4) {
+        uint32_t color = (pixelData[i] << 24) | (pixelData[i+1] << 16) | 
+                        (pixelData[i+2] << 8) | pixelData[i+3];
+        [uniqueColors addObject:@(color)];
+    }
+    
+    free(pixelData);
+    
+    // If we have many unique colors, it's likely a photograph - use JPEG
+    return [uniqueColors count] > 256;
+}
+
+@end
+</file>
+
+<file path="src/ContentElement.h">
+#import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@protocol ContentElement <NSObject>
+@property (nonatomic, readonly) CGRect bounds;
+@property (nonatomic, readonly) NSInteger pageIndex;
+- (NSString *)markdownRepresentation;
+@end
+
+@interface TextElement : NSObject <ContentElement>
+@property (nonatomic, strong) NSString *text;
+@property (nonatomic, assign) CGRect bounds;
+@property (nonatomic, assign) NSInteger pageIndex;
+@property (nonatomic, strong, nullable) NSString *fontName;
+@property (nonatomic, assign) CGFloat fontSize;
+@property (nonatomic, assign) BOOL isBold;
+@property (nonatomic, assign) BOOL isItalic;
+@property (nonatomic, assign) NSInteger headingLevel;
+@end
+
+@interface ImageElement : NSObject <ContentElement>
+@property (nonatomic, assign) CGImageRef image;
+@property (nonatomic, assign) CGRect bounds;
+@property (nonatomic, assign) NSInteger pageIndex;
+@property (nonatomic, assign) BOOL isVectorSource;
+@property (nonatomic, strong, nullable) NSString *assetRelativePath;
+@end
+
+NS_ASSUME_NONNULL_END
+</file>
+
+<file path="src/ContentElement.m">
+#import "ContentElement.h"
+
+@implementation TextElement
+
+- (NSString *)markdownRepresentation {
+    if (!self.text || [self.text length] == 0) {
+        return nil;
+    }
+    
+    NSString *trimmedText = [self.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if ([trimmedText length] == 0) {
+        return nil;
+    }
+    
+    // Apply heading formatting
+    if (self.headingLevel > 0 && self.headingLevel <= 6) {
+        NSMutableString *heading = [NSMutableString string];
+        for (NSInteger i = 0; i < self.headingLevel; i++) {
+            [heading appendString:@"#"];
+        }
+        [heading appendString:@" "];
+        [heading appendString:trimmedText];
+        return heading;
+    }
+    
+    // Apply bold/italic formatting
+    NSString *formattedText = trimmedText;
+    
+    if (self.isBold && self.isItalic) {
+        formattedText = [NSString stringWithFormat:@"***%@***", formattedText];
+    } else if (self.isBold) {
+        formattedText = [NSString stringWithFormat:@"**%@**", formattedText];
+    } else if (self.isItalic) {
+        formattedText = [NSString stringWithFormat:@"*%@*", formattedText];
+    }
+    
+    return formattedText;
+}
+
+- (void)dealloc {
+    // No need to release CGImageRef here as ARC doesn't manage it
+}
+
+@end
+
+@implementation ImageElement
+
+- (NSString *)markdownRepresentation {
+    if (!self.assetRelativePath) {
+        return @"![Image](image-not-saved)";
+    }
+    
+    return [NSString stringWithFormat:@"![Image](%@)", self.assetRelativePath];
+}
+
+- (void)dealloc {
+    if (self.image) {
+        CGImageRelease(self.image);
+    }
+}
+
+@end
+</file>
+
+<file path="src/main.m">
+#import <Foundation/Foundation.h>
+#import <PDFKit/PDFKit.h>
+#import "PDFMarkdownConverter.h"
+
+#ifndef VERSION
+#define VERSION "dev"
+#endif
+
+void printUsage(const char *programName) {
+    fprintf(stderr, "Usage: %s [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi] [-v] [-h]\n", programName);
+    fprintf(stderr, "  Converts PDF documents to Markdown format\n");
+    fprintf(stderr, "  -i <path>: Input PDF file (default: stdin)\n");
+    fprintf(stderr, "  -o <path>: Output Markdown file (default: stdout)\n");
+    fprintf(stderr, "  -a <path>: Assets folder for extracted images\n");
+    fprintf(stderr, "  -d <dpi>: DPI for rasterizing vector graphics (default: 144)\n");
+    fprintf(stderr, "  -v: Display version information\n");
+    fprintf(stderr, "  -h: Display this help message\n");
+}
+
+void printVersion() {
+    printf("pdf22md version %s\n", VERSION);
+}
+
+int main(int argc, const char *argv[]) {
+    @autoreleasepool {
+        NSString *inputPath = nil;
+        NSString *outputPath = nil;
+        NSString *assetsPath = nil;
+        CGFloat dpi = 144.0;
+        
+        // Parse command line arguments
+        int opt;
+        while ((opt = getopt(argc, (char * const *)argv, "i:o:a:d:hvV")) != -1) {
+            switch (opt) {
+                case 'i':
+                    inputPath = [NSString stringWithUTF8String:optarg];
+                    break;
+                case 'o':
+                    outputPath = [NSString stringWithUTF8String:optarg];
+                    break;
+                case 'a':
+                    assetsPath = [NSString stringWithUTF8String:optarg];
+                    break;
+                case 'd':
+                    dpi = atof(optarg);
+                    if (dpi <= 0) {
+                        fprintf(stderr, "Invalid DPI value: %s\n", optarg);
+                        return 1;
+                    }
+                    break;
+                case 'h':
+                    printUsage(argv[0]);
+                    return 0;
+                case 'v':
+                case 'V':
+                    printVersion();
+                    return 0;
+                default:
+                    printUsage(argv[0]);
+                    return 1;
+            }
+        }
+        
+        // Initialize converter
+        PDFMarkdownConverter *converter = nil;
+        
+        if (inputPath) {
+            // Read from file
+            fprintf(stderr, "DEBUG: Loading PDF from file: %s\n", [inputPath UTF8String]);
+            NSURL *pdfURL = [NSURL fileURLWithPath:inputPath];
+            converter = [[PDFMarkdownConverter alloc] initWithPDFAtURL:pdfURL];
+            if (!converter) {
+                fprintf(stderr, "Failed to load PDF from: %s\n", [inputPath UTF8String]);
+                return 1;
+            }
+            fprintf(stderr, "DEBUG: PDF loaded successfully\n");
+        } else {
+            // Read from stdin
+            NSFileHandle *stdinHandle = [NSFileHandle fileHandleWithStandardInput];
+            NSData *pdfData = [stdinHandle readDataToEndOfFile];
+            
+            if (!pdfData || [pdfData length] == 0) {
+                fprintf(stderr, "No PDF data received from stdin\n");
+                return 1;
+            }
+            
+            converter = [[PDFMarkdownConverter alloc] initWithPDFData:pdfData];
+            if (!converter) {
+                fprintf(stderr, "Failed to create PDF document from stdin data\n");
+                return 1;
+            }
+        }
+        
+        // Perform conversion
+        fprintf(stderr, "DEBUG: Starting conversion with assetsPath=%s, dpi=%.1f\n", 
+                assetsPath ? [assetsPath UTF8String] : "nil", dpi);
+        __block NSString *markdown = nil;
+        __block NSError *conversionError = nil;
+        
+        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+        
+        [converter convertWithAssetsFolderPath:assetsPath
+                                rasterizedDPI:dpi
+                                   completion:^(NSString *result, NSError *error) {
+            fprintf(stderr, "DEBUG: Conversion completed\n");
+            markdown = result;
+            conversionError = error;
+            dispatch_semaphore_signal(semaphore);
+        }];
+        
+        fprintf(stderr, "DEBUG: Waiting for conversion to complete...\n");
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        fprintf(stderr, "DEBUG: Conversion finished\n");
+        
+        if (conversionError) {
+            fprintf(stderr, "Conversion failed: %s\n", 
+                    [[conversionError localizedDescription] UTF8String]);
+            return 1;
+        }
+        
+        // Write output
+        if (outputPath) {
+            // Write to file
+            NSError *writeError = nil;
+            BOOL success = [markdown writeToFile:outputPath
+                                      atomically:YES
+                                        encoding:NSUTF8StringEncoding
+                                           error:&writeError];
+            if (!success) {
+                fprintf(stderr, "Failed to write output file: %s\n",
+                        [[writeError localizedDescription] UTF8String]);
+                return 1;
+            }
+        } else {
+            // Write to stdout
+            NSFileHandle *stdoutHandle = [NSFileHandle fileHandleWithStandardOutput];
+            NSData *markdownData = [markdown dataUsingEncoding:NSUTF8StringEncoding];
+            [stdoutHandle writeData:markdownData];
+        }
+        
+        return 0;
+    }
+}
+</file>
+
+<file path="src/PDFMarkdownConverter.h">
+#import <Foundation/Foundation.h>
+#import <PDFKit/PDFKit.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface PDFMarkdownConverter : NSObject
+
+- (nullable instancetype)initWithPDFData:(NSData *)pdfData;
+- (nullable instancetype)initWithPDFAtURL:(NSURL *)pdfURL;
+
+- (void)convertWithAssetsFolderPath:(nullable NSString *)assetsPath
+                     rasterizedDPI:(CGFloat)dpi
+                        completion:(void (^)(NSString * _Nullable markdown, NSError * _Nullable error))completion;
+
+@end
+
+NS_ASSUME_NONNULL_END
+</file>
+
+<file path="src/PDFMarkdownConverter.m">
+#import "PDFMarkdownConverter.h"
+#import "PDFPageProcessor.h"
+#import "ContentElement.h"
+#import "AssetExtractor.h"
+
+@interface PDFMarkdownConverter ()
+@property (nonatomic, strong) PDFDocument *pdfDocument;
+@property (nonatomic, strong) NSMutableArray<id<ContentElement>> *allElements;
+@property (nonatomic, strong) NSMutableDictionary<NSString *, NSNumber *> *fontStats;
+@end
+
+@implementation PDFMarkdownConverter
+
+- (nullable instancetype)initWithPDFData:(NSData *)pdfData {
+    self = [super init];
+    if (self) {
+        _pdfDocument = [[PDFDocument alloc] initWithData:pdfData];
+        if (!_pdfDocument) {
+            return nil;
+        }
+        _allElements = [NSMutableArray array];
+        _fontStats = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (nullable instancetype)initWithPDFAtURL:(NSURL *)pdfURL {
+    self = [super init];
+    if (self) {
+        _pdfDocument = [[PDFDocument alloc] initWithURL:pdfURL];
+        if (!_pdfDocument) {
+            return nil;
+        }
+        _allElements = [NSMutableArray array];
+        _fontStats = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (void)convertWithAssetsFolderPath:(nullable NSString *)assetsPath
+                     rasterizedDPI:(CGFloat)dpi
+                        completion:(void (^)(NSString * _Nullable markdown, NSError * _Nullable error))completion {
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSError *error = nil;
+        
+        // Process all pages in parallel
+        NSInteger pageCount = [self.pdfDocument pageCount];
+        fprintf(stderr, "DEBUG: PDFMarkdownConverter - Starting conversion of %ld pages\n", (long)pageCount);
+        
+        // Create thread-safe temporary storage
+        NSMutableArray<NSMutableArray<id<ContentElement>> *> *pageElementsArray = [NSMutableArray arrayWithCapacity:pageCount];
+        NSMutableArray<NSMutableDictionary *> *pageFontStatsArray = [NSMutableArray arrayWithCapacity:pageCount];
+        
+        // Initialize arrays
+        for (NSInteger i = 0; i < pageCount; i++) {
+            [pageElementsArray addObject:[NSMutableArray array]];
+            [pageFontStatsArray addObject:[NSMutableDictionary dictionary]];
+        }
+        
+        // Lock for thread safety
+        NSObject *lock = [[NSObject alloc] init];
+        __block BOOL processingFailed = NO;
+        
+        // Process pages in parallel using dispatch_apply
+        fprintf(stderr, "DEBUG: PDFMarkdownConverter - Starting dispatch_apply for %ld pages\n", (long)pageCount);
+        dispatch_apply(pageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t pageIndex) {
+            @autoreleasepool {
+                fprintf(stderr, "DEBUG: PDFMarkdownConverter - Processing page %zu\n", pageIndex);
+                // Check if processing has already failed
+                @synchronized(lock) {
+                    if (processingFailed) return;
+                }
+                
+                PDFPage *page = [self.pdfDocument pageAtIndex:pageIndex];
+                if (!page) {
+                    @synchronized(lock) {
+                        processingFailed = YES;
+                    }
+                    return;
+                }
+                
+                PDFPageProcessor *processor = [[PDFPageProcessor alloc] initWithPDFPage:page
+                                                                               pageIndex:pageIndex
+                                                                                     dpi:dpi];
+                
+                NSArray<id<ContentElement>> *pageElements = [processor extractContentElements];
+                fprintf(stderr, "DEBUG: PDFMarkdownConverter - Page %zu extracted %lu elements\n", pageIndex, (unsigned long)[pageElements count]);
+                
+                // Store results in thread-safe arrays
+                pageElementsArray[pageIndex] = [pageElements mutableCopy];
+                
+                // Collect font statistics for this page
+                NSMutableDictionary *pageFontStats = pageFontStatsArray[pageIndex];
+                for (id<ContentElement> element in pageElements) {
+                    if ([element isKindOfClass:[TextElement class]]) {
+                        TextElement *textElement = (TextElement *)element;
+                        NSString *fontKey = [NSString stringWithFormat:@"%.1f-%@", 
+                                           textElement.fontSize, 
+                                           textElement.fontName ?: @"Unknown"];
+                        
+                        NSNumber *count = pageFontStats[fontKey];
+                        pageFontStats[fontKey] = @([count integerValue] + 1);
+                    }
+                }
+            }
+        });
+        
+        // Check if processing failed
+        if (processingFailed) {
+            error = [NSError errorWithDomain:@"PDFMarkdownConverter"
+                                       code:2
+                                   userInfo:@{NSLocalizedDescriptionKey: @"Failed to process one or more PDF pages"}];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion(nil, error);
+            });
+            return;
+        }
+        
+        // Merge results from all pages
+        for (NSInteger i = 0; i < pageCount; i++) {
+            [self.allElements addObjectsFromArray:pageElementsArray[i]];
+            
+            // Merge font statistics
+            NSDictionary *pageFontStats = pageFontStatsArray[i];
+            for (NSString *fontKey in pageFontStats) {
+                NSNumber *pageCount = pageFontStats[fontKey];
+                NSNumber *totalCount = self.fontStats[fontKey];
+                self.fontStats[fontKey] = @([totalCount integerValue] + [pageCount integerValue]);
+            }
+        }
+        
+        // Analyze font hierarchy
+        [self analyzeFontHierarchy];
+        
+        // Sort elements by page and position
+        [self sortElements];
+        
+        // Handle assets if needed
+        AssetExtractor *assetExtractor = nil;
+        if (assetsPath) {
+            assetExtractor = [[AssetExtractor alloc] initWithAssetFolder:assetsPath];
+            if (!assetExtractor) {
+                error = [NSError errorWithDomain:@"PDFMarkdownConverter"
+                                           code:1
+                                       userInfo:@{NSLocalizedDescriptionKey: @"Failed to create assets folder"}];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(nil, error);
+                });
+                return;
+            }
+            
+            // Save images in parallel
+            NSMutableArray<ImageElement *> *imageElements = [NSMutableArray array];
+            for (id<ContentElement> element in self.allElements) {
+                if ([element isKindOfClass:[ImageElement class]]) {
+                    [imageElements addObject:(ImageElement *)element];
+                }
+            }
+            
+            NSInteger imageCount = [imageElements count];
+            if (imageCount > 0) {
+                dispatch_apply(imageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t index) {
+                    @autoreleasepool {
+                        ImageElement *imageElement = imageElements[index];
+                        NSString *baseName = [NSString stringWithFormat:@"image_%03zu", index];
+                        NSString *savedPath = [assetExtractor saveImage:imageElement.image
+                                                          isVectorSource:imageElement.isVectorSource
+                                                              withBaseName:baseName];
+                        if (savedPath) {
+                            @synchronized(imageElement) {
+                                imageElement.assetRelativePath = savedPath;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Generate markdown with YAML frontmatter
+        NSMutableString *markdown = [NSMutableString string];
+        
+        // Add YAML frontmatter with metadata
+        NSString *yamlFrontmatter = [self generateYAMLFrontmatter];
+        if (yamlFrontmatter) {
+            [markdown appendString:yamlFrontmatter];
+            [markdown appendString:@"\n"];
+        }
+        
+        for (id<ContentElement> element in self.allElements) {
+            NSString *elementMarkdown = [element markdownRepresentation];
+            if (elementMarkdown) {
+                [markdown appendString:elementMarkdown];
+                [markdown appendString:@"\n\n"];
+            }
+        }
+        
+        // Clean up extra newlines
+        NSString *finalMarkdown = [markdown stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(finalMarkdown, nil);
+        });
+    });
+}
+
+- (void)collectFontStatisticsFromElements:(NSArray<id<ContentElement>> *)elements {
+    for (id<ContentElement> element in elements) {
+        if ([element isKindOfClass:[TextElement class]]) {
+            TextElement *textElement = (TextElement *)element;
+            NSString *fontKey = [NSString stringWithFormat:@"%.1f-%@", 
+                               textElement.fontSize, 
+                               textElement.fontName ?: @"Unknown"];
+            
+            NSNumber *count = self.fontStats[fontKey];
+            self.fontStats[fontKey] = @([count integerValue] + 1);
+        }
+    }
+}
+
+- (void)analyzeFontHierarchy {
+    // Sort font sizes to determine heading levels
+    NSMutableArray<NSNumber *> *uniqueSizes = [NSMutableArray array];
+    NSMutableDictionary<NSNumber *, NSNumber *> *sizeFrequency = [NSMutableDictionary dictionary];
+    
+    for (NSString *fontKey in self.fontStats) {
+        NSArray *components = [fontKey componentsSeparatedByString:@"-"];
+        if (components.count > 0) {
+            CGFloat fontSize = [components[0] floatValue];
+            NSNumber *sizeNum = @(fontSize);
+            
+            if (![uniqueSizes containsObject:sizeNum]) {
+                [uniqueSizes addObject:sizeNum];
+            }
+            
+            NSInteger freq = [sizeFrequency[sizeNum] integerValue] + [self.fontStats[fontKey] integerValue];
+            sizeFrequency[sizeNum] = @(freq);
+        }
+    }
+    
+    // Sort sizes in descending order
+    [uniqueSizes sortUsingComparator:^NSComparisonResult(NSNumber *obj1, NSNumber *obj2) {
+        return [obj2 compare:obj1];
+    }];
+    
+    // Assign heading levels based on size hierarchy
+    // Assume largest font is H1, second largest is H2, etc.
+    NSMutableDictionary<NSNumber *, NSNumber *> *sizeToHeadingLevel = [NSMutableDictionary dictionary];
+    NSInteger headingLevel = 1;
+    
+    for (NSNumber *size in uniqueSizes) {
+        // Only assign heading levels to fonts that are significantly larger than average
+        // and appear less frequently (typical of headings)
+        NSInteger frequency = [sizeFrequency[size] integerValue];
+        
+        if (headingLevel <= 6 && frequency < 100) { // Adjust threshold as needed
+            sizeToHeadingLevel[size] = @(headingLevel);
+            headingLevel++;
+        } else {
+            sizeToHeadingLevel[size] = @(0); // Body text
+        }
+    }
+    
+    // Apply heading levels to text elements
+    for (id<ContentElement> element in self.allElements) {
+        if ([element isKindOfClass:[TextElement class]]) {
+            TextElement *textElement = (TextElement *)element;
+            NSNumber *sizeNum = @(textElement.fontSize);
+            NSNumber *level = sizeToHeadingLevel[sizeNum];
+            textElement.headingLevel = level ? [level integerValue] : 0;
+        }
+    }
+}
+
+- (void)sortElements {
+    [self.allElements sortUsingComparator:^NSComparisonResult(id<ContentElement> obj1, id<ContentElement> obj2) {
+        // First sort by page
+        if ([obj1 respondsToSelector:@selector(pageIndex)] && [obj2 respondsToSelector:@selector(pageIndex)]) {
+            NSInteger page1 = [(id)obj1 pageIndex];
+            NSInteger page2 = [(id)obj2 pageIndex];
+            
+            if (page1 != page2) {
+                return page1 < page2 ? NSOrderedAscending : NSOrderedDescending;
+            }
+        }
+        
+        // Then sort by vertical position (top to bottom)
+        CGFloat y1 = CGRectGetMaxY(obj1.bounds);
+        CGFloat y2 = CGRectGetMaxY(obj2.bounds);
+        
+        if (fabs(y1 - y2) > 5.0) { // Tolerance for same line
+            return y1 > y2 ? NSOrderedAscending : NSOrderedDescending;
+        }
+        
+        // Finally sort by horizontal position (left to right)
+        CGFloat x1 = CGRectGetMinX(obj1.bounds);
+        CGFloat x2 = CGRectGetMinX(obj2.bounds);
+        
+        return x1 < x2 ? NSOrderedAscending : NSOrderedDescending;
+    }];
+}
+
+- (NSString *)generateYAMLFrontmatter {
+    NSMutableString *yaml = [NSMutableString string];
+    
+    // Get PDF metadata
+    NSDictionary *docAttributes = [self.pdfDocument documentAttributes];
+    
+    [yaml appendString:@"---\n"];
+    
+    // Title
+    NSString *title = docAttributes[PDFDocumentTitleAttribute];
+    if (title && title.length > 0) {
+        [yaml appendFormat:@"title: \"%@\"\n", [self escapeYAMLString:title]];
+    }
+    
+    // Author
+    NSString *author = docAttributes[PDFDocumentAuthorAttribute];
+    if (author && author.length > 0) {
+        [yaml appendFormat:@"author: \"%@\"\n", [self escapeYAMLString:author]];
+    }
+    
+    // Subject
+    NSString *subject = docAttributes[PDFDocumentSubjectAttribute];
+    if (subject && subject.length > 0) {
+        [yaml appendFormat:@"subject: \"%@\"\n", [self escapeYAMLString:subject]];
+    }
+    
+    // Keywords
+    NSArray *keywords = docAttributes[PDFDocumentKeywordsAttribute];
+    if (keywords && [keywords isKindOfClass:[NSArray class]] && keywords.count > 0) {
+        [yaml appendString:@"keywords:\n"];
+        for (NSString *keyword in keywords) {
+            if ([keyword isKindOfClass:[NSString class]]) {
+                [yaml appendFormat:@"  - \"%@\"\n", [self escapeYAMLString:keyword]];
+            }
+        }
+    }
+    
+    // Creator (PDF producer software)
+    NSString *creator = docAttributes[PDFDocumentCreatorAttribute];
+    if (creator && creator.length > 0) {
+        [yaml appendFormat:@"creator: \"%@\"\n", [self escapeYAMLString:creator]];
+    }
+    
+    // Producer
+    NSString *producer = docAttributes[PDFDocumentProducerAttribute];
+    if (producer && producer.length > 0) {
+        [yaml appendFormat:@"producer: \"%@\"\n", [self escapeYAMLString:producer]];
+    }
+    
+    // Creation date
+    NSDate *creationDate = docAttributes[PDFDocumentCreationDateAttribute];
+    if (creationDate) {
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
+        [yaml appendFormat:@"created: %@\n", [formatter stringFromDate:creationDate]];
+    }
+    
+    // Modification date
+    NSDate *modDate = docAttributes[PDFDocumentModificationDateAttribute];
+    if (modDate) {
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
+        [yaml appendFormat:@"modified: %@\n", [formatter stringFromDate:modDate]];
+    }
+    
+    // PDF specific metadata
+    [yaml appendString:@"pdf_metadata:\n"];
+    [yaml appendFormat:@"  page_count: %ld\n", (long)[self.pdfDocument pageCount]];
+    
+    // PDF version
+    NSString *pdfVersion = [self extractPDFVersion];
+    if (pdfVersion) {
+        [yaml appendFormat:@"  version: \"%@\"\n", pdfVersion];
+    }
+    
+    // PDF outline (bookmarks/TOC)
+    PDFOutline *outline = [self.pdfDocument outlineRoot];
+    if (outline && [outline numberOfChildren] > 0) {
+        [yaml appendString:@"  outline:\n"];
+        [self appendOutlineToYAML:yaml outline:outline indent:@"    "];
+    }
+    
+    // Conversion metadata
+    [yaml appendString:@"conversion:\n"];
+    [yaml appendString:@"  tool: \"pdf22md\"\n"];
+    [yaml appendFormat:@"  version: \"%s\"\n", VERSION];
+    
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
+    [yaml appendFormat:@"  date: %@\n", [formatter stringFromDate:[NSDate date]]];
+    
+    [yaml appendString:@"---\n"];
+    
+    return yaml;
+}
+
+- (NSString *)escapeYAMLString:(NSString *)string {
+    // Escape quotes and backslashes for YAML
+    NSString *escaped = [string stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@"\n" withString:@"\\n"];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@"\r" withString:@"\\r"];
+    return escaped;
+}
+
+- (NSString *)extractPDFVersion {
+    // Try to extract PDF version from document attributes or metadata
+    // This is a simplified approach - actual PDF version extraction might require
+    // reading the PDF header directly
+    NSDictionary *attributes = [self.pdfDocument documentAttributes];
+    for (NSString *key in attributes) {
+        id value = attributes[key];
+        if ([value isKindOfClass:[NSString class]] && 
+            [value rangeOfString:@"PDF-" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+            return value;
+        }
+    }
+    return nil;
+}
+
+- (void)appendOutlineToYAML:(NSMutableString *)yaml outline:(PDFOutline *)outline indent:(NSString *)indent {
+    for (NSUInteger i = 0; i < [outline numberOfChildren]; i++) {
+        PDFOutline *child = [outline childAtIndex:i];
+        NSString *label = [child label];
+        if (label && label.length > 0) {
+            [yaml appendFormat:@"%@- title: \"%@\"\n", indent, [self escapeYAMLString:label]];
+            
+            PDFDestination *destination = [child destination];
+            if (destination) {
+                PDFPage *page = [destination page];
+                NSInteger pageIndex = [self.pdfDocument indexForPage:page];
+                [yaml appendFormat:@"%@  page: %ld\n", indent, (long)(pageIndex + 1)];
+            }
+            
+            if ([child numberOfChildren] > 0) {
+                [yaml appendFormat:@"%@  children:\n", indent];
+                NSString *newIndent = [indent stringByAppendingString:@"    "];
+                [self appendOutlineToYAML:yaml outline:child indent:newIndent];
+            }
+        }
+    }
+}
+
+@end
+</file>
+
+<file path="src/PDFPageProcessor.h">
+#import <Foundation/Foundation.h>
+#import <PDFKit/PDFKit.h>
+#import <CoreGraphics/CoreGraphics.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@protocol ContentElement;
+
+@interface PDFPageProcessor : NSObject {
+    @public
+    NSInteger _pageIndex;
+}
+
+- (instancetype)initWithPDFPage:(PDFPage *)pdfPage
+                      pageIndex:(NSInteger)pageIndex
+                            dpi:(CGFloat)dpi;
+
+- (NSArray<id<ContentElement>> *)extractContentElements;
+
+- (void)captureVectorGraphicsInBounds:(CGRect)bounds
+                         withElements:(NSMutableArray *)elements;
+
+@end
+
+NS_ASSUME_NONNULL_END
+</file>
+
+<file path="src/PDFPageProcessor.m">
+#import "PDFPageProcessor.h"
+#import "ContentElement.h"
+
+typedef struct {
+    __unsafe_unretained PDFPageProcessor *processor;
+    CGAffineTransform textMatrix;
+    CGAffineTransform ctm;
+    CGFloat fontSize;
+    NSString *fontName;
+    NSMutableString *currentText;
+    CGFloat textX;
+    CGFloat textY;
+    NSMutableArray *elements;
+    NSMutableArray *pathPoints;
+    BOOL inTextObject;
+    BOOL hasPath;
+    CGRect pathBounds;
+    NSInteger operatorCount;
+    NSInteger maxOperators;
+} PDFScannerState;
+
+// PDF operator callbacks
+static void op_BT(CGPDFScannerRef scanner __attribute__((unused)), void *info) {
+    // Begin text object
+    PDFScannerState *state = (PDFScannerState *)info;
+    state->inTextObject = YES;
+    state->textMatrix = CGAffineTransformIdentity;
+    state->currentText = [NSMutableString string];
+}
+
+static void op_ET(CGPDFScannerRef scanner __attribute__((unused)), void *info) {
+    // End text object
+    PDFScannerState *state = (PDFScannerState *)info;
+    
+    if ([state->currentText length] > 0) {
+        TextElement *element = [[TextElement alloc] init];
+        element.text = [state->currentText copy];
+        element.fontSize = state->fontSize;
+        element.fontName = state->fontName;
+        element.pageIndex = state->processor->_pageIndex;
+        
+        // Simple bold/italic detection based on font name
+        NSString *lowerFontName = [state->fontName lowercaseString];
+        element.isBold = [lowerFontName containsString:@"bold"];
+        element.isItalic = [lowerFontName containsString:@"italic"] || [lowerFontName containsString:@"oblique"];
+        
+        // Calculate bounds (simplified)
+        CGFloat width = [state->currentText length] * state->fontSize * 0.5;
+        CGFloat height = state->fontSize * 1.2;
+        element.bounds = CGRectMake(state->textX, state->textY - height, width, height);
+        
+        [state->elements addObject:element];
+    }
+    
+    state->inTextObject = NO;
+    [state->currentText setString:@""];
+}
+
+static void op_Tf(CGPDFScannerRef scanner, void *info) {
+    // Set font and size
+    PDFScannerState *state = (PDFScannerState *)info;
+    
+    CGPDFReal size;
+    const char *fontName;
+    
+    if (CGPDFScannerPopNumber(scanner, &size) &&
+        CGPDFScannerPopName(scanner, &fontName)) {
+        state->fontSize = size;
+        state->fontName = [NSString stringWithUTF8String:fontName];
+    }
+}
+
+static void op_Td(CGPDFScannerRef scanner, void *info) {
+    // Move text position
+    PDFScannerState *state = (PDFScannerState *)info;
+    
+    CGPDFReal tx, ty;
+    if (CGPDFScannerPopNumber(scanner, &ty) &&
+        CGPDFScannerPopNumber(scanner, &tx)) {
+        state->textX += tx;
+        state->textY += ty;
+    }
+}
+
+static void op_TD(CGPDFScannerRef scanner, void *info) {
+    // Move text position and set leading
+    op_Td(scanner, info);
+}
+
+static void op_Tm(CGPDFScannerRef scanner, void *info) {
+    // Set text matrix
+    PDFScannerState *state = (PDFScannerState *)info;
+    
+    CGPDFReal a, b, c, d, e, f;
+    if (CGPDFScannerPopNumber(scanner, &f) &&
+        CGPDFScannerPopNumber(scanner, &e) &&
+        CGPDFScannerPopNumber(scanner, &d) &&
+        CGPDFScannerPopNumber(scanner, &c) &&
+        CGPDFScannerPopNumber(scanner, &b) &&
+        CGPDFScannerPopNumber(scanner, &a)) {
+        state->textMatrix = CGAffineTransformMake(a, b, c, d, e, f);
+        state->textX = e;
+        state->textY = f;
+    }
+}
+
+static void op_Tj(CGPDFScannerRef scanner, void *info) {
+    // Show text string
+    PDFScannerState *state = (PDFScannerState *)info;
+    
+    CGPDFStringRef pdfString;
+    if (CGPDFScannerPopString(scanner, &pdfString)) {
+        NSString *string = (__bridge_transfer NSString *)CGPDFStringCopyTextString(pdfString);
+        if (string) {
+            [state->currentText appendString:string];
+        }
+    }
+}
+
+static void op_TJ(CGPDFScannerRef scanner, void *info) {
+    // Show text with individual glyph positioning
+    PDFScannerState *state = (PDFScannerState *)info;
+    
+    CGPDFArrayRef array;
+    if (CGPDFScannerPopArray(scanner, &array)) {
+        size_t count = CGPDFArrayGetCount(array);
+        for (size_t i = 0; i < count; i++) {
+            CGPDFObjectRef object;
+            if (CGPDFArrayGetObject(array, i, &object)) {
+                CGPDFObjectType type = CGPDFObjectGetType(object);
+                if (type == kCGPDFObjectTypeString) {
+                    CGPDFStringRef pdfString;
+                    if (CGPDFObjectGetValue(object, kCGPDFObjectTypeString, &pdfString)) {
+                        NSString *string = (__bridge_transfer NSString *)CGPDFStringCopyTextString(pdfString);
+                        if (string) {
+                            [state->currentText appendString:string];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void op_Do(CGPDFScannerRef scanner __attribute__((unused)), void *info) {
+    // Draw XObject (potentially an image)
+    PDFScannerState *state = (PDFScannerState *)info;
+    
+    const char *name;
+    if (CGPDFScannerPopName(scanner, &name)) {
+        // Skip image processing for now - just log it
+        // This avoids potential hanging issues with image extraction
+        fprintf(stderr, "DEBUG: op_Do called for page %ld, XObject: %s (skipping image extraction)\n", (long)state->processor->_pageIndex, name);
+    }
+}
+
+// Path construction operators
+static void op_m(CGPDFScannerRef scanner, void *info) {
+    // Move to
+    PDFScannerState *state = (PDFScannerState *)info;
+    CGPDFReal x, y;
+    if (CGPDFScannerPopNumber(scanner, &y) &&
+        CGPDFScannerPopNumber(scanner, &x)) {
+        CGPoint point = CGPointMake(x, y);
+        [state->pathPoints addObject:[NSValue valueWithBytes:&point objCType:@encode(CGPoint)]];
+        state->hasPath = YES;
+        
+        // Update path bounds
+        if (state->pathPoints.count == 1) {
+            state->pathBounds = CGRectMake(x, y, 0, 0);
+        } else {
+            state->pathBounds = CGRectUnion(state->pathBounds, CGRectMake(x, y, 0, 0));
+        }
+    }
+}
+
+static void op_l(CGPDFScannerRef scanner, void *info) {
+    // Line to
+    op_m(scanner, info); // Same handling for bounds tracking
+}
+
+static void op_c(CGPDFScannerRef scanner, void *info) {
+    // Cubic Bezier curve
+    PDFScannerState *state = (PDFScannerState *)info;
+    CGPDFReal x1, y1, x2, y2, x3, y3;
+    if (CGPDFScannerPopNumber(scanner, &y3) &&
+        CGPDFScannerPopNumber(scanner, &x3) &&
+        CGPDFScannerPopNumber(scanner, &y2) &&
+        CGPDFScannerPopNumber(scanner, &x2) &&
+        CGPDFScannerPopNumber(scanner, &y1) &&
+        CGPDFScannerPopNumber(scanner, &x1)) {
+        state->hasPath = YES;
+        state->pathBounds = CGRectUnion(state->pathBounds, CGRectMake(x3, y3, 0, 0));
+    }
+}
+
+static void op_re(CGPDFScannerRef scanner, void *info) {
+    // Rectangle
+    PDFScannerState *state = (PDFScannerState *)info;
+    CGPDFReal x, y, width, height;
+    if (CGPDFScannerPopNumber(scanner, &height) &&
+        CGPDFScannerPopNumber(scanner, &width) &&
+        CGPDFScannerPopNumber(scanner, &y) &&
+        CGPDFScannerPopNumber(scanner, &x)) {
+        state->hasPath = YES;
+        state->pathBounds = CGRectUnion(state->pathBounds, CGRectMake(x, y, width, height));
+    }
+}
+
+static void op_S(CGPDFScannerRef scanner __attribute__((unused)), void *info) {
+    // Stroke path
+    PDFScannerState *state = (PDFScannerState *)info;
+    if (state->hasPath) {
+        [state->processor captureVectorGraphicsInBounds:state->pathBounds
+                                            withElements:state->elements];
+        state->hasPath = NO;
+        [state->pathPoints removeAllObjects];
+    }
+}
+
+static void op_f(CGPDFScannerRef scanner, void *info) {
+    // Fill path
+    op_S(scanner, info); // Same handling
+}
+
+static void op_B(CGPDFScannerRef scanner, void *info) {
+    // Fill and stroke path
+    op_S(scanner, info); // Same handling
+}
+
+@interface PDFPageProcessor ()
+@property (nonatomic, strong) PDFPage *pdfPage;
+@property (nonatomic, assign) NSInteger pageIndex;
+@property (nonatomic, assign) CGFloat dpi;
+@property (nonatomic, assign) CGPDFPageRef cgPdfPage;
+@end
+
+@implementation PDFPageProcessor
+
+- (instancetype)initWithPDFPage:(PDFPage *)pdfPage
+                      pageIndex:(NSInteger)pageIndex
+                            dpi:(CGFloat)dpi {
+    self = [super init];
+    if (self) {
+        _pdfPage = pdfPage;
+        _pageIndex = pageIndex;
+        _dpi = dpi;
+        _cgPdfPage = [pdfPage pageRef];
+    }
+    return self;
+}
+
+- (NSArray<id<ContentElement>> *)extractContentElements {
+    fprintf(stderr, "DEBUG: PDFPageProcessor - extractContentElements starting for page %ld\n", (long)self.pageIndex);
+    NSMutableArray<id<ContentElement>> *elements = [NSMutableArray array];
+    
+    if (!self.cgPdfPage) {
+        fprintf(stderr, "DEBUG: PDFPageProcessor - No cgPdfPage for page %ld\n", (long)self.pageIndex);
+        return elements;
+    }
+    
+    // Set up scanner state
+    PDFScannerState state = {0};
+    state.processor = self;
+    state.elements = elements;
+    state.pathPoints = [NSMutableArray array];
+    state.ctm = CGAffineTransformIdentity;
+    state.fontSize = 12.0;
+    state.fontName = @"Helvetica";
+    
+    // Get content stream
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Creating content stream for page %ld\n", (long)self.pageIndex);
+    CGPDFContentStreamRef contentStream = CGPDFContentStreamCreateWithPage(self.cgPdfPage);
+    if (!contentStream) {
+        fprintf(stderr, "DEBUG: PDFPageProcessor - Failed to create content stream for page %ld\n", (long)self.pageIndex);
+        return elements;
+    }
+    
+    // Create operator table
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Creating operator table for page %ld\n", (long)self.pageIndex);
+    CGPDFOperatorTableRef operatorTable = CGPDFOperatorTableCreate();
+    
+    // Register text operators
+    CGPDFOperatorTableSetCallback(operatorTable, "BT", &op_BT);
+    CGPDFOperatorTableSetCallback(operatorTable, "ET", &op_ET);
+    CGPDFOperatorTableSetCallback(operatorTable, "Tf", &op_Tf);
+    CGPDFOperatorTableSetCallback(operatorTable, "Td", &op_Td);
+    CGPDFOperatorTableSetCallback(operatorTable, "TD", &op_TD);
+    CGPDFOperatorTableSetCallback(operatorTable, "Tm", &op_Tm);
+    CGPDFOperatorTableSetCallback(operatorTable, "Tj", &op_Tj);
+    CGPDFOperatorTableSetCallback(operatorTable, "TJ", &op_TJ);
+    
+    // Register graphics operators
+    CGPDFOperatorTableSetCallback(operatorTable, "Do", &op_Do);
+    CGPDFOperatorTableSetCallback(operatorTable, "m", &op_m);
+    CGPDFOperatorTableSetCallback(operatorTable, "l", &op_l);
+    CGPDFOperatorTableSetCallback(operatorTable, "c", &op_c);
+    CGPDFOperatorTableSetCallback(operatorTable, "re", &op_re);
+    CGPDFOperatorTableSetCallback(operatorTable, "S", &op_S);
+    CGPDFOperatorTableSetCallback(operatorTable, "f", &op_f);
+    CGPDFOperatorTableSetCallback(operatorTable, "F", &op_f);
+    CGPDFOperatorTableSetCallback(operatorTable, "f*", &op_f);
+    CGPDFOperatorTableSetCallback(operatorTable, "B", &op_B);
+    CGPDFOperatorTableSetCallback(operatorTable, "B*", &op_B);
+    CGPDFOperatorTableSetCallback(operatorTable, "b", &op_B);
+    CGPDFOperatorTableSetCallback(operatorTable, "b*", &op_B);
+    
+    // Create scanner
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Creating scanner for page %ld\n", (long)self.pageIndex);
+    CGPDFScannerRef scanner = CGPDFScannerCreate(contentStream, operatorTable, &state);
+    
+    // Scan the page
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Starting scan for page %ld\n", (long)self.pageIndex);
+    BOOL scanResult = CGPDFScannerScan(scanner);
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Scan completed for page %ld, result: %d\n", (long)self.pageIndex, scanResult);
+    
+    // Clean up
+    CGPDFScannerRelease(scanner);
+    CGPDFOperatorTableRelease(operatorTable);
+    CGPDFContentStreamRelease(contentStream);
+    
+    fprintf(stderr, "DEBUG: PDFPageProcessor - Returning %lu elements for page %ld\n", (unsigned long)[elements count], (long)self.pageIndex);
+    return elements;
+}
+
+- (void)captureVectorGraphicsInBounds:(CGRect)bounds
+                         withElements:(NSMutableArray *)elements {
+    // Expand bounds slightly to ensure we capture everything
+    bounds = CGRectInset(bounds, -5, -5);
+    
+    // Calculate size at specified DPI
+    CGFloat scale = self.dpi / 72.0;
+    size_t width = (size_t)(CGRectGetWidth(bounds) * scale);
+    size_t height = (size_t)(CGRectGetHeight(bounds) * scale);
+    
+    if (width == 0 || height == 0) {
+        return;
+    }
+    
+    // Create bitmap context
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(NULL, width, height, 8, 0, colorSpace,
+                                                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+    CGColorSpaceRelease(colorSpace);
+    
+    if (!context) {
+        return;
+    }
+    
+    // Set white background
+    CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
+    CGContextFillRect(context, CGRectMake(0, 0, width, height));
+    
+    // Set up transformation to render just the bounds area
+    CGContextSaveGState(context);
+    CGContextScaleCTM(context, scale, scale);
+    CGContextTranslateCTM(context, -bounds.origin.x, -bounds.origin.y);
+    
+    // Draw the PDF page
+    CGContextDrawPDFPage(context, self.cgPdfPage);
+    
+    CGContextRestoreGState(context);
+    
+    // Create image
+    CGImageRef image = CGBitmapContextCreateImage(context);
+    CGContextRelease(context);
+    
+    if (image) {
+        ImageElement *element = [[ImageElement alloc] init];
+        element.image = image;
+        element.bounds = bounds;
+        element.pageIndex = self.pageIndex;
+        element.isVectorSource = YES;
+        [elements addObject:element];
+    }
+}
+
+@end
+</file>
+
+<file path=".gitignore">
+# Build products
+build/
+*.o
+pdf22md
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Editor-specific
+.vscode/
+*.swp
+.idea/
+*.xcodeproj/
+*.xcworkspace/
+
+# Cursor and other AI assistants
+.cursor/
+.cursorrules
+.cursorindexingignore
+.giga/
+.specstory/
+
+# Test artifacts
+test/out/
+*.md
+!README.md
+!TODO.md
+!CLAUDE.md
+!AGENTS.md
+!CHANGELOG.md
+!docs/*.md
+</file>
+
+<file path="CLAUDE.md">
+# pdf22md
+
+A blazingly fast PDF to Markdown converter for macOS.
+
+`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
+
+### Key Features
+
+  * **High-Speed Conversion**: Uses all available CPU cores to process PDF pages concurrently.
+  * **Intelligent Heading Detection**: Analyzes font sizes and usage frequency to automatically format titles and headings (`#`, `##`, etc.).
+  * **Asset Extraction**: Saves raster and vector images into a specified assets folder and links them correctly in the Markdown file.
+  * **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality.
+  * **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`.
+  * **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps.
+
+### Installation
+
+Once the Homebrew tap is set up (see plan below), installation is simple:
+
+```bash
+brew install <your-username>/pdf22md/pdf22md
+```
+
+### Building from Source
+
+To build the project manually, you need Xcode Command Line Tools installed.
+
+```bash
+# Clone the repository (once it's public)
+git clone https://github.com/<your-username>/pdf22md.git
+cd pdf22md
+
+# Compile the tool
+make
+
+# Install it to /usr/local/bin
+sudo make install
+```
+
+### Usage
+
+```
+Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
+  Converts PDF documents to Markdown format
+  -i <path>: Input PDF file (default: stdin)
+  -o <path>: Output Markdown file (default: stdout)
+  -a <path>: Assets folder for extracted images
+  -d <dpi>: DPI for rasterizing vector graphics (default: 144)
+```
+
+**Example:**
+
+```bash
+# Convert a local PDF file and save images to an 'assets' folder
+pdf22md -i report.pdf -o report.md -a ./assets
+```
+
+---
+
+
+# main-overview
+
+## Development Guidelines
+
+- Only modify code directly relevant to the specific request. Avoid changing unrelated functionality.
+- Never replace code with placeholders like `# ... rest of the processing ...`. Always include complete code.
+- Break problems into smaller steps. Think through each step separately before implementing.
+- Always provide a complete PLAN with REASONING based on evidence from code and logs before making changes.
+- Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
+
+
+pdf22md is a PDF to Markdown converter that transforms PDF documents while preserving their semantic structure and content relationships.
+
+Core Business Components:
+
+1. Document Structure Analysis (Importance: 95)
+- Hierarchical heading detection using font statistics
+- Document structure preservation through positional element sorting
+- Automated heading level assignment (H1-H6) based on font usage patterns
+
+2. Content Classification System (Importance: 85)
+- TextElement: Handles formatted text with style attributes
+- ImageElement: Manages both raster and vector graphics
+- Content relationship tracking between elements
+
+3. Asset Processing Pipeline (Importance: 80)
+- Intelligent format selection between PNG/JPEG based on:
+  * Transparency detection
+  * Color complexity analysis
+  * Dimension-based optimization
+- Asset extraction with maintained document references
+
+4. PDF Content Processing (Importance: 90)
+- Text styling and formatting context preservation
+- Vector graphics path construction tracking
+- Coordinate system transformation management
+- Element bounds calculation for layout fidelity
+
+Key Integration Points:
+
+1. Content Extraction Layer
+- Connects PDF parsing with markdown generation
+- Maintains element relationships and hierarchy
+- Preserves formatting context across transformations
+
+2. Asset Management Layer
+- Links extracted images with markdown references
+- Maintains asset organization structure
+- Handles format conversions while preserving quality
+
+The system organizes business logic around content transformation pipelines while maintaining document semantic structure throughout the conversion process.
+
+—— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates.
+</file>
+
+<file path="TODO.md">
+# TODO
+
+## Completed Tasks ✅
+
+All professional repository refactoring tasks have been completed:
+
+- [x] Cleaned up build artifacts (.o files) from root directory
+- [x] Updated Makefile to use dedicated build directory
+- [x] Fixed .gitignore to properly exclude build artifacts
+- [x] Added MIT LICENSE file
+- [x] Created GitHub issue templates (bug_report.md, feature_request.md)
+- [x] Fixed GitHub Actions workflow (build-release.yml)
+- [x] Added comprehensive CHANGELOG.md
+- [x] Reviewed and applied PR #1 suggestions (already merged)
+- [x] Created release.sh script for semver versioning
+- [x] Developed GitHub action for macOS builds on semver tags (release.yml)
+
+## Next Steps
+
+- [ ] Preserve PDF bookmarks/outline structure and extracting metadata (author, title, creation date) into YAML frontmatter
+
+### Code Improvements
+
+- [ ] Add unit tests for core functionality
+- [ ] Implement proper error handling with descriptive messages
+- [ ] Add code comments and documentation
+- [ ] Create man page for the tool
+- [ ] Add performance benchmarks
+
+### Distribution
+
+- [ ] Create Homebrew formula for easy installation
+- [ ] Set up automated nightly builds
+- [ ] Add support for Linux (using GNUstep)
+- [ ] Create Docker image for cross-platform usage
+
+### Documentation
+
+- [ ] Add detailed API documentation
+- [ ] Write blog post about the implementation
+- [ ] Add more examples to README
+</file>
+
+<file path="AGENTS.md">
+# pdf22md
+
+A blazingly fast PDF to Markdown converter for macOS.
+
+`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
+
+### Key Features
+
+  * **High-Speed Conversion**: Uses all available CPU cores to process PDF pages concurrently.
+  * **Intelligent Heading Detection**: Analyzes font sizes and usage frequency to automatically format titles and headings (`#`, `##`, etc.).
+  * **Asset Extraction**: Saves raster and vector images into a specified assets folder and links them correctly in the Markdown file.
+  * **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality.
+  * **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`.
+  * **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps.
+
+### Installation
+
+Once the Homebrew tap is set up (see plan below), installation is simple:
+
+```bash
+brew install <your-username>/pdf22md/pdf22md
+```
+
+### Building from Source
+
+To build the project manually, you need Xcode Command Line Tools installed.
+
+```bash
+# Clone the repository (once it's public)
+git clone https://github.com/<your-username>/pdf22md.git
+cd pdf22md
+
+# Compile the tool
+make
+
+# Install it to /usr/local/bin
+sudo make install
+```
+
+### Usage
+
+```
+Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
+  Converts PDF documents to Markdown format
+  -i <path>: Input PDF file (default: stdin)
+  -o <path>: Output Markdown file (default: stdout)
+  -a <path>: Assets folder for extracted images
+  -d <dpi>: DPI for rasterizing vector graphics (default: 144)
+```
+
+**Example:**
+
+```bash
+# Convert a local PDF file and save images to an 'assets' folder
+pdf22md -i report.pdf -o report.md -a ./assets
+```
+
+---
+
+
+# main-overview
+
+## Development Guidelines
+
+- Only modify code directly relevant to the specific request. Avoid changing unrelated functionality.
+- Never replace code with placeholders like `# ... rest of the processing ...`. Always include complete code.
+- Break problems into smaller steps. Think through each step separately before implementing.
+- Always provide a complete PLAN with REASONING based on evidence from code and logs before making changes.
+- Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
+
+
+pdf22md is a PDF to Markdown converter that transforms PDF documents while preserving their semantic structure and content relationships.
+
+Core Business Components:
+
+1. Document Structure Analysis (Importance: 95)
+- Hierarchical heading detection using font statistics
+- Document structure preservation through positional element sorting
+- Automated heading level assignment (H1-H6) based on font usage patterns
+
+2. Content Classification System (Importance: 85)
+- TextElement: Handles formatted text with style attributes
+- ImageElement: Manages both raster and vector graphics
+- Content relationship tracking between elements
+
+3. Asset Processing Pipeline (Importance: 80)
+- Intelligent format selection between PNG/JPEG based on:
+  * Transparency detection
+  * Color complexity analysis
+  * Dimension-based optimization
+- Asset extraction with maintained document references
+
+4. PDF Content Processing (Importance: 90)
+- Text styling and formatting context preservation
+- Vector graphics path construction tracking
+- Coordinate system transformation management
+- Element bounds calculation for layout fidelity
+
+Key Integration Points:
+
+1. Content Extraction Layer
+- Connects PDF parsing with markdown generation
+- Maintains element relationships and hierarchy
+- Preserves formatting context across transformations
+
+2. Asset Management Layer
+- Links extracted images with markdown references
+- Maintains asset organization structure
+- Handles format conversions while preserving quality
+
+The system organizes business logic around content transformation pipelines while maintaining document semantic structure throughout the conversion process.
+
+—— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates.
+</file>
+
+<file path="Makefile">
+CC = clang
+CFLAGS = -Wall -Wextra -O2 -fobjc-arc
+FRAMEWORKS = -framework Foundation -framework PDFKit -framework CoreGraphics -framework ImageIO -framework CoreServices
+TARGET = pdf22md
+
+# Version from git tag or fallback
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+
+# Define directories
+SRC_DIR = src
+BUILD_DIR = build
+
+# Source and object files
+SOURCES = $(wildcard $(SRC_DIR)/*.m)
+OBJECTS = $(patsubst $(SRC_DIR)/%.m,$(BUILD_DIR)/%.o,$(SOURCES))
+
+# Default prefix for installation
+PREFIX ?= /usr/local
+
+all: $(BUILD_DIR) $(TARGET)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(TARGET): $(OBJECTS)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -o $(TARGET) $(OBJECTS)
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.m | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -c $< -o $@
+
+clean:
+	rm -rf $(BUILD_DIR) $(TARGET)
+
+install: $(TARGET)
+	install -d $(DESTDIR)$(PREFIX)/bin
+	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/
+
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+
+.PHONY: all clean install uninstall
+</file>
+
+<file path="README.md">
+# pdf22md
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![macOS](https://img.shields.io/badge/macOS-10.15+-blue.svg)](https://www.apple.com/macos/)
+[![Build Status](https://github.com/twardoch/pdf22md/workflows/Build%20and%20Release/badge.svg)](https://github.com/twardoch/pdf22md/actions)
+
+A blazingly fast PDF to Markdown converter for macOS.
+
+`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
+
+## Key Features
+
+- **High-Speed Conversion**: Uses all available CPU cores to process PDF pages concurrently
+- **Intelligent Heading Detection**: Analyzes font sizes and usage frequency to automatically format titles and headings (`#`, `##`, etc.)
+- **Asset Extraction**: Saves raster and vector images into a specified assets folder and links them correctly in the Markdown file
+- **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality
+- **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`
+- **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps
+
+## Installation
+
+### Using Homebrew (Coming Soon)
+
+```bash
+brew tap twardoch/pdf22md
+brew install pdf22md
+```
+
+### Building from Source
+
+To build the project manually, you need Xcode Command Line Tools installed.
+
+```bash
+# Clone the repository
+git clone https://github.com/twardoch/pdf22md.git
+cd pdf22md
+
+# Compile the tool
+make
+
+# Install it to /usr/local/bin (optional)
+sudo make install
+```
+
+### Download Pre-built Binary
+
+Pre-built binaries are available from the [Releases](https://github.com/twardoch/pdf22md/releases) page.
+
+## Usage
+
+```
+Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
+  Converts PDF documents to Markdown format
+  -i <path>: Input PDF file (default: stdin)
+  -o <path>: Output Markdown file (default: stdout)
+  -a <path>: Assets folder for extracted images
+  -d <dpi>: DPI for rasterizing vector graphics (default: 144)
+```
+
+### Examples
+
+```bash
+# Convert a PDF file to Markdown
+pdf22md -i document.pdf -o document.md
+
+# Convert with images saved to an 'assets' folder
+pdf22md -i report.pdf -o report.md -a ./assets
+
+# Convert with custom DPI for vector graphics
+pdf22md -i presentation.pdf -o presentation.md -a ./images -d 300
+
+# Use with pipes
+cat document.pdf | pdf22md > document.md
+
+# Convert and view in less
+pdf22md -i manual.pdf | less
+```
+
+## Requirements
+
+- macOS 10.15 (Catalina) or later
+- Xcode Command Line Tools (for building from source)
+
+## Project Structure
+
+```
+pdf22md/
+├── src/                    # Source code
+│   ├── main.m             # Entry point
+│   ├── PDFMarkdownConverter.*  # Main conversion logic
+│   ├── PDFPageProcessor.*      # PDF page processing
+│   ├── ContentElement.*        # Content element definitions
+│   └── AssetExtractor.*        # Image extraction logic
+├── docs/                   # Additional documentation
+├── test/                   # Test files
+├── LICENSE                 # MIT License
+├── Makefile               # Build configuration
+└── README.md              # This file
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with Apple's PDFKit and Core Graphics frameworks
+- Parallel processing powered by Grand Central Dispatch (GCD)
+- Inspired by the need for fast, accurate PDF to Markdown conversion
+
+## Related Projects
+
+- [pdfplumber](https://github.com/jsvine/pdfplumber) - Python library for PDF processing
+- [pdf2md](https://github.com/axllent/pdf2md) - Another PDF to Markdown converter
+- [pandoc](https://pandoc.org/) - Universal document converter
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a list of changes in each version.
+
+## Support
+
+If you encounter any issues or have questions, please [open an issue](https://github.com/twardoch/pdf22md/issues/new/choose) on GitHub.
+</file>
+
+</files>
+.
+├── AGENTS.md
+├── build
+│   ├── AssetExtractor.o
+│   ├── ContentElement.o
+│   ├── main.o
+│   ├── PDFMarkdownConverter.o
+│   └── PDFPageProcessor.o
+├── CHANGELOG.md
+├── CLAUDE.md
+├── docs
+│   └── PARALLEL_PROCESSING.md
+├── LICENSE
+├── llms.txt
+├── Makefile
+├── pdf22md
+├── README.md
+├── release.sh
+├── src
+│   ├── AssetExtractor.h
+│   ├── AssetExtractor.m
+│   ├── ContentElement.h
+│   ├── ContentElement.m
+│   ├── main.m
+│   ├── PDFMarkdownConverter.h
+│   ├── PDFMarkdownConverter.m
+│   ├── PDFPageProcessor.h
+│   └── PDFPageProcessor.m
+├── test
+│   ├── digitallegacies-twardoch2018.pdf
+│   ├── jlm-bachotex2013a.pdf
+│   └── out
+└── TODO.md
+
+6 directories, 27 files

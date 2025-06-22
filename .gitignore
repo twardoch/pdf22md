@@ -1,7 +1,7 @@
 # Build products
 build/
 *.o
-$(TARGET) # The executable file itself
+pdf22md
 
 # macOS
 .DS_Store
@@ -19,5 +19,22 @@ $(TARGET) # The executable file itself
 .vscode/
 *.swp
 .idea/
+*.xcodeproj/
+*.xcworkspace/
+
+# Cursor and other AI assistants
+.cursor/
+.cursorrules
 .cursorindexingignore
+.giga/
 .specstory/
+
+# Test artifacts
+test/out/
+*.md
+!README.md
+!TODO.md
+!CLAUDE.md
+!AGENTS.md
+!CHANGELOG.md
+!docs/*.md

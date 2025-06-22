@@ -20,7 +20,7 @@ jobs:
       run: make
 
     - name: Run a basic check
-      run: ./${{ env.TARGET_NAME }} -h
+      run: ./pdf22md -h
 
   create-release:
     if: github.event_name == 'release'
