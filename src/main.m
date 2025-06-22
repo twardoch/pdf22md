@@ -66,14 +66,12 @@ int main(int argc, const char *argv[]) {
         
         if (inputPath) {
             // Read from file
-            fprintf(stderr, "DEBUG: Loading PDF from file: %s\n", [inputPath UTF8String]);
             NSURL *pdfURL = [NSURL fileURLWithPath:inputPath];
             converter = [[PDFMarkdownConverter alloc] initWithPDFAtURL:pdfURL];
             if (!converter) {
                 fprintf(stderr, "Failed to load PDF from: %s\n", [inputPath UTF8String]);
                 return 1;
             }
-            fprintf(stderr, "DEBUG: PDF loaded successfully\n");
         } else {
             // Read from stdin
             NSFileHandle *stdinHandle = [NSFileHandle fileHandleWithStandardInput];
@@ -92,8 +90,6 @@ int main(int argc, const char *argv[]) {
         }
         
         // Perform conversion
-        fprintf(stderr, "DEBUG: Starting conversion with assetsPath=%s, dpi=%.1f\n", 
-                assetsPath ? [assetsPath UTF8String] : "nil", dpi);
         __block NSString *markdown = nil;
         __block NSError *conversionError = nil;
         
@@ -102,15 +98,12 @@ int main(int argc, const char *argv[]) {
         [converter convertWithAssetsFolderPath:assetsPath
                                 rasterizedDPI:dpi
                                    completion:^(NSString *result, NSError *error) {
-            fprintf(stderr, "DEBUG: Conversion completed\n");
             markdown = result;
             conversionError = error;
             dispatch_semaphore_signal(semaphore);
         }];
         
-        fprintf(stderr, "DEBUG: Waiting for conversion to complete...\n");
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-        fprintf(stderr, "DEBUG: Conversion finished\n");
         
         if (conversionError) {
             fprintf(stderr, "Conversion failed: %s\n", 
