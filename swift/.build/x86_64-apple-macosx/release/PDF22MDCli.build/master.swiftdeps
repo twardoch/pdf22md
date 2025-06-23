@@ -1,0 +1,6 @@
+version: "Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)"
+options: "be07deb102898ed776cc9c59577b6d9cc42490724c5f719bf9c34766344ce660"
+build_start_time: [1750687281, 951236000]
+build_end_time: [1750687283, 591687000]
+inputs:
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MDCli/main.swift": [1750686812, 682847886]

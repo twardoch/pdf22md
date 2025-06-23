@@ -1,0 +1,42 @@
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Completions/BashCompletionsGenerator.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Completions/CompletionsGenerator.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Completions/FishCompletionsGenerator.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Completions/ZshCompletionsGenerator.swift
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/Argument.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/ArgumentHelp.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/ArgumentVisibility.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/CompletionKind.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/Errors.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/Flag.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/NameSpecification.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/Option.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/OptionGroup.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/AsyncParsableCommand.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/CommandConfiguration.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/CommandGroup.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/EnumerableFlag.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/ExpressibleByArgument.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/ParsableArguments.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/ParsableArgumentsValidation.swift'
+'/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/ParsableCommand.swift'
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ArgumentDecoder.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ArgumentDefinition.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ArgumentSet.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/CommandParser.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/InputKey.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/InputOrigin.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/Name.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/Parsed.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ParsedValues.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ParserError.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/SplitArguments.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/DumpHelpGenerator.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/HelpCommand.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/HelpGenerator.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/MessageInfo.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/UsageGenerator.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/CollectionExtensions.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/SequenceExtensions.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/StringExtensions.swift
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/Tree.swift

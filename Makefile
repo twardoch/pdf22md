@@ -38,4 +38,21 @@ install: $(TARGET)
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
 
-.PHONY: all clean install uninstall
+# Swift targets
+swift-build:
+	cd swift && swift build -c release
+
+swift-clean:
+	cd swift && swift package clean
+
+swift-test:
+	cd swift && swift test
+
+# Benchmark targets
+benchmarks: all swift-build
+	@echo "Both implementations built. Run ./run-benchmarks.sh to execute benchmarks"
+
+# Build everything
+all-implementations: all swift-build
+
+.PHONY: all clean install uninstall swift-build swift-clean swift-test benchmarks all-implementations

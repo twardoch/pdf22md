@@ -1,0 +1,7 @@
+version: "Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)"
+options: "df9687fb18261d674e83d146a9f0370b5c68be54c5390d31f40be097416793f8"
+build_start_time: [1750686950, 20194000]
+build_end_time: [1750686951, 641713000]
+inputs:
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParserToolInfo/ToolInfo.swift"
+  : [1750677970, 172491002]

@@ -222,8 +222,6 @@
     NSInteger gridX = (NSInteger)ceil(pageRect.size.width / sectionSize);
     NSInteger gridY = (NSInteger)ceil(pageRect.size.height / sectionSize);
     
-    NSInteger imageIndex = startIndex;
-    
     for (NSInteger x = 0; x < gridX; x++) {
         for (NSInteger y = 0; y < gridY; y++) {
             CGRect sectionRect = CGRectMake(x * sectionSize, y * sectionSize, 
@@ -245,7 +243,6 @@
                     element.pageIndex = self.pageIndex;
                     element.isVectorSource = YES; // Since we're rendering from vector
                     [elements addObject:element];
-                    imageIndex++;
                 }
             }
         }

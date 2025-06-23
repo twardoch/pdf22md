@@ -17,6 +17,7 @@ A blazingly fast PDF to Markdown converter for macOS.
 - **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`
 - **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps
 - **Clean Output**: Runs without verbose debug logging for a noise-free CLI experience
+- **Dual Implementation**: Both Objective-C and Swift versions available for comparison and future development
 
 ## Installation
 
@@ -36,11 +37,21 @@ To build the project manually, you need Xcode Command Line Tools installed.
 git clone https://github.com/twardoch/pdf22md.git
 cd pdf22md
 
-# Compile the tool
-make
+# Build both versions (recommended)
+./build.sh
 
-# Install it to /usr/local/bin (optional)
-sudo make install
+# Build with options
+./build.sh --clean              # Clean build
+./build.sh --objc-only          # Build only Objective-C version
+./build.sh --swift-only         # Build only Swift version
+./build.sh --install            # Build and install to /usr/local/bin
+./build.sh --version 1.3.0      # Build with specific version
+
+# Alternative: use make directly
+make                            # Build Objective-C version
+make swift-build                # Build Swift version
+make all-implementations        # Build both versions
+sudo make install               # Install to /usr/local/bin
 ```
 
 ### Download Pre-built Binary
@@ -56,6 +67,8 @@ Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
   -o <path>: Output Markdown file (default: stdout)
   -a <path>: Assets folder for extracted images
   -d <dpi>: DPI for rasterizing vector graphics (default: 144)
+
+Swift version: pdf22md-swift (same arguments)
 ```
 
 ### Examples
@@ -86,12 +99,18 @@ pdf22md -i manual.pdf | less
 
 ```
 pdf22md/
-├── src/                    # Source code
+├── src/                    # Objective-C source code
 │   ├── main.m             # Entry point
 │   ├── PDFMarkdownConverter.*  # Main conversion logic
 │   ├── PDFPageProcessor.*      # PDF page processing
 │   ├── ContentElement.*        # Content element definitions
 │   └── AssetExtractor.*        # Image extraction logic
+├── swift/                  # Swift implementation
+│   ├── Package.swift      # Swift Package Manager manifest
+│   └── Sources/
+│       ├── PDF22MD/       # Core library
+│       └── PDF22MDCli/    # Command-line executable
+├── benchmarks/            # Performance benchmarking
 ├── docs/                   # Additional documentation
 ├── test/                   # Test files
 ├── LICENSE                 # MIT License
@@ -113,10 +132,44 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Performance
+
+Benchmark results comparing Objective-C and Swift implementations:
+
+| PDF Size | Pages | ObjC Time | Swift Time | Speed Difference |
+|----------|-------|-----------|------------|------------------|
+| Small    | 5     | 0.09s     | 0.33s      | ObjC 3.7x faster |
+| Medium   | 50    | 0.12s     | 2.44s      | ObjC 20x faster  |
+| Large    | 200   | 0.27s     | 9.43s      | ObjC 35x faster  |
+
+Memory usage: Swift implementation currently uses 3.7-5.6x more memory than Objective-C.
+
+### Running Benchmarks
+
+```bash
+# Quick benchmark (3 iterations)
+./bench.sh --quick
+
+# Standard benchmark (5 iterations)
+./bench.sh
+
+# Benchmark with memory profiling
+./bench.sh --memory
+
+# Custom iterations
+./bench.sh --iterations 10
+
+# Use Python benchmark suite for detailed statistics
+./bench.sh --python
+# or directly:
+python3 benchmark.py
+```
+
 ## Acknowledgments
 
 - Built with Apple's PDFKit and Core Graphics frameworks
 - Parallel processing powered by Grand Central Dispatch (GCD)
+- Swift implementation uses modern async/await concurrency
 - Inspired by the need for fast, accurate PDF to Markdown conversion
 
 ## Related Projects

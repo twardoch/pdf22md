@@ -1,0 +1,12 @@
+{
+  "": {
+    "dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDCli.build/PDF22MDCli.d",
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDCli.build/PDF22MDCli.o",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDCli.build/master.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MDCli/main.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDCli.build/main.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDCli.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDCli.build/main.swiftdeps"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "": {
+    "dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/Benchmark.d",
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/Benchmark.o",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/master.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/Benchmark.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/Benchmark.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/Benchmark~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/Benchmark.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkArguments.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkArguments.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkArguments~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkArguments.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkColumn.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkColumn.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkColumn~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkColumn.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkCommand.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkCommand.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkCommand~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkCommand.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkFilter.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkFilter.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkFilter~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkFilter.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkFormatter.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkFormatter.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkFormatter~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkFormatter.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkMain.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkMain.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkMain~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkMain.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkReporter.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkReporter.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkReporter~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkReporter.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkResult.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkResult.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkResult~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkResult.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkRunner.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkRunner.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkRunner~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkRunner.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkSetting.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkSetting.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkSetting~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkSetting.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkState.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkState.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkState~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkState.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkSuite.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkSuite.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkSuite~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkSuite.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkTermination.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkTermination.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkTermination~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkTermination.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/BenchmarkTime.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkTime.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkTime~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/BenchmarkTime.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/Stats.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/Stats.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/Stats~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/Stats.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-benchmark/Sources/Benchmark/TestIntegration.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/TestIntegration.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/TestIntegration~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/Benchmark.build/TestIntegration.swiftdeps"
+  }
+}

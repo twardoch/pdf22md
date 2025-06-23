@@ -8,6 +8,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Complete Swift implementation alongside existing Objective-C version
+- Swift Package Manager integration with executable target
+- Comprehensive performance benchmarking suite comparing both implementations
+- Python benchmark script with detailed performance metrics and memory usage tracking
+- Test PDF generation script for creating consistent benchmark datasets
+- Swift implementation features:
+  - Async/await support for concurrent page processing
+  - Native Swift concurrency with TaskGroup
+  - Type-safe PDF element protocol hierarchy
+  - Modern Swift error handling
+- Benchmark results showing performance characteristics of both implementations
+- `build.sh` script for building both implementations with options:
+  - `--objc-only` / `--swift-only` for selective builds
+  - `--clean` for clean builds
+  - `--install` for installing to /usr/local/bin
+  - `--version` for setting build version
+- `bench.sh` script for running performance benchmarks:
+  - `--quick` for rapid 3-iteration benchmarks
+  - `--iterations N` for custom iteration counts
+  - `--memory` for detailed memory profiling
+  - `--python` to use Python benchmark suite
+
+### Changed
+- Makefile updated to support building both implementations with `all-implementations` target
+- Added `swift-build`, `swift-clean`, and `swift-test` targets to Makefile
+- Enhanced benchmark scripts to measure:
+  - Processing time per PDF size
+  - Memory usage patterns
+  - Concurrent processing efficiency
+  - Output quality comparison
+
+### Performance
+- Benchmark results (as of initial Swift port):
+  - Objective-C implementation is 2.7x-34x faster depending on PDF size
+  - Swift implementation uses 3.7x-5.6x more memory
+  - Both implementations produce identical output content
+  - Performance gap increases with larger PDFs
+- Added Swift optimization attempts:
+  - GCD-based implementation (3% improvement over async/await)
+  - Ultra-optimized version using NSString and pre-allocation
+  - Compiler optimization flags (-O, -whole-module-optimization)
+  - Memory pooling and ContiguousArray usage
+- Created comprehensive benchmark suite (`benchmark-all.py`) testing all versions
+
+### Documentation
+- Added Swift implementation architecture details
+- Documented benchmark methodology and results
+- Updated build instructions for both implementations
+- Added build and benchmark script documentation
+
+## [1.2.0] - Previous Release
+
+### Added
 - Semantic versioning support based on git tags
 - Version display option (-v, -V) in the command-line tool
 - Release automation script (release.sh) for macOS

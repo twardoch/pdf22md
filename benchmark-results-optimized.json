@@ -1,0 +1,106 @@
+{
+  "objc": {
+    "small": {
+      "mean_time": 0.09114302360685542,
+      "min_time": 0.08935225399909541,
+      "max_time": 0.09345878500607796,
+      "stddev": 0.0016612532182635285,
+      "pages_per_second": 54.858833974692935,
+      "peak_memory_mb": 16.6875
+    },
+    "medium": {
+      "mean_time": 0.12104226959636435,
+      "min_time": 0.11655767599586397,
+      "max_time": 0.12623501699999906,
+      "stddev": 0.004176884474867138,
+      "pages_per_second": 413.07883739071764,
+      "peak_memory_mb": 88.14453125
+    },
+    "large": {
+      "mean_time": 0.32553461379720827,
+      "min_time": 0.26504319498781115,
+      "max_time": 0.4040227079822216,
+      "stddev": 0.06525497816523199,
+      "pages_per_second": 614.3739913464009,
+      "peak_memory_mb": 328.44140625
+    }
+  },
+  "swift_async": {
+    "small": {
+      "mean_time": 0.3235550120007247,
+      "min_time": 0.3200437949853949,
+      "max_time": 0.3277759029879235,
+      "stddev": 0.003030570269602874,
+      "pages_per_second": 15.453322663995085,
+      "peak_memory_mb": 59.546875
+    },
+    "medium": {
+      "mean_time": 2.318158926599426,
+      "min_time": 2.2552502199832816,
+      "max_time": 2.4449190750019625,
+      "stddev": 0.08322441763624576,
+      "pages_per_second": 21.5688404389713,
+      "peak_memory_mb": 468.55859375
+    },
+    "large": {
+      "mean_time": 12.461529752000933,
+      "min_time": 9.24025256501045,
+      "max_time": 14.881060073006665,
+      "stddev": 2.3703744357869727,
+      "pages_per_second": 16.049393933187556,
+      "peak_memory_mb": 1828.546875
+    }
+  },
+  "swift_optimized": {
+    "small": {
+      "mean_time": 0.3333033094066195,
+      "min_time": 0.3137292680039536,
+      "max_time": 0.37255738402018324,
+      "stddev": 0.022671230490003497,
+      "pages_per_second": 15.001351198406969,
+      "peak_memory_mb": 57.7421875
+    },
+    "medium": {
+      "mean_time": 2.3921599540044554,
+      "min_time": 2.3215480420039967,
+      "max_time": 2.5017891910101753,
+      "stddev": 0.07039984688687768,
+      "pages_per_second": 20.90161233420049,
+      "peak_memory_mb": 469.70703125
+    },
+    "large": {
+      "mean_time": 12.906486689398298,
+      "min_time": 10.60599827801343,
+      "max_time": 15.981301491992781,
+      "stddev": 2.349589733856191,
+      "pages_per_second": 15.496083854042547,
+      "peak_memory_mb": 1827.3046875
+    }
+  },
+  "comparison": {
+    "small": {
+      "swift_async_vs_objc": 3.549970137005507,
+      "swift_opt_vs_objc": 3.6569261827906896,
+      "swift_opt_vs_async": 1.030128717047576,
+      "objc_faster_than_async": 254.9970137005507,
+      "objc_faster_than_opt": 265.69261827906894,
+      "opt_faster_than_async": -2.924752659446961
+    },
+    "medium": {
+      "swift_async_vs_objc": 19.1516478857321,
+      "swift_opt_vs_objc": 19.76301305305586,
+      "swift_opt_vs_async": 1.0319223270483804,
+      "objc_faster_than_async": 1815.16478857321,
+      "objc_faster_than_opt": 1876.301305305586,
+      "opt_faster_than_async": -3.093481574304935
+    },
+    "large": {
+      "swift_async_vs_objc": 38.2801988600937,
+      "swift_opt_vs_objc": 39.64704870812414,
+      "swift_opt_vs_async": 1.0357064458579748,
+      "objc_faster_than_async": 3728.0198860093697,
+      "objc_faster_than_opt": 3864.704870812414,
+      "opt_faster_than_async": -3.447545006673758
+    }
+  }
+}

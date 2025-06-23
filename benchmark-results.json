@@ -1,0 +1,71 @@
+{
+  "objc": {
+    "small": {
+      "mean_time": 0.0903995987959206,
+      "min_time": 0.08846781300962903,
+      "max_time": 0.09446190600283444,
+      "stddev": 0.002384727110412917,
+      "pages_per_second": 55.30997998439824,
+      "peak_memory_mb": 16.171875
+    },
+    "medium": {
+      "mean_time": 0.12023308900534176,
+      "min_time": 0.11783336600637995,
+      "max_time": 0.12395159201696515,
+      "stddev": 0.002285855443023974,
+      "pages_per_second": 415.8588988575232,
+      "peak_memory_mb": 87.671875
+    },
+    "large": {
+      "mean_time": 0.270461295399582,
+      "min_time": 0.2545375970075838,
+      "max_time": 0.3101905630028341,
+      "stddev": 0.022777904924896446,
+      "pages_per_second": 739.4773426065202,
+      "peak_memory_mb": 328.21875
+    }
+  },
+  "swift": {
+    "small": {
+      "mean_time": 0.3302507345972117,
+      "min_time": 0.3127953849907499,
+      "max_time": 0.36752714999602176,
+      "stddev": 0.02282673089954591,
+      "pages_per_second": 15.140011743193302,
+      "peak_memory_mb": 59.94140625
+    },
+    "medium": {
+      "mean_time": 2.440226792602334,
+      "min_time": 2.352173154009506,
+      "max_time": 2.5782634890056215,
+      "stddev": 0.08841227820786358,
+      "pages_per_second": 20.489898787923085,
+      "peak_memory_mb": 469.49609375
+    },
+    "large": {
+      "mean_time": 9.434031917399262,
+      "min_time": 9.150218203983968,
+      "max_time": 9.662905335018877,
+      "stddev": 0.20965365744500625,
+      "pages_per_second": 21.19984347637603,
+      "peak_memory_mb": 1829.05859375
+    }
+  },
+  "comparison": {
+    "small": {
+      "swift_vs_objc_ratio": 3.653232304080919,
+      "objc_faster_by": 265.3232304080919,
+      "memory_ratio": 3.7065217391304346
+    },
+    "medium": {
+      "swift_vs_objc_ratio": 20.295800538684645,
+      "objc_faster_by": 1929.5800538684646,
+      "memory_ratio": 5.355150597041526
+    },
+    "large": {
+      "swift_vs_objc_ratio": 34.881264261717504,
+      "objc_faster_by": 3388.1264261717506,
+      "memory_ratio": 5.57268161477673
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "": {
+    "dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDTests.build/PDF22MDTests.d",
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDTests.build/PDF22MDTests.o",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDTests.build/master.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Tests/PDF22MDTests/AssetExtractorTests.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDTests.build/AssetExtractorTests.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDTests.build/AssetExtractorTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDTests.build/AssetExtractorTests.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Tests/PDF22MDTests/PDFElementTests.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDTests.build/PDFElementTests.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDTests.build/PDFElementTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDTests.build/PDFElementTests.swiftdeps"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "": {
+    "dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDF22MD.d",
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDF22MD.o",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/master.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/AssetExtractor.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/AssetExtractor.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/AssetExtractor~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/AssetExtractor.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/FontStatistics.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/FontStatistics.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/FontStatistics~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/FontStatistics.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFElement.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFElement.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFElement~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFElement.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFMarkdownConverter.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFMarkdownConverter.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFMarkdownConverter~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFMarkdownConverter.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFMarkdownConverterOptimized.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFMarkdownConverterOptimized.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFMarkdownConverterOptimized~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFMarkdownConverterOptimized.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFMarkdownConverterUltraOptimized.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFMarkdownConverterUltraOptimized.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFMarkdownConverterUltraOptimized~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFMarkdownConverterUltraOptimized.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFPageProcessor.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFPageProcessor.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFPageProcessor~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFPageProcessor.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFPageProcessorOptimized.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFPageProcessorOptimized.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFPageProcessorOptimized~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDFPageProcessorOptimized.swiftdeps"
+  }
+}

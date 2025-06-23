@@ -1,0 +1,4 @@
+module PDF22MD {
+    header "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MD.build/PDF22MD-Swift.h"
+    requires objc
+}

@@ -1,0 +1,89 @@
+version: "Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)"
+options: "a5acb165136e0a55e297e82f7fe0c191d6365ceb592033459f2dc83f594b67d0"
+build_start_time: [1750687253, 373164000]
+build_end_time: [1750687281, 570978000]
+inputs:
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Completions/BashCompletionsGenerator.swift"
+  : [1750677970, 122389546]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Completions/CompletionsGenerator.swift"
+  : [1750677970, 123438939]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Completions/FishCompletionsGenerator.swift"
+  : [1750677970, 123845182]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Completions/ZshCompletionsGenerator.swift"
+  : [1750677970, 124331111]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/Argument.swift"
+  : [1750677970, 143174406]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/ArgumentHelp.swift"
+  : [1750677970, 143826408]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/ArgumentVisibility.swift"
+  : [1750677970, 144911249]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/CompletionKind.swift"
+  : [1750677970, 145513999]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/Errors.swift"
+  : [1750677970, 146004806]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/Flag.swift"
+  : [1750677970, 146720177]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/NameSpecification.swift"
+  : [1750677970, 147273023]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/Option.swift"
+  : [1750677970, 147848067]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Properties/OptionGroup.swift"
+  : [1750677970, 148459846]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/AsyncParsableCommand.swift"
+  : [1750677970, 149310025]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/CommandConfiguration.swift"
+  : [1750677970, 149861969]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/CommandGroup.swift"
+  : [1750677970, 150151256]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/EnumerableFlag.swift"
+  : [1750677970, 150669218]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/ExpressibleByArgument.swift"
+  : [1750677970, 151123969]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/ParsableArguments.swift"
+  : [1750677970, 151979084]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/ParsableArgumentsValidation.swift"
+  : [1750677970, 152846377]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsable Types/ParsableCommand.swift"
+  : [1750677970, 153473070]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ArgumentDecoder.swift"
+  : [1750677970, 154146094]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ArgumentDefinition.swift"
+  : [1750677970, 154966114]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ArgumentSet.swift"
+  : [1750677970, 155667232]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/CommandParser.swift"
+  : [1750677970, 156766847]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/InputKey.swift"
+  : [1750677970, 157060526]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/InputOrigin.swift"
+  : [1750677970, 157354413]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/Name.swift"
+  : [1750677970, 157973309]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/Parsed.swift"
+  : [1750677970, 158635750]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ParsedValues.swift"
+  : [1750677970, 158959241]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/ParserError.swift"
+  : [1750677970, 159245380]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Parsing/SplitArguments.swift"
+  : [1750677970, 159992384]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/DumpHelpGenerator.swift"
+  : [1750677970, 161070066]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/HelpCommand.swift"
+  : [1750677970, 161575580]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/HelpGenerator.swift"
+  : [1750677970, 163239201]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/MessageInfo.swift"
+  : [1750677970, 163699003]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Usage/UsageGenerator.swift"
+  : [1750677970, 165160719]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/CollectionExtensions.swift"
+  : [1750677970, 165837396]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift"
+  : [1750677970, 166440130]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/SequenceExtensions.swift"
+  : [1750677970, 166746955]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/StringExtensions.swift"
+  : [1750677970, 167691833]
+  ? "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParser/Utilities/Tree.swift"
+  : [1750677970, 168140545]

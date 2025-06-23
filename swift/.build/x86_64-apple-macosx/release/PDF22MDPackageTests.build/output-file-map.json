@@ -1,0 +1,12 @@
+{
+  "": {
+    "dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDPackageTests.build/PDF22MDPackageTests.d",
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDPackageTests.build/PDF22MDPackageTests.o",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDPackageTests.build/master.swiftdeps"
+  },
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDPackageTests.derived/runner.swift": {
+    "object": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/.build/x86_64-apple-macosx/release/PDF22MDPackageTests.build/runner.swiftdeps"
+  }
+}

@@ -1,0 +1,13 @@
+version: "Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)"
+options: "1659c3376cf3f8f1ab909298f82b2d5b11f4f9f19df539c85456e6fb458ba198"
+build_start_time: [1750687253, 368807000]
+build_end_time: [1750687260, 813704000]
+inputs:
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/AssetExtractor.swift": [1750677701, 874410084]
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/FontStatistics.swift": [1750687187, 99281308]
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFElement.swift": [1750686836, 675805308]
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFMarkdownConverter.swift": [1750687203, 288965037]
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFMarkdownConverterOptimized.swift": [1750687210, 59423477]
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFMarkdownConverterUltraOptimized.swift": [1750686993, 728094563]
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFPageProcessor.swift": [1750678057, 735658076]
+  "/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/swift/Sources/PDF22MD/PDFPageProcessorOptimized.swift": [1750687240, 754250473]
