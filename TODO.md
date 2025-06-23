@@ -2,7 +2,13 @@
 
 ## 🚨 CRITICAL: Fix Hanging Issue (Highest Priority)
 
+<!-- RESOLVED: Hanging issue fixed in src/PDFPageProcessor.m (2025-06-22) -->
+
 The tool currently hangs when processing PDF files. This must be fixed before any other work.
+
+I run `./pdf22md -i test/README.pdf` and I get the content of `issues/issue101.txt` and then it hangs. FIXME!
+
+
 
 ### Root Cause Analysis
 - **Issue**: `CGPDFScannerScan` hangs indefinitely on certain PDFs (confirmed with test/jlm-bachotex2013a.pdf)
@@ -69,6 +75,8 @@ All professional repository refactoring tasks have been completed:
 - [x] Reviewed and applied PR #1 suggestions (already merged)
 - [x] Created release.sh script for semver versioning
 - [x] Developed GitHub action for macOS builds on semver tags (release.yml)
+- [x] Removed verbose DEBUG logging from converter and processor (code cleanup).
+- [x] Fixed hanging issue by replacing low-level CGPDFScanner logic with PDFKit high-level text extraction (`src/PDFPageProcessor.m`).
 
 ## Future Enhancements (After Core Fix)
 

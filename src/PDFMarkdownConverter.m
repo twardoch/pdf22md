@@ -46,7 +46,7 @@
         
         // Process all pages in parallel
         NSInteger pageCount = [self.pdfDocument pageCount];
-        fprintf(stderr, "DEBUG: PDFMarkdownConverter - Starting conversion of %ld pages\n", (long)pageCount);
+        // DEBUG log suppressed: Starting conversion of pages
         
         // Create thread-safe temporary storage
         NSMutableArray<NSMutableArray<id<ContentElement>> *> *pageElementsArray = [NSMutableArray arrayWithCapacity:pageCount];
@@ -63,10 +63,10 @@
         __block BOOL processingFailed = NO;
         
         // Process pages in parallel using dispatch_apply
-        fprintf(stderr, "DEBUG: PDFMarkdownConverter - Starting dispatch_apply for %ld pages\n", (long)pageCount);
+        // DEBUG log suppressed: Starting dispatch_apply for pages
         dispatch_apply(pageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t pageIndex) {
             @autoreleasepool {
-                fprintf(stderr, "DEBUG: PDFMarkdownConverter - Processing page %zu\n", pageIndex);
+                // DEBUG log suppressed: Processing page
                 // Check if processing has already failed
                 @synchronized(lock) {
                     if (processingFailed) return;
@@ -85,7 +85,7 @@
                                                                                      dpi:dpi];
                 
                 NSArray<id<ContentElement>> *pageElements = [processor extractContentElements];
-                fprintf(stderr, "DEBUG: PDFMarkdownConverter - Page %zu extracted %lu elements\n", pageIndex, (unsigned long)[pageElements count]);
+                // DEBUG log suppressed: Page extracted elements
                 
                 // Store results in thread-safe arrays
                 pageElementsArray[pageIndex] = [pageElements mutableCopy];
@@ -106,16 +106,18 @@
             }
         });
         
+        // DEBUG log suppressed: dispatch_apply completed
+        
         // Check if processing failed
         if (processingFailed) {
             error = [NSError errorWithDomain:@"PDFMarkdownConverter"
                                        code:2
                                    userInfo:@{NSLocalizedDescriptionKey: @"Failed to process one or more PDF pages"}];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                completion(nil, error);
-            });
+            completion(nil, error);
             return;
         }
+        
+        // DEBUG log suppressed: Merging results from all pages
         
         // Merge results from all pages
         for (NSInteger i = 0; i < pageCount; i++) {
@@ -130,23 +132,28 @@
             }
         }
         
+        // DEBUG log suppressed: Analyzing font hierarchy
+        
         // Analyze font hierarchy
         [self analyzeFontHierarchy];
+        
+        // DEBUG log suppressed: Sorting elements
         
         // Sort elements by page and position
         [self sortElements];
         
+        // DEBUG log suppressed: Sort completed
+        
         // Handle assets if needed
         AssetExtractor *assetExtractor = nil;
         if (assetsPath) {
+            // DEBUG log suppressed: Starting asset extraction with path:
             assetExtractor = [[AssetExtractor alloc] initWithAssetFolder:assetsPath];
             if (!assetExtractor) {
                 error = [NSError errorWithDomain:@"PDFMarkdownConverter"
                                            code:1
                                        userInfo:@{NSLocalizedDescriptionKey: @"Failed to create assets folder"}];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    completion(nil, error);
-                });
+                completion(nil, error);
                 return;
             }
             
@@ -159,7 +166,9 @@
             }
             
             NSInteger imageCount = [imageElements count];
+            // DEBUG log suppressed: Found images to extract
             if (imageCount > 0) {
+                // DEBUG log suppressed: Starting parallel image extraction
                 dispatch_apply(imageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t index) {
                     @autoreleasepool {
                         ImageElement *imageElement = imageElements[index];
@@ -174,19 +183,26 @@
                         }
                     }
                 });
+                // DEBUG log suppressed: Completed parallel image extraction
             }
+        } else {
+            // DEBUG log suppressed: No assets path provided, skipping image extraction
         }
+        
+        // DEBUG log suppressed: Starting markdown generation
         
         // Generate markdown with YAML frontmatter
         NSMutableString *markdown = [NSMutableString string];
         
         // Add YAML frontmatter with metadata
+        // DEBUG log suppressed: Generating YAML frontmatter
         NSString *yamlFrontmatter = [self generateYAMLFrontmatter];
         if (yamlFrontmatter) {
             [markdown appendString:yamlFrontmatter];
             [markdown appendString:@"\n"];
         }
         
+        // DEBUG log suppressed: Converting elements to markdown
         for (id<ContentElement> element in self.allElements) {
             NSString *elementMarkdown = [element markdownRepresentation];
             if (elementMarkdown) {
@@ -194,13 +210,12 @@
                 [markdown appendString:@"\n\n"];
             }
         }
+        // DEBUG log suppressed: Markdown generation completed
         
         // Clean up extra newlines
         NSString *finalMarkdown = [markdown stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
         
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completion(finalMarkdown, nil);
-        });
+        completion(finalMarkdown, nil);
     });
 }
 

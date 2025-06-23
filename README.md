@@ -16,6 +16,7 @@ A blazingly fast PDF to Markdown converter for macOS.
 - **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality
 - **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`
 - **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps
+- **Clean Output**: Runs without verbose debug logging for a noise-free CLI experience
 
 ## Installation
 

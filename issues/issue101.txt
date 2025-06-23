@@ -1,0 +1,30 @@
+DEBUG: PDFMarkdownConverter - Starting conversion of 2 pages
+DEBUG: PDFMarkdownConverter - Starting dispatch_apply for 2 pages
+DEBUG: PDFMarkdownConverter - Processing page 0
+DEBUG: PDFMarkdownConverter - Processing page 1
+DEBUG: PDFPageProcessor - extractContentElements starting for page 0
+DEBUG: PDFPageProcessor - Creating content stream for page 0
+DEBUG: PDFPageProcessor - Creating operator table for page 0
+DEBUG: PDFPageProcessor - Creating scanner for page 0
+DEBUG: PDFPageProcessor - Starting scan for page 0
+DEBUG: PDFPageProcessor - extractContentElements starting for page 1
+DEBUG: PDFPageProcessor - Creating content stream for page 1
+DEBUG: PDFPageProcessor - Creating operator table for page 1
+DEBUG: PDFPageProcessor - Creating scanner for page 1
+DEBUG: PDFPageProcessor - Starting scan for page 1
+DEBUG: PDFPageProcessor - Scan completed for page 1, result: 1
+DEBUG: PDFPageProcessor - Returning 74 elements for page 1
+DEBUG: PDFMarkdownConverter - Page 1 extracted 74 elements
+DEBUG: PDFPageProcessor - Scan completed for page 0, result: 1
+DEBUG: PDFPageProcessor - Returning 179 elements for page 0
+DEBUG: PDFMarkdownConverter - Page 0 extracted 179 elements
+DEBUG: PDFMarkdownConverter - dispatch_apply completed
+DEBUG: PDFMarkdownConverter - Merging results from all pages
+DEBUG: PDFMarkdownConverter - Analyzing font hierarchy
+DEBUG: PDFMarkdownConverter - Sorting elements
+DEBUG: PDFMarkdownConverter - Sort completed
+DEBUG: PDFMarkdownConverter - No assets path provided, skipping image extraction
+DEBUG: PDFMarkdownConverter - Starting markdown generation
+DEBUG: PDFMarkdownConverter - Generating YAML frontmatter
+DEBUG: PDFMarkdownConverter - Converting 253 elements to markdown
+DEBUG: PDFMarkdownConverter - Markdown generation completed
