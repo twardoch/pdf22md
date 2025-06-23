@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed CLI deadlock caused by main-queue dispatch in `PDFMarkdownConverter`; completions now called directly.
 - Fixed hanging issue on certain malformed PDFs by replacing low-level CGPDFScanner-based extraction with PDFKit high-level API (see `PDFPageProcessor`).
 - Removed unused CGPDFScanner operator callback functions and PDFScannerState struct that were part of the deprecated implementation.
+- Fixed segmentation fault during asset extraction (Phase 1a): removed premature CGImageRelease calls in `PDFPageProcessor` that deallocated images still in use.
 
 ### Removed
 - Object files from repository root (moved to build directory)

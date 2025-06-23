@@ -78,9 +78,8 @@
         [elements addObject:element];
     }
     
-    // NOTE: Image extraction has been temporarily disabled to prioritise
-    //       reliability. The placeholder method captureVectorGraphicsInBounds:
-    //       remains available for future use.
+    // 5. Extract images using PDFKit annotations
+    [self extractImagesFromPageWithElements:elements];
     
     return elements;
 }
@@ -135,6 +134,177 @@
         element.isVectorSource = YES;
         [elements addObject:element];
     }
+}
+
+- (void)extractImagesFromPageWithElements:(NSMutableArray *)elements {
+    // Method 1: Extract images from annotations (for embedded images)
+    NSArray<PDFAnnotation *> *annotations = [self.pdfPage annotations];
+    NSInteger imageIndex = 0;
+    
+    for (PDFAnnotation *annotation in annotations) {
+        // Skip text annotations and other non-image types
+        if (![annotation isKindOfClass:[PDFAnnotation class]]) {
+            continue;
+        }
+        
+        // Try to get image from annotation appearance
+        CGImageRef image = [self imageFromAnnotation:annotation];
+        if (image) {
+            ImageElement *element = [[ImageElement alloc] init];
+            element.image = image;
+            element.bounds = [annotation bounds];
+            element.pageIndex = self.pageIndex;
+            element.isVectorSource = NO;
+            [elements addObject:element];
+            imageIndex++;
+        }
+    }
+    
+    // Method 2: Render page areas that likely contain images
+    // This is a fallback approach - render page in sections and detect image-like content
+    [self extractImagesByRenderingPageSections:elements startingIndex:imageIndex];
+}
+
+- (CGImageRef)imageFromAnnotation:(PDFAnnotation *)annotation {
+    // Try to extract image from annotation's appearance stream
+    CGRect bounds = [annotation bounds];
+    if (CGRectIsEmpty(bounds) || bounds.size.width < 10 || bounds.size.height < 10) {
+        return NULL;
+    }
+    
+    // Create a bitmap context to render the annotation
+    CGFloat scale = self.dpi / 72.0;
+    size_t width = (size_t)(bounds.size.width * scale);
+    size_t height = (size_t)(bounds.size.height * scale);
+    
+    if (width == 0 || height == 0) {
+        return NULL;
+    }
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(NULL, width, height, 8, 0, colorSpace,
+                                                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+    CGColorSpaceRelease(colorSpace);
+    
+    if (!context) {
+        return NULL;
+    }
+    
+    // Set white background
+    CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
+    CGContextFillRect(context, CGRectMake(0, 0, width, height));
+    
+    // Transform context to match annotation bounds
+    CGContextSaveGState(context);
+    CGContextScaleCTM(context, scale, scale);
+    
+    // Draw just the annotation area from the page
+    CGContextClipToRect(context, CGRectMake(0, 0, bounds.size.width, bounds.size.height));
+    CGContextTranslateCTM(context, -bounds.origin.x, -bounds.origin.y);
+    CGContextDrawPDFPage(context, self.cgPdfPage);
+    
+    CGContextRestoreGState(context);
+    
+    // Create image
+    CGImageRef image = CGBitmapContextCreateImage(context);
+    CGContextRelease(context);
+    
+    return image;
+}
+
+- (void)extractImagesByRenderingPageSections:(NSMutableArray *)elements startingIndex:(NSInteger)startIndex {
+    // This method divides the page into a grid and analyzes each section
+    // to detect areas that contain primarily image content vs text content
+    
+    CGRect pageRect = [self.pdfPage boundsForBox:kPDFDisplayBoxMediaBox];
+    CGFloat sectionSize = 100.0; // 100 point sections
+    
+    NSInteger gridX = (NSInteger)ceil(pageRect.size.width / sectionSize);
+    NSInteger gridY = (NSInteger)ceil(pageRect.size.height / sectionSize);
+    
+    NSInteger imageIndex = startIndex;
+    
+    for (NSInteger x = 0; x < gridX; x++) {
+        for (NSInteger y = 0; y < gridY; y++) {
+            CGRect sectionRect = CGRectMake(x * sectionSize, y * sectionSize, 
+                                          sectionSize, sectionSize);
+            
+            // Intersect with page bounds
+            sectionRect = CGRectIntersection(sectionRect, pageRect);
+            if (CGRectIsEmpty(sectionRect) || sectionRect.size.width < 20 || sectionRect.size.height < 20) {
+                continue;
+            }
+            
+            // Check if this section contains primarily image content
+            if ([self sectionContainsImageContent:sectionRect]) {
+                CGImageRef sectionImage = [self renderPageSection:sectionRect];
+                if (sectionImage) {
+                    ImageElement *element = [[ImageElement alloc] init];
+                    element.image = sectionImage;
+                    element.bounds = sectionRect;
+                    element.pageIndex = self.pageIndex;
+                    element.isVectorSource = YES; // Since we're rendering from vector
+                    [elements addObject:element];
+                    imageIndex++;
+                }
+            }
+        }
+    }
+}
+
+- (BOOL)sectionContainsImageContent:(CGRect)sectionRect {
+    // Simple heuristic: if a section doesn't contain much text, it might be an image
+    // This is a simplified approach - we could improve this with more sophisticated analysis
+    
+    // Get text in this section
+    PDFSelection *selection = [self.pdfPage selectionForRect:sectionRect];
+    NSString *sectionText = [selection string];
+    
+    // If there's very little text, it might be an image area
+    NSString *trimmedText = [sectionText stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    
+    // Threshold: if less than 10 characters, consider it potentially an image area
+    return [trimmedText length] < 10;
+}
+
+- (CGImageRef)renderPageSection:(CGRect)sectionRect {
+    // Render just the specified section of the page
+    CGFloat scale = self.dpi / 72.0;
+    size_t width = (size_t)(sectionRect.size.width * scale);
+    size_t height = (size_t)(sectionRect.size.height * scale);
+    
+    if (width == 0 || height == 0) {
+        return NULL;
+    }
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(NULL, width, height, 8, 0, colorSpace,
+                                                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+    CGColorSpaceRelease(colorSpace);
+    
+    if (!context) {
+        return NULL;
+    }
+    
+    // Set white background
+    CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
+    CGContextFillRect(context, CGRectMake(0, 0, width, height));
+    
+    // Transform context to render just the section
+    CGContextSaveGState(context);
+    CGContextScaleCTM(context, scale, scale);
+    CGContextTranslateCTM(context, -sectionRect.origin.x, -sectionRect.origin.y);
+    
+    // Draw the PDF page
+    CGContextDrawPDFPage(context, self.cgPdfPage);
+    
+    CGContextRestoreGState(context);
+    
+    // Create image
+    CGImageRef image = CGBitmapContextCreateImage(context);
+    CGContextRelease(context);
+    
+    return image;
 }
 
 @end
