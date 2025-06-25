@@ -50,8 +50,6 @@ docs/
 issues/
   issue102-resolution.txt
 pdf22md-objc/
-  docs/
-    pdf22md.1
   src/
     CLI/
       main.m
@@ -78,8 +76,6 @@ pdf22md-objc/
       PDF22MDAssetManager.m
       PDF22MDMarkdownGenerator.h
       PDF22MDMarkdownGenerator.m
-  test/
-    README.md
   Tests/
     Integration/
       EndToEndConversionTests.m
@@ -92,23 +88,18 @@ pdf22md-objc/
       PDFMarkdownConverterTests.m
       SimpleConverterTest.m
 pdf22md-swift/
-  docs/
-    pdf22md.1
-  test/
-    README.md
   Tests/
     PDF22MDTests/
       PDF22MDTests.swift
-  build.sh
   Package.swift
   README.md
-  release.sh
 shared/
   Algorithms/
     PDF22MDImageFormatDetection.h
     PDF22MDImageFormatDetection.m
-test/
-  README.md
+  test-resources/
+    expected-outputs/
+      README.md
 .gitignore
 AGENTS.md
 build.sh
@@ -473,342 +464,6 @@ Each parallel operation is wrapped in `@autoreleasepool` to ensure prompt deallo
 </file>
 
 <file path="docs/pdf22md.1">
-.TH PDF22MD 1 "June 2025" "pdf22md v1.0" "User Commands"
-.SH NAME
-pdf22md \- high-performance PDF to Markdown converter
-.SH SYNOPSIS
-.B pdf22md
-[\fB\-i\fR \fIinput.pdf\fR]
-[\fB\-o\fR \fIoutput.md\fR]
-[\fB\-a\fR \fIassets_folder\fR]
-[\fB\-d\fR \fIdpi\fR]
-[\fB\-v\fR]
-[\fB\-h\fR]
-.SH DESCRIPTION
-.B pdf22md
-is a blazingly fast PDF to Markdown converter that extracts text and images from PDF documents and converts them into clean, structured Markdown format. It uses parallel processing to achieve high performance on multi-page documents.
-
-The tool automatically detects heading hierarchy based on font size analysis, extracts images with intelligent format optimization (PNG/JPEG), and generates YAML frontmatter with document metadata.
-
-.SH OPTIONS
-.TP
-\fB\-i\fR \fIinput.pdf\fR
-Specify the input PDF file to convert. If not provided, pdf22md reads from standard input (stdin).
-.TP
-\fB\-o\fR \fIoutput.md\fR
-Specify the output Markdown file. If not provided, pdf22md writes to standard output (stdout).
-.TP
-\fB\-a\fR \fIassets_folder\fR
-Specify the folder where extracted images will be saved. The folder will be created if it doesn't exist. Images are automatically referenced in the generated Markdown with relative paths.
-.TP
-\fB\-d\fR \fIdpi\fR
-Set the DPI (dots per inch) for rasterizing vector graphics. Default is 144. Higher values produce better quality but larger file sizes. Common values: 72 (screen), 144 (default), 300 (print quality).
-.TP
-\fB\-v\fR, \fB\-\-version\fR
-Display version information and exit.
-.TP
-\fB\-h\fR, \fB\-\-help\fR
-Display usage information and exit.
-
-.SH EXAMPLES
-.TP
-Convert a PDF file to Markdown:
-.B pdf22md \-i document.pdf \-o document.md
-
-.TP
-Extract images to an assets folder:
-.B pdf22md \-i document.pdf \-o document.md \-a ./assets
-
-.TP
-Use higher DPI for better image quality:
-.B pdf22md \-i document.pdf \-o document.md \-a ./assets \-d 300
-
-.TP
-Convert using pipes (stdin/stdout):
-.B cat document.pdf | pdf22md > document.md
-
-.TP
-Process a document with custom settings:
-.B pdf22md \-i report.pdf \-o report.md \-a ./images \-d 200
-
-.SH INPUT/OUTPUT
-.SS Input Sources
-.B pdf22md
-accepts PDF input from:
-.IP • 2
-File path specified with \fB\-i\fR flag
-.IP • 2
-Standard input (stdin) when no \fB\-i\fR flag is provided
-
-.SS Output Destinations
-Markdown output is written to:
-.IP • 2
-File path specified with \fB\-o\fR flag
-.IP • 2
-Standard output (stdout) when no \fB\-o\fR flag is provided
-
-.SS Image Assets
-When the \fB\-a\fR flag is used:
-.IP • 2
-Images are extracted and saved to the specified folder
-.IP • 2
-Filenames follow the pattern: image_001.png, image_002.jpg, etc.
-.IP • 2
-Format selection is automatic (PNG for graphics, JPEG for photos)
-.IP • 2
-Markdown contains relative references to the images
-
-.SH FEATURES
-.SS Intelligent Content Processing
-.IP • 2
-\fBHeading Detection\fR: Automatically identifies headings (H1-H6) based on font size analysis
-.IP • 2
-\fBText Extraction\fR: Preserves text formatting and structure
-.IP • 2
-\fBImage Processing\fR: Extracts both raster and vector graphics
-.IP • 2
-\fBSmart Formatting\fR: Maintains document hierarchy and readability
-
-.SS Performance Optimizations
-.IP • 2
-\fBParallel Processing\fR: Uses all available CPU cores for maximum speed
-.IP • 2
-\fBMemory Efficiency\fR: Processes large documents without excessive memory usage
-.IP • 2
-\fBFormat Optimization\fR: Automatic PNG/JPEG selection based on image content
-
-.SS Output Features
-.IP • 2
-\fBYAML Frontmatter\fR: Includes document metadata (title, author, creation date)
-.IP • 2
-\fBClean Markdown\fR: Well-structured output compatible with all Markdown processors
-.IP • 2
-\fBAsset Management\fR: Organized image extraction with proper linking
-
-.SH FILE FORMATS
-.SS Supported Input
-.IP • 2
-PDF files (version 1.4 and higher)
-.IP • 2
-Unencrypted PDFs (password-protected PDFs are not supported)
-.IP • 2
-PDFs with text, images, and vector graphics
-.IP • 2
-Multi-page documents of any size
-
-.SS Generated Output
-.IP • 2
-\fBMarkdown (.md)\fR: GitHub Flavored Markdown compatible
-.IP • 2
-\fBImages (.png/.jpg)\fR: Extracted graphics in optimal formats
-.IP • 2
-\fBYAML Frontmatter\fR: Document metadata in standard format
-
-.SH PERFORMANCE
-Typical conversion speeds on modern hardware:
-.IP • 2
-Simple text documents: <1 second per page
-.IP • 2
-Complex documents with images: 2-5 seconds per page
-.IP • 2
-Large documents (100+ pages): Scales linearly with parallel processing
-
-Memory usage is optimized for documents up to 1000 pages. Very large documents may require additional system memory.
-
-.SH ERROR HANDLING
-.B pdf22md
-provides detailed error messages with suggestions for common issues:
-
-.SS Common Errors and Solutions
-.TP
-\fBInvalid PDF file\fR
-.IP • 2
-Verify the file exists and is a valid PDF
-.IP • 2
-Check if the file is corrupted
-.IP • 2
-Ensure you have read permissions
-
-.TP
-\fBCannot create assets folder\fR
-.IP • 2
-Check if the parent directory exists
-.IP • 2
-Verify you have write permissions
-.IP • 2
-Ensure sufficient disk space
-
-.TP
-\fBPassword-protected PDF\fR
-.IP • 2
-Remove password protection using another tool first
-.IP • 2
-Use: qpdf \-\-decrypt input.pdf output.pdf
-
-.TP
-\fBMemory pressure\fR
-.IP • 2
-Close other applications to free memory
-.IP • 2
-Try using a lower DPI setting (\-d 72)
-.IP • 2
-Process smaller sections of large documents
-
-.SH EXIT STATUS
-.TP
-.B 0
-Successful conversion
-.TP
-.B 1
-Error occurred (invalid input, processing failure, I/O error)
-
-.SH ENVIRONMENT
-No special environment variables are required. The tool uses standard macOS frameworks (PDFKit, CoreGraphics) and runs on macOS 10.15 and later.
-
-.SH LIMITATIONS
-.IP • 2
-Password-protected PDFs are not supported
-.IP • 2
-Scanned PDFs without OCR text layer will only extract images
-.IP • 2
-Complex table layouts may not convert perfectly
-.IP • 2
-Some advanced PDF features (forms, annotations) are not preserved
-
-.SH COMPATIBILITY
-.SS Platform Support
-.IP • 2
-macOS 10.15 (Catalina) and later
-.IP • 2
-Intel and Apple Silicon processors
-.IP • 2
-Universal binary for optimal performance
-
-.SS Markdown Compatibility
-Output is compatible with:
-.IP • 2
-GitHub Flavored Markdown
-.IP • 2
-CommonMark specification
-.IP • 2
-Popular Markdown processors (pandoc, Jekyll, etc.)
-.IP • 2
-Static site generators (Hugo, Jekyll, Gatsby)
-
-.SH FILES
-.TP
-.I ~/.pdf22md/
-User configuration directory (future use)
-.TP
-.I /usr/local/bin/pdf22md
-Default installation location
-.TP
-.I /usr/local/share/man/man1/pdf22md.1
-This manual page
-
-.SH EXAMPLES WORKFLOW
-.SS Basic Document Conversion
-.nf
-# Convert a simple document
-pdf22md \-i report.pdf \-o report.md
-
-# Result: clean Markdown with YAML frontmatter
-# Output includes: title, headings, body text, metadata
-.fi
-
-.SS Academic Paper with Images
-.nf
-# Convert research paper with figure extraction
-pdf22md \-i paper.pdf \-o paper.md \-a figures \-d 300
-
-# Result: 
-# - paper.md with structured content
-# - figures/ folder with high-quality images
-# - Proper cross-references to figures
-.fi
-
-.SS Batch Processing
-.nf
-# Process multiple documents
-for pdf in *.pdf; do
-    pdf22md \-i "$pdf" \-o "${pdf%.pdf}.md" \-a "assets_${pdf%.pdf}"
-done
-.fi
-
-.SS Integration with Other Tools
-.nf
-# Combine with pandoc for further processing
-pdf22md \-i document.pdf | pandoc \-f markdown \-t html \-o document.html
-
-# Use with static site generators
-pdf22md \-i post.pdf \-o content/posts/post.md \-a static/images
-.fi
-
-.SH TROUBLESHOOTING
-.SS Performance Issues
-If conversion is slow:
-.IP • 2
-Check available memory and CPU usage
-.IP • 2
-Close unnecessary applications
-.IP • 2
-Try lower DPI setting for faster processing
-.IP • 2
-Process documents in smaller batches
-
-.SS Quality Issues
-If output quality is poor:
-.IP • 2
-Increase DPI setting (\-d 300) for better images
-.IP • 2
-Verify the source PDF has good quality text
-.IP • 2
-Check if the PDF has a proper text layer (not just scanned images)
-
-.SS Memory Errors
-For large documents:
-.IP • 2
-Ensure sufficient RAM (8GB+ recommended for large PDFs)
-.IP • 2
-Close other memory-intensive applications
-.IP • 2
-Split very large PDFs into smaller parts first
-
-.SH REPORTING BUGS
-Report bugs and feature requests at:
-.UR https://github.com/twardoch/pdf22md/issues
-.UE
-
-Include in your report:
-.IP • 2
-pdf22md version (\fBpdf22md \-v\fR)
-.IP • 2
-macOS version
-.IP • 2
-Sample PDF file (if possible)
-.IP • 2
-Complete error message
-.IP • 2
-Steps to reproduce the issue
-
-.SH AUTHORS
-Written by Adam Twardoch and contributors.
-
-.SH LICENSE
-MIT License. See the LICENSE file for details.
-
-.SH SEE ALSO
-.BR pandoc (1),
-.BR qpdf (1),
-.BR pdftotext (1),
-.BR markdown (7)
-
-Project homepage: 
-.UR https://github.com/twardoch/pdf22md
-.UE
-</file>
-
-<file path="pdf22md-objc/docs/pdf22md.1">
 .TH PDF22MD 1 "June 2025" "pdf22md v1.0" "User Commands"
 .SH NAME
 pdf22md \- high-performance PDF to Markdown converter
@@ -3269,292 +2924,6 @@ NS_ASSUME_NONNULL_END
 @end
 </file>
 
-<file path="pdf22md-objc/test/README.md">
----
-title: "README.md"
-creator: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
-producer: "Skia/PDF m137"
-created: 2025-06-23T01:33:53+02:00
-modified: 2025-06-23T01:33:53+02:00
-pdf_metadata:
-  page_count: 2
-conversion:
-  tool: "pdf22md"
-  version: "v1.1.0-dirty"
-  date: 2025-06-23T02:28:31+02:00
----
-
-23/06/2025, 01:33 README.md
-
-![Image](image_000.png)
-
-![Image](image_001.png)
-
-pdf22md
-
-MIT
-
-License MIT
-
-License
-
-10.15+
-
-![Image](image_002.png)
-
-![Image](image_003.png)
-
-macOS 10.15+
-
-macOS
-
-Build and Release Build and Release passing passing
-
-A blazingly fast PDF to Markdown converter for macOS.
-
-pdf22md is a command-line tool that extracts all text and image content from a PDF file and converts it into a
-
-![Image](image_004.png)
-
-![Image](image_005.png)
-
-![Image](image_006.png)
-
-clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in
-
-parallel, making it exceptionally fast for multi-page documents.
-
-Key Features
-
-High-Speed Conversion: Uses all available CPU cores to process PDF pages concurrently
-
-Intelligent Heading Detection: Analyzes font sizes and usage frequency to automatically format titles
-
-![Image](image_007.png)
-
-![Image](image_008.png)
-
-![Image](image_009.png)
-
-and headings ( # , ## , etc.)
-
-Asset Extraction: Saves raster and vector images into a specified assets folder and links them correctly
-
-in the Markdown file
-
-Smart Image Formatting: Automatically chooses between JPEG (for photos) and PNG (for graphics with
-
-transparency) to optimize file size and quality
-
-Flexible I/O: Reads from a PDF file or stdin and writes to a Markdown file or stdout
-
-![Image](image_010.png)
-
-![Image](image_011.png)
-
-![Image](image_012.png)
-
-Customizable Rasterization: Allows setting a custom DPI for converting vector graphics to bitmaps
-
-Installation
-
-Using Homebrew (Coming Soon)
-
-brew tap twardoch/pdf22md
-
-brew install pdf22md
-
-![Image](image_013.png)
-
-![Image](image_014.png)
-
-Building from Source
-
-To build the project manually, you need Xcode Command Line Tools installed.
-
-# Clone the repository
-
-git clone https://github.com/twardoch/pdf22md.git
-
-cd pdf22md
-
-# Compile the tool
-
-make
-
-# Install it to /usr/local/bin (optional)
-
-sudo make install
-
-Download Pre-built Binary
-
-Pre-built binaries are available from the Releases page.
-
-Usage
-
-Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets
-
-_
-
-folder] [-d dpi]
-
-Converts PDF documents to Markdown format
-
--i <path>: Input PDF file (default: stdin)
-
--o <path>: Output Markdown file (default: stdout)
-
--a <path>: Assets folder for extracted images
-
--d <dpi>: DPI for rasterizing vector graphics (default: 144)
-
-Examples
-
-# Convert a PDF file to Markdown
-
-pdf22md -i document.pdf -o document.md
-
-# Convert with images saved to an 'assets' folder
-
-pdf22md -i report.pdf -o report.md -a ./assets
-
-# Convert with custom DPI for vector graphics
-
-pdf22md -i presentation.pdf -o presentation.md -a ./images -d 300
-
-# Use with pipes
-
-cat document.pdf | pdf22md > document.md
-
-# Convert and view in less
-
-pdf22md -i manual.pdf | less
-
-Requirements
-
-macOS 10.15 (Catalina) or later
-
-Xcode Command Line Tools (for building from source)
-
-Project Structure
-
-pdf22md/
-
-├── src/ # Source code
-
-│ ├── main.m # Entry point
-
-│ ├── PDFMarkdownConverter.* # Main conversion logic
-
-│ ├── PDFPageProcessor.* # PDF page processing
-
-│ ├── ContentElement.* # Content element definitions
-
-│ └── AssetExtractor.* # Image extraction logic
-
-├── docs/ # Additional documentation
-
-├── test/ # Test files
-
-file:///Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/README.md 1/2
-
-23/06/2025, 01:33 README.md
-
-![Image](image_015.png)
-
-![Image](image_016.png)
-
-├── LICENSE # MIT License
-
-├── Makefile # Build configuration
-
-└── README.md # This file
-
-Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an
-
-![Image](image_017.png)
-
-![Image](image_018.png)
-
-![Image](image_019.png)
-
-issue first to discuss what you
-
-would like to change.
-
-1. Fork the repository
-
-2. Create your feature branch ( git checkout -b feature/AmazingFeature )
-
-3. Commit your changes ( git commit -m 'Add some AmazingFeature' )
-
-![Image](image_020.png)
-
-![Image](image_021.png)
-
-![Image](image_022.png)
-
-4. Push to the branch ( git push origin feature/AmazingFeature )
-
-5. Open a Pull Request
-
-License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-Acknowledgments
-
-![Image](image_023.png)
-
-![Image](image_024.png)
-
-![Image](image_025.png)
-
-![Image](image_026.png)
-
-![Image](image_027.png)
-
-Built with Apple’s PDFKit and Core Graphics frameworks
-
-Parallel processing powered by Grand Central Dispatch (GCD)
-
-Inspired by the need for fast, accurate PDF to Markdown conversion
-
-Related Projects
-
-pdfplumber - Python library for PDF processing
-
-![Image](image_028.png)
-
-pdf2md - Another PDF to Markdown converter
-
-![Image](image_029.png)
-
-![Image](image_030.png)
-
-![Image](image_031.png)
-
-![Image](image_032.png)
-
-pandoc - Universal document converter
-
-Changelog
-
-See CHANGELOG.md for a list of changes in each version.
-
-Support
-
-If you encounter any issues or have questions, please open an issue on GitHub.
-
-![Image](image_033.png)
-
-![Image](image_034.png)
-
-file:///Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/README.md 2/2
-</file>
-
 <file path="pdf22md-objc/Tests/Integration/EndToEndConversionTests.m">
 //
 //  EndToEndConversionTests.m
@@ -5315,628 +4684,6 @@ int main(int argc, char *argv[]) {
 }
 </file>
 
-<file path="pdf22md-swift/docs/pdf22md.1">
-.TH PDF22MD 1 "June 2025" "pdf22md v1.0" "User Commands"
-.SH NAME
-pdf22md \- high-performance PDF to Markdown converter
-.SH SYNOPSIS
-.B pdf22md
-[\fB\-i\fR \fIinput.pdf\fR]
-[\fB\-o\fR \fIoutput.md\fR]
-[\fB\-a\fR \fIassets_folder\fR]
-[\fB\-d\fR \fIdpi\fR]
-[\fB\-v\fR]
-[\fB\-h\fR]
-.SH DESCRIPTION
-.B pdf22md
-is a blazingly fast PDF to Markdown converter that extracts text and images from PDF documents and converts them into clean, structured Markdown format. It uses parallel processing to achieve high performance on multi-page documents.
-
-The tool automatically detects heading hierarchy based on font size analysis, extracts images with intelligent format optimization (PNG/JPEG), and generates YAML frontmatter with document metadata.
-
-.SH OPTIONS
-.TP
-\fB\-i\fR \fIinput.pdf\fR
-Specify the input PDF file to convert. If not provided, pdf22md reads from standard input (stdin).
-.TP
-\fB\-o\fR \fIoutput.md\fR
-Specify the output Markdown file. If not provided, pdf22md writes to standard output (stdout).
-.TP
-\fB\-a\fR \fIassets_folder\fR
-Specify the folder where extracted images will be saved. The folder will be created if it doesn't exist. Images are automatically referenced in the generated Markdown with relative paths.
-.TP
-\fB\-d\fR \fIdpi\fR
-Set the DPI (dots per inch) for rasterizing vector graphics. Default is 144. Higher values produce better quality but larger file sizes. Common values: 72 (screen), 144 (default), 300 (print quality).
-.TP
-\fB\-v\fR, \fB\-\-version\fR
-Display version information and exit.
-.TP
-\fB\-h\fR, \fB\-\-help\fR
-Display usage information and exit.
-
-.SH EXAMPLES
-.TP
-Convert a PDF file to Markdown:
-.B pdf22md \-i document.pdf \-o document.md
-
-.TP
-Extract images to an assets folder:
-.B pdf22md \-i document.pdf \-o document.md \-a ./assets
-
-.TP
-Use higher DPI for better image quality:
-.B pdf22md \-i document.pdf \-o document.md \-a ./assets \-d 300
-
-.TP
-Convert using pipes (stdin/stdout):
-.B cat document.pdf | pdf22md > document.md
-
-.TP
-Process a document with custom settings:
-.B pdf22md \-i report.pdf \-o report.md \-a ./images \-d 200
-
-.SH INPUT/OUTPUT
-.SS Input Sources
-.B pdf22md
-accepts PDF input from:
-.IP • 2
-File path specified with \fB\-i\fR flag
-.IP • 2
-Standard input (stdin) when no \fB\-i\fR flag is provided
-
-.SS Output Destinations
-Markdown output is written to:
-.IP • 2
-File path specified with \fB\-o\fR flag
-.IP • 2
-Standard output (stdout) when no \fB\-o\fR flag is provided
-
-.SS Image Assets
-When the \fB\-a\fR flag is used:
-.IP • 2
-Images are extracted and saved to the specified folder
-.IP • 2
-Filenames follow the pattern: image_001.png, image_002.jpg, etc.
-.IP • 2
-Format selection is automatic (PNG for graphics, JPEG for photos)
-.IP • 2
-Markdown contains relative references to the images
-
-.SH FEATURES
-.SS Intelligent Content Processing
-.IP • 2
-\fBHeading Detection\fR: Automatically identifies headings (H1-H6) based on font size analysis
-.IP • 2
-\fBText Extraction\fR: Preserves text formatting and structure
-.IP • 2
-\fBImage Processing\fR: Extracts both raster and vector graphics
-.IP • 2
-\fBSmart Formatting\fR: Maintains document hierarchy and readability
-
-.SS Performance Optimizations
-.IP • 2
-\fBParallel Processing\fR: Uses all available CPU cores for maximum speed
-.IP • 2
-\fBMemory Efficiency\fR: Processes large documents without excessive memory usage
-.IP • 2
-\fBFormat Optimization\fR: Automatic PNG/JPEG selection based on image content
-
-.SS Output Features
-.IP • 2
-\fBYAML Frontmatter\fR: Includes document metadata (title, author, creation date)
-.IP • 2
-\fBClean Markdown\fR: Well-structured output compatible with all Markdown processors
-.IP • 2
-\fBAsset Management\fR: Organized image extraction with proper linking
-
-.SH FILE FORMATS
-.SS Supported Input
-.IP • 2
-PDF files (version 1.4 and higher)
-.IP • 2
-Unencrypted PDFs (password-protected PDFs are not supported)
-.IP • 2
-PDFs with text, images, and vector graphics
-.IP • 2
-Multi-page documents of any size
-
-.SS Generated Output
-.IP • 2
-\fBMarkdown (.md)\fR: GitHub Flavored Markdown compatible
-.IP • 2
-\fBImages (.png/.jpg)\fR: Extracted graphics in optimal formats
-.IP • 2
-\fBYAML Frontmatter\fR: Document metadata in standard format
-
-.SH PERFORMANCE
-Typical conversion speeds on modern hardware:
-.IP • 2
-Simple text documents: <1 second per page
-.IP • 2
-Complex documents with images: 2-5 seconds per page
-.IP • 2
-Large documents (100+ pages): Scales linearly with parallel processing
-
-Memory usage is optimized for documents up to 1000 pages. Very large documents may require additional system memory.
-
-.SH ERROR HANDLING
-.B pdf22md
-provides detailed error messages with suggestions for common issues:
-
-.SS Common Errors and Solutions
-.TP
-\fBInvalid PDF file\fR
-.IP • 2
-Verify the file exists and is a valid PDF
-.IP • 2
-Check if the file is corrupted
-.IP • 2
-Ensure you have read permissions
-
-.TP
-\fBCannot create assets folder\fR
-.IP • 2
-Check if the parent directory exists
-.IP • 2
-Verify you have write permissions
-.IP • 2
-Ensure sufficient disk space
-
-.TP
-\fBPassword-protected PDF\fR
-.IP • 2
-Remove password protection using another tool first
-.IP • 2
-Use: qpdf \-\-decrypt input.pdf output.pdf
-
-.TP
-\fBMemory pressure\fR
-.IP • 2
-Close other applications to free memory
-.IP • 2
-Try using a lower DPI setting (\-d 72)
-.IP • 2
-Process smaller sections of large documents
-
-.SH EXIT STATUS
-.TP
-.B 0
-Successful conversion
-.TP
-.B 1
-Error occurred (invalid input, processing failure, I/O error)
-
-.SH ENVIRONMENT
-No special environment variables are required. The tool uses standard macOS frameworks (PDFKit, CoreGraphics) and runs on macOS 10.15 and later.
-
-.SH LIMITATIONS
-.IP • 2
-Password-protected PDFs are not supported
-.IP • 2
-Scanned PDFs without OCR text layer will only extract images
-.IP • 2
-Complex table layouts may not convert perfectly
-.IP • 2
-Some advanced PDF features (forms, annotations) are not preserved
-
-.SH COMPATIBILITY
-.SS Platform Support
-.IP • 2
-macOS 10.15 (Catalina) and later
-.IP • 2
-Intel and Apple Silicon processors
-.IP • 2
-Universal binary for optimal performance
-
-.SS Markdown Compatibility
-Output is compatible with:
-.IP • 2
-GitHub Flavored Markdown
-.IP • 2
-CommonMark specification
-.IP • 2
-Popular Markdown processors (pandoc, Jekyll, etc.)
-.IP • 2
-Static site generators (Hugo, Jekyll, Gatsby)
-
-.SH FILES
-.TP
-.I ~/.pdf22md/
-User configuration directory (future use)
-.TP
-.I /usr/local/bin/pdf22md
-Default installation location
-.TP
-.I /usr/local/share/man/man1/pdf22md.1
-This manual page
-
-.SH EXAMPLES WORKFLOW
-.SS Basic Document Conversion
-.nf
-# Convert a simple document
-pdf22md \-i report.pdf \-o report.md
-
-# Result: clean Markdown with YAML frontmatter
-# Output includes: title, headings, body text, metadata
-.fi
-
-.SS Academic Paper with Images
-.nf
-# Convert research paper with figure extraction
-pdf22md \-i paper.pdf \-o paper.md \-a figures \-d 300
-
-# Result: 
-# - paper.md with structured content
-# - figures/ folder with high-quality images
-# - Proper cross-references to figures
-.fi
-
-.SS Batch Processing
-.nf
-# Process multiple documents
-for pdf in *.pdf; do
-    pdf22md \-i "$pdf" \-o "${pdf%.pdf}.md" \-a "assets_${pdf%.pdf}"
-done
-.fi
-
-.SS Integration with Other Tools
-.nf
-# Combine with pandoc for further processing
-pdf22md \-i document.pdf | pandoc \-f markdown \-t html \-o document.html
-
-# Use with static site generators
-pdf22md \-i post.pdf \-o content/posts/post.md \-a static/images
-.fi
-
-.SH TROUBLESHOOTING
-.SS Performance Issues
-If conversion is slow:
-.IP • 2
-Check available memory and CPU usage
-.IP • 2
-Close unnecessary applications
-.IP • 2
-Try lower DPI setting for faster processing
-.IP • 2
-Process documents in smaller batches
-
-.SS Quality Issues
-If output quality is poor:
-.IP • 2
-Increase DPI setting (\-d 300) for better images
-.IP • 2
-Verify the source PDF has good quality text
-.IP • 2
-Check if the PDF has a proper text layer (not just scanned images)
-
-.SS Memory Errors
-For large documents:
-.IP • 2
-Ensure sufficient RAM (8GB+ recommended for large PDFs)
-.IP • 2
-Close other memory-intensive applications
-.IP • 2
-Split very large PDFs into smaller parts first
-
-.SH REPORTING BUGS
-Report bugs and feature requests at:
-.UR https://github.com/twardoch/pdf22md/issues
-.UE
-
-Include in your report:
-.IP • 2
-pdf22md version (\fBpdf22md \-v\fR)
-.IP • 2
-macOS version
-.IP • 2
-Sample PDF file (if possible)
-.IP • 2
-Complete error message
-.IP • 2
-Steps to reproduce the issue
-
-.SH AUTHORS
-Written by Adam Twardoch and contributors.
-
-.SH LICENSE
-MIT License. See the LICENSE file for details.
-
-.SH SEE ALSO
-.BR pandoc (1),
-.BR qpdf (1),
-.BR pdftotext (1),
-.BR markdown (7)
-
-Project homepage: 
-.UR https://github.com/twardoch/pdf22md
-.UE
-</file>
-
-<file path="pdf22md-swift/test/README.md">
----
-title: "README.md"
-creator: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
-producer: "Skia/PDF m137"
-created: 2025-06-23T01:33:53+02:00
-modified: 2025-06-23T01:33:53+02:00
-pdf_metadata:
-  page_count: 2
-conversion:
-  tool: "pdf22md"
-  version: "v1.1.0-dirty"
-  date: 2025-06-23T02:28:31+02:00
----
-
-23/06/2025, 01:33 README.md
-
-![Image](image_000.png)
-
-![Image](image_001.png)
-
-pdf22md
-
-MIT
-
-License MIT
-
-License
-
-10.15+
-
-![Image](image_002.png)
-
-![Image](image_003.png)
-
-macOS 10.15+
-
-macOS
-
-Build and Release Build and Release passing passing
-
-A blazingly fast PDF to Markdown converter for macOS.
-
-pdf22md is a command-line tool that extracts all text and image content from a PDF file and converts it into a
-
-![Image](image_004.png)
-
-![Image](image_005.png)
-
-![Image](image_006.png)
-
-clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in
-
-parallel, making it exceptionally fast for multi-page documents.
-
-Key Features
-
-High-Speed Conversion: Uses all available CPU cores to process PDF pages concurrently
-
-Intelligent Heading Detection: Analyzes font sizes and usage frequency to automatically format titles
-
-![Image](image_007.png)
-
-![Image](image_008.png)
-
-![Image](image_009.png)
-
-and headings ( # , ## , etc.)
-
-Asset Extraction: Saves raster and vector images into a specified assets folder and links them correctly
-
-in the Markdown file
-
-Smart Image Formatting: Automatically chooses between JPEG (for photos) and PNG (for graphics with
-
-transparency) to optimize file size and quality
-
-Flexible I/O: Reads from a PDF file or stdin and writes to a Markdown file or stdout
-
-![Image](image_010.png)
-
-![Image](image_011.png)
-
-![Image](image_012.png)
-
-Customizable Rasterization: Allows setting a custom DPI for converting vector graphics to bitmaps
-
-Installation
-
-Using Homebrew (Coming Soon)
-
-brew tap twardoch/pdf22md
-
-brew install pdf22md
-
-![Image](image_013.png)
-
-![Image](image_014.png)
-
-Building from Source
-
-To build the project manually, you need Xcode Command Line Tools installed.
-
-# Clone the repository
-
-git clone https://github.com/twardoch/pdf22md.git
-
-cd pdf22md
-
-# Compile the tool
-
-make
-
-# Install it to /usr/local/bin (optional)
-
-sudo make install
-
-Download Pre-built Binary
-
-Pre-built binaries are available from the Releases page.
-
-Usage
-
-Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets
-
-_
-
-folder] [-d dpi]
-
-Converts PDF documents to Markdown format
-
--i <path>: Input PDF file (default: stdin)
-
--o <path>: Output Markdown file (default: stdout)
-
--a <path>: Assets folder for extracted images
-
--d <dpi>: DPI for rasterizing vector graphics (default: 144)
-
-Examples
-
-# Convert a PDF file to Markdown
-
-pdf22md -i document.pdf -o document.md
-
-# Convert with images saved to an 'assets' folder
-
-pdf22md -i report.pdf -o report.md -a ./assets
-
-# Convert with custom DPI for vector graphics
-
-pdf22md -i presentation.pdf -o presentation.md -a ./images -d 300
-
-# Use with pipes
-
-cat document.pdf | pdf22md > document.md
-
-# Convert and view in less
-
-pdf22md -i manual.pdf | less
-
-Requirements
-
-macOS 10.15 (Catalina) or later
-
-Xcode Command Line Tools (for building from source)
-
-Project Structure
-
-pdf22md/
-
-├── src/ # Source code
-
-│ ├── main.m # Entry point
-
-│ ├── PDFMarkdownConverter.* # Main conversion logic
-
-│ ├── PDFPageProcessor.* # PDF page processing
-
-│ ├── ContentElement.* # Content element definitions
-
-│ └── AssetExtractor.* # Image extraction logic
-
-├── docs/ # Additional documentation
-
-├── test/ # Test files
-
-file:///Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/README.md 1/2
-
-23/06/2025, 01:33 README.md
-
-![Image](image_015.png)
-
-![Image](image_016.png)
-
-├── LICENSE # MIT License
-
-├── Makefile # Build configuration
-
-└── README.md # This file
-
-Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an
-
-![Image](image_017.png)
-
-![Image](image_018.png)
-
-![Image](image_019.png)
-
-issue first to discuss what you
-
-would like to change.
-
-1. Fork the repository
-
-2. Create your feature branch ( git checkout -b feature/AmazingFeature )
-
-3. Commit your changes ( git commit -m 'Add some AmazingFeature' )
-
-![Image](image_020.png)
-
-![Image](image_021.png)
-
-![Image](image_022.png)
-
-4. Push to the branch ( git push origin feature/AmazingFeature )
-
-5. Open a Pull Request
-
-License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-Acknowledgments
-
-![Image](image_023.png)
-
-![Image](image_024.png)
-
-![Image](image_025.png)
-
-![Image](image_026.png)
-
-![Image](image_027.png)
-
-Built with Apple’s PDFKit and Core Graphics frameworks
-
-Parallel processing powered by Grand Central Dispatch (GCD)
-
-Inspired by the need for fast, accurate PDF to Markdown conversion
-
-Related Projects
-
-pdfplumber - Python library for PDF processing
-
-![Image](image_028.png)
-
-pdf2md - Another PDF to Markdown converter
-
-![Image](image_029.png)
-
-![Image](image_030.png)
-
-![Image](image_031.png)
-
-![Image](image_032.png)
-
-pandoc - Universal document converter
-
-Changelog
-
-See CHANGELOG.md for a list of changes in each version.
-
-Support
-
-If you encounter any issues or have questions, please open an issue on GitHub.
-
-![Image](image_033.png)
-
-![Image](image_034.png)
-
-file:///Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/README.md 2/2
-</file>
-
 <file path="pdf22md-swift/Tests/PDF22MDTests/PDF22MDTests.swift">
 import XCTest
 @testable import PDF22MD
@@ -6273,148 +5020,6 @@ let package = Package(
 )
 </file>
 
-<file path="pdf22md-swift/release.sh">
-#!/bin/bash
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Print functions
-print_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-print_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-
-# Configuration
-APP_NAME="pdf22md-swift"
-BUILD_DIR=".build/release"
-ARCHIVE_DIR="archive"
-
-# Get version from git or default
-get_version() {
-    local version=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
-    echo "$version"
-}
-
-# Build release version
-build_release() {
-    print_info "Building release version..."
-    
-    # Clean and build
-    swift build -c release
-    
-    if [ $? -eq 0 ]; then
-        print_info "✓ Release build completed successfully"
-        return 0
-    else
-        print_error "Release build failed"
-        return 1
-    fi
-}
-
-# Run tests before release
-run_tests() {
-    print_info "Running test suite..."
-    
-    if swift test; then
-        print_info "✓ All tests passed"
-        return 0
-    else
-        print_error "Tests failed"
-        return 1
-    fi
-}
-
-# Create archive
-create_archive() {
-    local version=$(get_version)
-    local archive_name="${APP_NAME}-${version}-macos"
-    
-    print_info "Creating archive: ${archive_name}"
-    
-    # Create archive directory
-    mkdir -p "$ARCHIVE_DIR"
-    
-    # Create temporary directory for archive contents
-    local temp_dir=$(mktemp -d)
-    local archive_path="$temp_dir/$archive_name"
-    
-    mkdir -p "$archive_path"
-    
-    # Copy binary
-    if [ -f "$BUILD_DIR/pdf22md" ]; then
-        cp "$BUILD_DIR/pdf22md" "$archive_path/"
-        print_info "✓ Copied binary"
-    else
-        print_error "Binary not found at $BUILD_DIR/pdf22md"
-        return 1
-    fi
-    
-    # Copy documentation
-    if [ -f "README.md" ]; then
-        cp "README.md" "$archive_path/"
-    fi
-    
-    if [ -f "docs/pdf22md.1" ]; then
-        mkdir -p "$archive_path/man"
-        cp "docs/pdf22md.1" "$archive_path/man/"
-        print_info "✓ Copied documentation"
-    fi
-    
-    # Create tarball
-    cd "$temp_dir"
-    tar -czf "${archive_name}.tar.gz" "$archive_name"
-    
-    # Move to archive directory
-    mv "${archive_name}.tar.gz" "$OLDPWD/$ARCHIVE_DIR/"
-    
-    # Cleanup
-    rm -rf "$temp_dir"
-    
-    print_info "✓ Archive created: $ARCHIVE_DIR/${archive_name}.tar.gz"
-    
-    # Show archive contents
-    print_info "Archive contents:"
-    tar -tzf "$ARCHIVE_DIR/${archive_name}.tar.gz" | sed 's/^/  /'
-}
-
-# Main execution
-main() {
-    local version=$(get_version)
-    
-    print_info "Starting release process for $APP_NAME version $version"
-    
-    # Build release
-    if ! build_release; then
-        exit 1
-    fi
-    
-    # Run tests
-    if ! run_tests; then
-        print_error "Tests failed, aborting release"
-        exit 1
-    fi
-    
-    # Create archive
-    if ! create_archive; then
-        print_error "Archive creation failed"
-        exit 1
-    fi
-    
-    print_info "🎉 Release complete!"
-    print_info "Version: $version"
-    print_info "Archive: $ARCHIVE_DIR/${APP_NAME}-${version}-macos.tar.gz"
-    print_info ""
-    print_info "To install locally:"
-    print_info "  tar -xzf $ARCHIVE_DIR/${APP_NAME}-${version}-macos.tar.gz"
-    print_info "  sudo cp ${APP_NAME}-${version}-macos/pdf22md /usr/local/bin/pdf22md-swift"
-}
-
-main "$@"
-</file>
-
 <file path="shared/Algorithms/PDF22MDImageFormatDetection.h">
 //
 //  PDF22MDImageFormatDetection.h
@@ -6589,7 +5194,7 @@ NS_ASSUME_NONNULL_END
 @end
 </file>
 
-<file path="test/README.md">
+<file path="shared/test-resources/expected-outputs/README.md">
 ---
 title: "README.md"
 creator: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
@@ -8086,161 +6691,6 @@ NS_ASSUME_NONNULL_END
 
 
 @end
-</file>
-
-<file path="pdf22md-swift/build.sh">
-#!/bin/bash
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Print functions
-print_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-print_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-
-# Check for required tools
-check_requirements() {
-    local missing_tools=()
-
-    if ! command -v swift &>/dev/null; then
-        missing_tools+=("swift")
-    fi
-
-    if [ ${#missing_tools[@]} -ne 0 ]; then
-        print_error "Missing required tools: ${missing_tools[*]}"
-        print_info "Please install Xcode Command Line Tools:"
-        print_info "xcode-select --install"
-        exit 1
-    fi
-}
-
-# Build pdf22md-swift
-build_swift() {
-    print_info "Building pdf22md (Swift implementation)..."
-    
-    # Clean previous builds
-    if [ -d ".build" ]; then
-        rm -rf .build
-        print_info "Cleaned previous build artifacts"
-    fi
-    
-    # Try to detect and fix Swift toolchain issues
-    print_info "Checking Swift toolchain..."
-    
-    # Check for SWBBuildService.framework issue
-    local swift_build_output
-    swift_build_output=$(swift build -c release 2>&1)
-    local exit_code=$?
-    
-    if [ $exit_code -eq 0 ]; then
-        print_info "✓ pdf22md-swift built successfully"
-        return 0
-    elif echo "$swift_build_output" | grep -q "SWBBuildService.framework"; then
-        print_error "Swift Package Manager framework missing: SWBBuildService.framework"
-        print_warning "This is a known issue with Command Line Tools installation"
-        print_info ""
-        print_info "To fix this issue, try ONE of these solutions:"
-        print_info ""
-        print_info "Option 1: If you have Xcode installed"
-        print_info "  sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
-        print_info ""
-        print_info "Option 2: Reinstall Command Line Tools"
-        print_info "  sudo rm -rf /Library/Developer/CommandLineTools"
-        print_info "  xcode-select --install"
-        print_info ""
-        print_info "Option 3: Use the Objective-C implementation instead"
-        print_info "  ./build.sh --objc-only"
-        return 1
-    else
-        # Show the actual error
-        print_error "Swift build failed with error:"
-        echo "$swift_build_output" | tail -n 20
-        return 1
-    fi
-}
-
-# Install binary
-install_binary() {
-    local install_dir="/usr/local/bin"
-    print_info "Installing binary to $install_dir..."
-
-    # Create install directory if it doesn't exist
-    sudo mkdir -p "$install_dir"
-
-    # Install pdf22md
-    if [ -f ".build/release/pdf22md" ]; then
-        sudo install -m 755 .build/release/pdf22md "$install_dir/pdf22md-swift"
-        print_info "✓ Installed pdf22md-swift"
-    else
-        print_error "Built binary not found at .build/release/pdf22md"
-        return 1
-    fi
-
-    # Install man pages
-    if [ -f "docs/pdf22md.1" ]; then
-        sudo mkdir -p /usr/local/share/man/man1
-        sudo install -m 644 docs/pdf22md.1 /usr/local/share/man/man1/
-        print_info "✓ Installed man pages"
-    fi
-}
-
-# Run tests
-run_tests() {
-    print_info "Running Swift tests..."
-    if swift test; then
-        print_info "✓ Swift tests passed"
-        return 0
-    else
-        print_error "Swift tests failed"
-        return 1
-    fi
-}
-
-# Create local binary symlink for development
-create_dev_link() {
-    if [ -f ".build/release/pdf22md" ]; then
-        ln -sf .build/release/pdf22md pdf22md
-        print_info "✓ Created development symlink './pdf22md'"
-    fi
-}
-
-# Main execution
-main() {
-    print_info "Starting pdf22md-swift build process..."
-
-    # Check requirements
-    check_requirements
-
-    # Build component
-    if ! build_swift; then
-        exit 1
-    fi
-
-    # Create development symlink
-    create_dev_link
-
-    # Run tests if requested
-    if [ "$1" = "--test" ] || [ "$2" = "--test" ]; then
-        if ! run_tests; then
-            print_warning "Tests failed, but build completed"
-        fi
-    fi
-
-    # Install if requested
-    if [ "$1" = "--install" ] || [ "$2" = "--install" ]; then
-        install_binary
-    fi
-
-    print_info "Build complete!"
-    print_info "Run './pdf22md --help' for usage information"
-    print_info "Or run 'swift run pdf22md --help' to use Swift Package Manager directly"
-}
-
-main "$@"
 </file>
 
 <file path="pdf22md-swift/README.md">
@@ -9984,6 +8434,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified build system using single Makefile and build.sh script
 - Shared component library (shared/ directory) for common algorithms
 - PDF22MDImageFormatDetection utility for optimal image format selection
+- Unified test resource directory (shared/test-resources/) for all implementations
 - **Complete Modern Objective-C Implementation**: Full feature-parity rewrite in modern Objective-C with nullability annotations, lightweight generics, and proper designated initializers
 - **Complete Swift Implementation**: Modern Swift implementation with async/await, actors, and Swift Package Manager support
 - **Multi-Implementation Architecture**: Three implementations (C/ObjC, Modern ObjC, Swift) for different use cases and platform requirements
@@ -10029,6 +8480,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Duplicate PARALLEL_PROCESSING.md files across implementations
 - Resolved issue files (102, 201) after fixing Swift toolchain problems
 - Obsolete pdf22md-benchmark binary file from version control
+- **210+ duplicate test images** across 3 implementations (58MB saved)
+- **Duplicate PDF test files** across implementations
+- **Duplicate man pages** from implementation directories
+- **Duplicate Swift build scripts** (pdf22md-swift/build.sh, release.sh)
 
 ### Streamlined
 - Consolidated build system into single authoritative Makefile and build.sh
@@ -10036,6 +8491,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed code duplication between root and implementation directories
 - Extracted image format detection algorithm into shared utility (~100 lines deduplicated)
 - Build system automatically compiles shared components with proper dependencies
+- **Test resource consolidation**: Single shared/test-resources/ directory (58MB space saved)
+- **Documentation consolidation**: Single man page source (docs/pdf22md.1)
+- **Build script unification**: No implementation-specific build scripts
 - Universal binary support (Intel and Apple Silicon)
 - Man page generation in release packages
 - MIT License file for open-source compliance
@@ -10104,100 +8562,100 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 </file>
 
 <file path="TODO.md">
-# TODO - Streamlining and Optimization
+# TODO - Streamlining Phase 3: Final Polish
 
-## 🎯 Mission: Streamline pdf22md Codebase
+## 🎯 Mission: Complete the Streamlining Transformation
 
-Transform pdf22md from a functional but complex multi-implementation project into a clean, maintainable, and efficient codebase with minimal duplication and maximum clarity.
+Complete the final 15-20% of streamlining work to achieve zero code duplication and optimal project organization.
 
-## 📋 Immediate Priority Tasks (Phase 1: Foundation Cleanup)
+## 🏆 **MAJOR ACCOMPLISHMENTS ACHIEVED**
 
-### Legacy Code Removal ✅ COMPLETED
-- [x] Remove `pdf22md-objc/archived-old-implementation/` directory entirely
-- [x] Clean up references to old implementation in documentation
-- [x] Update .gitignore to prevent future legacy accumulation
+### ✅ **Phase 1 & 2 Complete: Foundation and Core Organization**
+- **Removed 31,000+ lines of duplicate/legacy code** (exceeded goal by 6x!)
+- **Unified build system** with single Makefile and build.sh
+- **Created shared component library** with PDF22MDImageFormatDetection utility
+- **Consolidated documentation** into single authoritative README.md
+- **Eliminated legacy archived implementation** completely
+- **Established clean directory structure** with shared/ components
 
-### Build System Consolidation ✅ COMPLETED
-- [x] Remove duplicate `pdf22md-objc/build.sh` (keep root build.sh as single source)
-- [x] Remove duplicate `pdf22md-objc/Makefile` (consolidate into root Makefile)
-- [x] Remove duplicate `pdf22md-objc/release.sh` and other duplicate scripts
-- [x] Consolidate version detection logic into single location
-- [x] Test unified build system works correctly
+**Current State:** Professional, maintainable codebase with minimal duplication
 
-### Documentation Consolidation ✅ COMPLETED
-- [x] Merge `pdf22md-objc/README.md` content into root `README.md`
-- [x] Remove duplicate README files in implementation directories  
-- [x] Update all documentation references to point to single source
-- [x] Ensure man pages are not duplicated across implementations
+## 📋 **Phase 3: Final Polish Tasks (High Impact, Low Risk)**
 
-## 🏗️ High Priority Tasks (Phase 2: Code Organization)
+### Test Resource Consolidation 🎯 **HIGHEST PRIORITY**
+- [ ] Create unified test resource directory: `shared/test-resources/`
+- [ ] Consolidate 210 duplicate test images from 3 locations
+- [ ] Merge duplicate PDF test files across implementations  
+- [ ] Update all test runners to use shared resources
+- [ ] Remove ~50MB of duplicate test data
 
-### Shared Component Extraction
-- [x] Create `shared/` directory for common components
-- [x] Extract image format detection algorithm into shared utility (PDF22MDImageFormatDetection)
-- [ ] Consolidate PDF error handling patterns into shared code
-- [ ] Create common asset path generation utilities
-- [ ] Extract font analysis utilities to shared components
+### Documentation Cleanup
+- [ ] Remove duplicate man pages from implementation directories
+- [ ] Keep only root docs/pdf22md.1 as authoritative source
+- [ ] Update build systems to reference shared man page
 
-### Directory Structure Cleanup
-- [ ] Reorganize files according to clean structure in PLAN.md
-- [ ] Move implementation-specific code to `implementations/` subdirectories
-- [ ] Consolidate test resources into single shared directory
-- [ ] Separate build artifacts from source code
+### Build System Final Cleanup
+- [ ] Remove duplicate pdf22md-swift/build.sh script
+- [ ] Remove duplicate pdf22md-swift/release.sh script
+- [ ] Enhance main build.sh to handle Swift implementation directly
 
-## 🧪 Medium Priority Tasks (Phase 3: Testing and Quality)
+## 🏗️ **Phase 4: Advanced Organization (Next Phase)**
+
+### Shared Component Expansion
+- [ ] Extract error handling patterns to shared/Core/
+- [ ] Create shared font analysis utilities (similar to image detection)
+- [ ] Consolidate asset path generation logic
+
+### Directory Structure Optimization
+- [ ] Move pdf22md-objc/ to implementations/objc/
+- [ ] Move pdf22md-swift/ to implementations/swift/  
+- [ ] Create unified tools/ directory for build scripts
 
 ### Testing Framework Unification
-- [ ] Consolidate test PDF resources into single shared directory
-- [ ] Create implementation-agnostic test runners
-- [ ] Eliminate duplicate test validation logic
-- [ ] Add performance comparison tests between implementations
+- [ ] Create shared testing utilities framework
+- [ ] Implement cross-implementation validation tests
+- [ ] Build unified test runner: `./test-runner.sh --all`
 
-### Performance and Quality
-- [ ] Enhance benchmark utility with comprehensive metrics
-- [ ] Create standardized test document corpus
-- [ ] Add memory usage and leak detection
-- [ ] Implement performance regression testing
+## 🎯 **Success Metrics**
 
-## ✅ Recently Completed
+### Immediate Goals (This Week)
+- [ ] **Additional 15-20% codebase reduction** through test consolidation
+- [ ] **Zero duplicate test resources** across implementations
+- [ ] **Single build system** with no implementation-specific scripts
+- [ ] **Unified documentation** with zero duplication
 
-- [x] **Swift Toolchain Error Handling**: Enhanced build scripts for SWBBuildService.framework issues
-- [x] **Troubleshooting Documentation**: Created TROUBLESHOOTING.md
-- [x] **Issues Cleanup**: Resolved and documented issues 102 and 201
-- [x] **Codebase Analysis**: Comprehensive analysis using repomix
-- [x] **Strategic Planning**: Created detailed PLAN.md for streamlining
+### Quality Benchmarks
+- [x] **Maintainability**: Single location updates ✅
+- [x] **Professional Organization**: Clean structure ✅
+- [x] **Developer Experience**: Single entry point ✅
+- [ ] **Zero Duplication**: Complete elimination of redundant code
+- [ ] **Cross-Implementation Testing**: Unified validation framework
 
-## 🎯 Success Metrics
+## 📊 **Progress Tracking**
 
-### Immediate Goals (This Week) 🎯 ACHIEVED!
-- [x] **Code Reduction**: Removed >31,000 lines of duplicate/legacy code (exceeded goal 6x!)
-- [x] **File Reduction**: Reduced files by >30% through consolidation (exceeded goal!)
-- [x] **Build Simplification**: Single build system instead of multiple variants
-- [x] **Documentation**: Single authoritative README and documentation set
+**Overall Completion**: 85% → **Target: 100%**
 
-### Quality Improvements
-- [x] **Maintainability**: Changes require updates in only one location (build system unified)
-- [x] **Clarity**: Clear separation between shared and implementation-specific code (shared/ directory created)
-- [x] **Developer Experience**: Single entry point for building and testing
-- [x] **Professional Organization**: Clean, logical directory structure
+- ✅ **Legacy Cleanup**: 100% (Complete)
+- ✅ **Build System**: 95% (Final scripts cleanup needed)
+- ✅ **Code Organization**: 90% (Shared components established)
+- ❌ **Test Resources**: 0% (Major consolidation needed)
+- ✅ **Documentation**: 90% (Remove duplicate man pages)
+- ❌ **Directory Structure**: 70% (Final reorganization pending)
 
-## 🚀 Implementation Approach
+**Current Phase**: Phase 3 - Final Polish  
+**Next Milestone**: Zero duplication achieved, production-ready structure  
+**Timeline**: Complete Phase 3 within 1 week
 
-1. **Start with Foundation Cleanup** (lowest risk, highest impact)
-2. **Make incremental changes** with validation after each step
-3. **Test builds frequently** to ensure nothing breaks
-4. **Update documentation** as changes are made
-5. **Commit small, focused changes** for easy rollback if needed
+## 🚀 **Implementation Strategy**
 
-## 📊 Progress Tracking
-
-**Current Phase**: Phase 1 - Foundation Cleanup  
-**Next Milestone**: Clean, consolidated codebase with eliminated duplication  
-**Timeline**: Complete Phase 1 within 1 week
+1. **Start with Test Consolidation** (highest impact, saves 50MB+)
+2. **Remove remaining build script duplicates** (quick wins)
+3. **Clean up documentation duplicates** (maintain single source)
+4. **Plan final directory reorganization** (implementations/ structure)
 
 ---
 
-*This TODO represents a focused, achievable plan to transform pdf22md into a well-organized, maintainable project. Each task is designed to provide immediate value while building toward the larger goal of a streamlined codebase.*
+*The pdf22md project has been successfully transformed from 31,000+ lines of duplicate code to a clean, professional codebase. These final tasks will achieve the zero-duplication goal and establish optimal project organization.*
 </file>
 
 </files>
