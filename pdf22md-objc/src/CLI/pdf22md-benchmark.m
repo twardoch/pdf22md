@@ -196,11 +196,15 @@ typedef struct {
     mach_timebase_info(&timebase);
     
     // Load PDF
+    if (self.verbose) {
+        printf("  Loading PDF from: %s\n", pdfPath.UTF8String);
+    }
+    
     NSURL *pdfURL = [NSURL fileURLWithPath:pdfPath];
     PDF22MDConverter *converter = [[PDF22MDConverter alloc] initWithPDFURL:pdfURL];
     
     if (!converter) {
-        fprintf(stderr, "%sError: Failed to load PDF%s\n", COLOR_RED, COLOR_RESET);
+        fprintf(stderr, "%sError: Failed to load PDF from %s%s\n", COLOR_RED, pdfPath.UTF8String, COLOR_RESET);
         return result;
     }
     
@@ -219,6 +223,10 @@ typedef struct {
     __block NSString *markdown = nil;
     __block NSError *convError = nil;
     
+    if (self.verbose) {
+        printf("  Starting conversion with %lu pages...\n", (unsigned long)result.pageCount);
+    }
+    
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
     [converter convertWithOptions:options completion:^(NSString *output, NSError *error) {
@@ -227,7 +235,12 @@ typedef struct {
         dispatch_semaphore_signal(semaphore);
     }];
     
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    // Wait with timeout
+    dispatch_time_t timeout = dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC);
+    if (dispatch_semaphore_wait(semaphore, timeout) != 0) {
+        fprintf(stderr, "%sError: Conversion timed out after 30 seconds%s\n", COLOR_RED, COLOR_RESET);
+        return result;
+    }
     
     uint64_t convEnd = mach_absolute_time();
     
