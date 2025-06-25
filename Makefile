@@ -7,7 +7,7 @@ TARGET = pdf22md
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 
 # Define directories
-SRC_DIR = src
+SRC_DIR = pdf22md-objc/src
 BUILD_DIR = build
 
 # Source and object files - look in all subdirectories, exclude benchmark
@@ -19,7 +19,7 @@ PREFIX ?= /usr/local
 
 # Additional targets
 BENCHMARK = pdf22md-benchmark
-BENCHMARK_SRC = src/CLI/pdf22md-benchmark.m
+BENCHMARK_SRC = pdf22md-objc/src/CLI/pdf22md-benchmark.m
 
 all: $(BUILD_DIR) $(TARGET)
 
@@ -31,7 +31,7 @@ $(TARGET): $(OBJECTS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.m | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -Isrc -c $< -o $@
+	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -I$(SRC_DIR) -c $< -o $@
 
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET) $(BENCHMARK)
@@ -40,7 +40,7 @@ install: $(TARGET)
 	install -d $(DESTDIR)$(PREFIX)/bin
 	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/
 	install -d $(DESTDIR)$(PREFIX)/share/man/man1
-	install -m 644 docs/pdf22md.1 $(DESTDIR)$(PREFIX)/share/man/man1/
+	install -m 644 pdf22md-objc/docs/pdf22md.1 $(DESTDIR)$(PREFIX)/share/man/man1/
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
@@ -86,7 +86,7 @@ test-clean:
 # Build benchmark tool
 $(BUILD_DIR)/CLI/pdf22md-benchmark.o: $(BENCHMARK_SRC) | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -Isrc -c $< -o $@
+	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -I$(SRC_DIR) -c $< -o $@
 
 $(BENCHMARK): $(BUILD_DIR) $(BUILD_DIR)/CLI/pdf22md-benchmark.o $(filter-out $(BUILD_DIR)/CLI/main.o, $(OBJECTS))
 	@echo "🔨 Building benchmark tool..."

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Complete Modern Objective-C Implementation**: Full feature-parity rewrite in modern Objective-C with nullability annotations, lightweight generics, and proper designated initializers
+- **Complete Swift Implementation**: Modern Swift implementation with async/await, actors, and Swift Package Manager support
+- **Multi-Implementation Architecture**: Three implementations (C/ObjC, Modern ObjC, Swift) for different use cases and platform requirements
+- **Advanced Error Handling**: Custom error domains and comprehensive error reporting across all implementations
+- **Thread-Safe Asset Management**: Concurrent image processing with proper synchronization
+- **Modern Build Infrastructure**: Support for both Makefile and Xcode/SPM build systems
 - TROUBLESHOOTING.md documentation for common build and runtime issues
 - Enhanced Swift toolchain detection in build scripts
 - Better error messages for SWBBuildService.framework missing issue
@@ -16,6 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Verbose logging options for PDF loading and conversion processes
 - Timeout handling for conversion process to prevent hangs
 - Comprehensive test data with sample PDFs and expected output
+- Semantic versioning support based on git tags
+- Version display option (-v, -V) in the command-line tool
+- Release automation script (release.sh) for macOS
+- GitHub Actions workflow for automated releases
+- Package installer (.pkg) generation for macOS
+
+### Changed
+- Restructured project with separate directories for each implementation (pdf22md-objc, pdf22md-swift)
+- Moved test files and resources to implementation-specific directories
+- Updated object file compilation commands in build scripts
 
 ### Improved
 - Build scripts now provide clearer guidance when Swift toolchain is corrupted
@@ -24,30 +40,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error reporting now includes process IDs for easier debugging
 - Conversion feedback with detailed status messages during operations
 
-### Changed
-- Restructured project with separate directories for each implementation (pdf22md-objc, pdf22md-swift)
-- Moved test files and resources to implementation-specific directories
-- Updated object file compilation commands in build scripts
-
 ### Fixed
 - Duplicate symbol errors in pdf22md-objc build process
 - Build script compatibility issues with object file handling
+- PDF processing hang issue with timeout implementation
+- Memory leaks in asset management
 
 ### Removed
 - Obsolete pdf22md-benchmark binary file from version control
-
-### Added
-- **Complete Modern Objective-C Implementation**: Full feature-parity rewrite in modern Objective-C with nullability annotations, lightweight generics, and proper designated initializers
-- **Complete Swift Implementation**: Modern Swift implementation with async/await, actors, and Swift Package Manager support
-- **Multi-Implementation Architecture**: Three implementations (C/ObjC, Modern ObjC, Swift) for different use cases and platform requirements
-- **Advanced Error Handling**: Custom error domains and comprehensive error reporting across all implementations
-- **Thread-Safe Asset Management**: Concurrent image processing with proper synchronization
-- **Modern Build Infrastructure**: Support for both Makefile and Xcode/SPM build systems
-- Semantic versioning support based on git tags
-- Version display option (-v, -V) in the command-line tool
-- Release automation script (release.sh) for macOS
-- GitHub Actions workflow for automated releases
-- Package installer (.pkg) generation for macOS
 - Universal binary support (Intel and Apple Silicon)
 - Man page generation in release packages
 - MIT License file for open-source compliance

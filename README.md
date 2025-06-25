@@ -8,14 +8,33 @@ A blazingly fast PDF to Markdown converter for macOS.
 
 `pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
 
-## Project Structure
+## Architecture
 
-This repository contains two separate implementations of pdf22md:
+pdf22md is built with modern Objective-C and Swift implementations:
 
-- **[pdf22md-objc/](./pdf22md-objc/)**: Modern Objective-C implementation with thread-safe design
-- **[pdf22md-swift/](./pdf22md-swift/)**: Modern Swift implementation with async/await and structured concurrency
+- **pdf22md-objc/**: Modern Objective-C implementation with thread-safe design, nullability annotations, and modular architecture
+- **pdf22md-swift/**: Modern Swift implementation with async/await and structured concurrency
 
-Both implementations provide the same core functionality with different architectural approaches.
+### Core Components
+
+```
+pdf22md/
+├── pdf22md-objc/src/
+│   ├── Core/                    # Core conversion logic
+│   │   ├── PDF22MDConverter     # Main coordinator
+│   │   ├── PDF22MDPageProcessor # Page content extraction
+│   │   ├── PDF22MDFontAnalyzer  # Heading detection
+│   │   └── PDF22MDError         # Error handling
+│   ├── Models/                  # Data models
+│   │   ├── PDF22MDTextElement   # Text content
+│   │   └── PDF22MDImageElement  # Image content
+│   ├── Services/                # Business logic services
+│   │   ├── PDF22MDAssetManager  # Image extraction/saving
+│   │   └── PDF22MDMarkdownGenerator # Markdown generation
+│   └── CLI/                     # Command-line interface
+├── pdf22md-swift/               # Swift implementation
+└── shared/                      # Common utilities and protocols
+```
 
 ## Key Features
 

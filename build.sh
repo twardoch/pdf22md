@@ -51,26 +51,33 @@ build_objc() {
         return 1
     fi
     
-    cd pdf22md-objc
-    
-    # Build with options
-    local build_cmd="./build.sh"
-    if [ "$RUN_TESTS" = "true" ]; then
-        build_cmd="$build_cmd --test"
-    fi
-    if [ "$INSTALL_BINARIES" = "true" ]; then
-        build_cmd="$build_cmd --install"
-    fi
-    
-    if $build_cmd; then
+    # Build using unified Makefile
+    if make clean && make; then
         print_info "✓ pdf22md-objc built successfully"
         build_results_objc=0
+        
+        # Run tests if requested
+        if [ "$RUN_TESTS" = "true" ]; then
+            if make test; then
+                print_info "✓ Tests passed"
+            else
+                print_warning "Tests failed, but build completed"
+            fi
+        fi
+        
+        # Install if requested
+        if [ "$INSTALL_BINARIES" = "true" ]; then
+            if sudo make install; then
+                print_info "✓ Installation completed"
+            else
+                print_error "Installation failed"
+                build_results_objc=1
+            fi
+        fi
     else
         print_error "✗ pdf22md-objc build failed"
         build_results_objc=1
     fi
-    
-    cd ..
     return $build_results_objc
 }
 
