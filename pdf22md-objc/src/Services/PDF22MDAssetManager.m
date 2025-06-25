@@ -1,5 +1,6 @@
 #import "PDF22MDAssetManager.h"
 #import "../Models/PDF22MDImageElement.h"
+#import "../../shared/Algorithms/PDF22MDImageFormatDetection.h"
 #import <ImageIO/ImageIO.h>
 
 @interface PDF22MDAssetManager ()
@@ -53,7 +54,7 @@
     }
     
     // Determine optimal format
-    BOOL shouldUseJPEG = [self shouldUseJPEGForImage:image isVectorSource:isVectorSource];
+    BOOL shouldUseJPEG = [PDF22MDImageFormatDetection shouldUseJPEGForImage:image isVectorSource:isVectorSource];
     
     NSString *extension = shouldUseJPEG ? @"jpg" : @"png";
     NSString *fileName = [self uniqueFilenameForBaseName:baseName withExtension:extension];
@@ -111,40 +112,6 @@
     return savedPath;
 }
 
-- (BOOL)shouldUseJPEGForImage:(CGImageRef)image
-                isVectorSource:(BOOL)isVectorSource {
-    if (!image) {
-        return NO;
-    }
-    
-    // Get image properties
-    size_t width = CGImageGetWidth(image);
-    size_t height = CGImageGetHeight(image);
-    CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo(image);
-    
-    // If image has alpha channel, use PNG
-    if (alphaInfo != kCGImageAlphaNone &&
-        alphaInfo != kCGImageAlphaNoneSkipFirst &&
-        alphaInfo != kCGImageAlphaNoneSkipLast) {
-        return NO;
-    }
-    
-    // For small images, use PNG
-    if (width * height < 10000) { // Less than 100x100
-        return NO;
-    }
-    
-    // For vector sources, prefer PNG to maintain quality
-    if (isVectorSource) {
-        return NO;
-    }
-    
-    // Analyze color complexity
-    NSUInteger uniqueColors = [self estimateUniqueColorCountForImage:image];
-    
-    // If we have many unique colors, it's likely a photograph - use JPEG
-    return uniqueColors > 256;
-}
 
 - (NSString *)uniqueFilenameForBaseName:(NSString *)baseName
                           withExtension:(NSString *)extension {
@@ -168,65 +135,5 @@
     return filename;
 }
 
-#pragma mark - Private Methods
-
-- (NSUInteger)estimateUniqueColorCountForImage:(CGImageRef)image {
-    size_t width = CGImageGetWidth(image);
-    size_t height = CGImageGetHeight(image);
-    
-    // Sample a subset of pixels for performance
-    size_t __unused sampleSize = MIN(width * height, 10000);
-    size_t stepX = MAX(1, width / 100);
-    size_t stepY = MAX(1, height / 100);
-    
-    // Create a small bitmap context for sampling
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    size_t bytesPerRow = 4; // Single pixel
-    unsigned char *pixelData = calloc(4, sizeof(unsigned char));
-    
-    if (!pixelData) {
-        CGColorSpaceRelease(colorSpace);
-        return 256; // Default to medium complexity
-    }
-    
-    CGContextRef context = CGBitmapContextCreate(pixelData, 1, 1, 8, bytesPerRow, colorSpace,
-                                                kCGImageAlphaNoneSkipLast | kCGBitmapByteOrder32Big);
-    CGColorSpaceRelease(colorSpace);
-    
-    if (!context) {
-        free(pixelData);
-        return 256;
-    }
-    
-    // Count unique colors by sampling
-    NSMutableSet *uniqueColors = [NSMutableSet set];
-    
-    for (size_t y = 0; y < height; y += stepY) {
-        for (size_t x = 0; x < width; x += stepX) {
-            // Draw a single pixel
-            CGRect __unused sourceRect = CGRectMake(x, y, 1, 1);
-            CGContextClearRect(context, CGRectMake(0, 0, 1, 1));
-            CGContextDrawImage(context, CGRectMake(-x, -y, width, height), image);
-            
-            uint32_t color = (pixelData[0] << 24) | (pixelData[1] << 16) | 
-                           (pixelData[2] << 8) | pixelData[3];
-            [uniqueColors addObject:@(color)];
-            
-            // Early exit if we already have many colors
-            if (uniqueColors.count > 1000) {
-                break;
-            }
-        }
-        
-        if (uniqueColors.count > 1000) {
-            break;
-        }
-    }
-    
-    CGContextRelease(context);
-    free(pixelData);
-    
-    return uniqueColors.count;
-}
 
 @end

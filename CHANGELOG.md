@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Comprehensive streamlining plan (PLAN.md) for codebase optimization
+- Unified build system using single Makefile and build.sh script
 - **Complete Modern Objective-C Implementation**: Full feature-parity rewrite in modern Objective-C with nullability annotations, lightweight generics, and proper designated initializers
 - **Complete Swift Implementation**: Modern Swift implementation with async/await, actors, and Swift Package Manager support
 - **Multi-Implementation Architecture**: Three implementations (C/ObjC, Modern ObjC, Swift) for different use cases and platform requirements
@@ -47,7 +49,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory leaks in asset management
 
 ### Removed
+- Legacy archived-old-implementation directory (2,000+ lines of obsolete code)
+- Duplicate build scripts (pdf22md-objc/build.sh, release.sh, run-tests.sh)
+- Duplicate README files and documentation
+- Duplicate PARALLEL_PROCESSING.md files across implementations
+- Resolved issue files (102, 201) after fixing Swift toolchain problems
 - Obsolete pdf22md-benchmark binary file from version control
+
+### Streamlined
+- Consolidated build system into single authoritative Makefile and build.sh
+- Unified documentation in single root README.md
+- Removed code duplication between root and implementation directories
 - Universal binary support (Intel and Apple Silicon)
 - Man page generation in release packages
 - MIT License file for open-source compliance

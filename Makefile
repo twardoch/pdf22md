@@ -12,7 +12,9 @@ BUILD_DIR = build
 
 # Source and object files - look in all subdirectories, exclude benchmark
 SOURCES = $(filter-out $(BENCHMARK_SRC),$(wildcard $(SRC_DIR)/*/*.m $(SRC_DIR)/*/*/*.m))
-OBJECTS = $(patsubst $(SRC_DIR)/%.m,$(BUILD_DIR)/%.o,$(SOURCES))
+SHARED_SOURCES = $(wildcard shared/*/*.m shared/*/*/*.m)
+ALL_SOURCES = $(SOURCES) $(SHARED_SOURCES)
+OBJECTS = $(patsubst $(SRC_DIR)/%.m,$(BUILD_DIR)/%.o,$(SOURCES)) $(patsubst shared/%.m,$(BUILD_DIR)/shared/%.o,$(SHARED_SOURCES))
 
 # Default prefix for installation
 PREFIX ?= /usr/local
@@ -31,7 +33,11 @@ $(TARGET): $(OBJECTS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.m | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -I$(SRC_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -I$(SRC_DIR) -Ishared -c $< -o $@
+
+$(BUILD_DIR)/shared/%.o: shared/%.m | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -I$(SRC_DIR) -Ishared -c $< -o $@
 
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET) $(BENCHMARK)

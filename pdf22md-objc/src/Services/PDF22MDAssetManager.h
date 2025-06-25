@@ -50,15 +50,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString *)saveImageElement:(PDF22MDImageElement *)imageElement
                            withBaseName:(NSString *)baseName;
 
-/**
- * Determines the optimal image format for the given image.
- *
- * @param image The image to analyze
- * @param isVectorSource Whether this originated from vector graphics
- * @return YES for JPEG, NO for PNG
- */
-- (BOOL)shouldUseJPEGForImage:(CGImageRef)image
-                isVectorSource:(BOOL)isVectorSource;
 
 /**
  * Gets the next available filename for the given base name.
