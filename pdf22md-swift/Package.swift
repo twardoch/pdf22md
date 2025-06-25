@@ -13,17 +13,9 @@ let package = Package(
         .library(
             name: "PDF22MD",
             targets: ["PDF22MD"]
-        ),
-        // Executable product for CLI
-        .executable(
-            name: "pdf22md",
-            targets: ["pdf22md-cli"]
         )
     ],
-    dependencies: [
-        // Swift Argument Parser for CLI
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.0")
-    ],
+    dependencies: [],
     targets: [
         // Main library target
         .target(
@@ -31,26 +23,15 @@ let package = Package(
             dependencies: [],
             path: "Sources/PDF22MD",
             swiftSettings: [
-                .define("VERSION", to: "\"1.0.0\"")
+                .define("VERSION", .when(platforms: [.macOS]))
             ]
         ),
-        // CLI executable target
-        .executableTarget(
-            name: "pdf22md-cli",
-            dependencies: [
-                "PDF22MD",
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
-            ],
-            path: "Sources/CLI"
-        ),
+
         // Test target
         .testTarget(
             name: "PDF22MDTests",
             dependencies: ["PDF22MD"],
-            path: "Tests/PDF22MDTests",
-            resources: [
-                .process("test-resources")
-            ]
+            path: "Tests/PDF22MDTests"
         )
     ]
 ) 

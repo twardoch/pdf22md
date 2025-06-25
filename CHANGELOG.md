@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Major Project Restructuring**: Consolidated build system and moved shared components to implementation-specific directories
+- Moved shared core components (FileSystemUtils, Constants, ErrorFactory, ConcurrencyManager, ImageFormatDetection) to pdf22md-objc/shared-core/
+- Updated imports in source files to reference new shared-core location
+- Created implementation-specific build systems:
+  - pdf22md-objc/Makefile for Objective-C implementation
+  - pdf22md-swift continues using Swift Package Manager
+- Simplified root README.md to focus on high-level project overview
+- Created comprehensive README.md files for each implementation with detailed documentation
+
+### Removed
+- Root-level Makefile and build.sh scripts (functionality moved to pdf22md-objc/)
+- Duplicate test resources that were mistakenly re-added to pdf22md-swift/
+- Redundant documentation from implementation directories
+
 ### Added
 - **PDF22MDFileSystemUtils**: Unified file system operations consolidating scattered NSFileManager patterns
 - **PDF22MDConstants**: Centralized configuration constants eliminating magic numbers across 15+ files
