@@ -224,8 +224,18 @@
         });
     }
     
-    // Wait for all pages to complete
-    dispatch_group_wait(processingGroup, DISPATCH_TIME_FOREVER);
+    // Wait for all pages to complete with timeout
+    dispatch_time_t timeout = dispatch_time(DISPATCH_TIME_NOW, 60 * NSEC_PER_SEC); // 60 seconds timeout
+    long result = dispatch_group_wait(processingGroup, timeout);
+    
+    if (result != 0) {
+        // Timeout occurred
+        if (error) {
+            *error = [PDF22MDErrorHelper processingFailedErrorWithReason:@"PDF processing timed out after 60 seconds. The PDF may be corrupted or too complex."
+                                                       underlyingError:nil];
+        }
+        return nil;
+    }
     
     if (processingFailed) {
         if (error) {

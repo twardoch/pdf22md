@@ -1,7 +1,6 @@
 # Build products
 build/
 *.o
-pdf22md
 
 # macOS
 .DS_Store
@@ -40,3 +39,4 @@ test/out/
 !docs/*.md
 _private/
 pdf22md-swift/.build
+debug-assets/

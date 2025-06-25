@@ -53,11 +53,12 @@
 - (NSArray<id<PDF22MDContentElement>> *)extractTextElements {
     NSMutableArray<id<PDF22MDContentElement>> *elements = [NSMutableArray array];
     
-    // Extract text using PDFKit's high-level API
-    NSString *pageText = [self.pdfPage string];
-    if (!pageText || pageText.length == 0) {
-        return elements;
-    }
+    @try {
+        // Extract text using PDFKit's high-level API
+        NSString *pageText = [self.pdfPage string];
+        if (!pageText || pageText.length == 0) {
+            return elements;
+        }
     
     // Get page bounds for positioning
     CGRect pageRect = [self.pdfPage boundsForBox:kPDFDisplayBoxMediaBox];
@@ -78,9 +79,18 @@
             continue;
         }
         
-        // Try to extract font information from PDF selections
-        PDFSelection *selection = [self.pdfPage selectionForRange:NSMakeRange(0, trimmed.length)];
-        NSDictionary *fontInfo = [self extractFontInfoFromSelection:selection];
+        // Try to extract font information from PDF selections (with timeout protection)
+        NSDictionary *fontInfo = @{@"fontName": @"Unknown", @"fontSize": @12.0, @"isBold": @NO, @"isItalic": @NO};
+        @try {
+            // This operation can hang on malformed PDFs, so we wrap it in a try-catch
+            PDFSelection *selection = [self.pdfPage selectionForRange:NSMakeRange(0, MIN(trimmed.length, 100))];
+            if (selection) {
+                fontInfo = [self extractFontInfoFromSelection:selection] ?: fontInfo;
+            }
+        } @catch (NSException *exception) {
+            // If font extraction fails, continue with defaults
+            NSLog(@"Warning: Font extraction failed for page %ld: %@", (long)self.pageIndex, exception.reason);
+        }
         
         PDF22MDTextElement *element = [[PDF22MDTextElement alloc] initWithText:trimmed
                                                                         bounds:CGRectMake(20, cursorY - lineHeight, pageRect.size.width - 40, lineHeight)
@@ -95,6 +105,12 @@
         // Update cursor position
         NSInteger lineCount = [self estimateLineCountForText:trimmed inWidth:pageRect.size.width - 40];
         cursorY -= (lineHeight * lineCount + paragraphSpacing);
+        }
+        
+    } @catch (NSException *exception) {
+        NSLog(@"Error extracting text from page %ld: %@", (long)self.pageIndex, exception.reason);
+        // Return empty array on error rather than crashing
+        return @[];
     }
     
     return elements;
@@ -103,8 +119,9 @@
 - (NSArray<id<PDF22MDContentElement>> *)extractImageElements {
     NSMutableArray<id<PDF22MDContentElement>> *elements = [NSMutableArray array];
     
-    // Method 1: Extract images from annotations
-    NSArray<PDFAnnotation *> *annotations = [self.pdfPage annotations];
+    @try {
+        // Method 1: Extract images from annotations
+        NSArray<PDFAnnotation *> *annotations = [self.pdfPage annotations];
     
     for (PDFAnnotation *annotation in annotations) {
         // Check if annotation might contain an image
@@ -127,6 +144,11 @@
         CGRect region;
         [regionData getBytes:&region length:sizeof(CGRect)];
         [self captureVectorGraphicsInBounds:region withElements:elements];
+        }
+        
+    } @catch (NSException *exception) {
+        NSLog(@"Error extracting images from page %ld: %@", (long)self.pageIndex, exception.reason);
+        // Return what we have so far on error
     }
     
     return elements;
