@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Comprehensive streamlining plan (PLAN.md) for codebase optimization
 - Unified build system using single Makefile and build.sh script
+- Shared component library (shared/ directory) for common algorithms
+- PDF22MDImageFormatDetection utility for optimal image format selection
 - **Complete Modern Objective-C Implementation**: Full feature-parity rewrite in modern Objective-C with nullability annotations, lightweight generics, and proper designated initializers
 - **Complete Swift Implementation**: Modern Swift implementation with async/await, actors, and Swift Package Manager support
 - **Multi-Implementation Architecture**: Three implementations (C/ObjC, Modern ObjC, Swift) for different use cases and platform requirements
@@ -60,6 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consolidated build system into single authoritative Makefile and build.sh
 - Unified documentation in single root README.md
 - Removed code duplication between root and implementation directories
+- Extracted image format detection algorithm into shared utility (~100 lines deduplicated)
+- Build system automatically compiles shared components with proper dependencies
 - Universal binary support (Intel and Apple Silicon)
 - Man page generation in release packages
 - MIT License file for open-source compliance
