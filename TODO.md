@@ -10,6 +10,8 @@ Transform pdf22md from a solid foundation (85% ready) into a production-ready, p
 - [x] **Memory Safety**: Fixed all segmentation faults and memory leaks
 - [x] **CLI Interface**: Functional command-line tool with proper argument parsing
 - [x] **Documentation**: Comprehensive README, CHANGELOG, project documentation
+- [x] **Swift Toolchain Error Handling**: Enhanced build scripts to handle SWBBuildService.framework issues
+- [x] **Troubleshooting Documentation**: Created TROUBLESHOOTING.md for common build/runtime issues
 
 ---
 

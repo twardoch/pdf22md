@@ -93,6 +93,20 @@ build_swift() {
         return 1
     fi
     
+    # Check for Swift Package Manager functionality
+    if ! swift package --version >/dev/null 2>&1; then
+        print_error "Swift Package Manager is not functional"
+        print_warning "This is often due to missing SWBBuildService.framework"
+        print_info "Possible solutions:"
+        print_info "  1. Run: xcode-select --install"
+        print_info "  2. If you have Xcode installed: sudo xcode-select -s /Applications/Xcode.app"
+        print_info "  3. Reinstall Command Line Tools completely:"
+        print_info "     sudo rm -rf /Library/Developer/CommandLineTools"
+        print_info "     xcode-select --install"
+        build_results_swift=1
+        return 1
+    fi
+    
     cd pdf22md-swift
     
     # Build with options

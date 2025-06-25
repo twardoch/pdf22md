@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- TROUBLESHOOTING.md documentation for common build and runtime issues
+- Enhanced Swift toolchain detection in build scripts
+- Better error messages for SWBBuildService.framework missing issue
+
+### Improved
+- Build scripts now provide clearer guidance when Swift toolchain is corrupted
+- Swift build failures are handled more gracefully with specific remediation steps
+
+### Added
 - **Complete Modern Objective-C Implementation**: Full feature-parity rewrite in modern Objective-C with nullability annotations, lightweight generics, and proper designated initializers
 - **Complete Swift Implementation**: Modern Swift implementation with async/await, actors, and Swift Package Manager support
 - **Multi-Implementation Architecture**: Three implementations (C/ObjC, Modern ObjC, Swift) for different use cases and platform requirements

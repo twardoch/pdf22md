@@ -40,31 +40,34 @@ build_swift() {
     # Try to detect and fix Swift toolchain issues
     print_info "Checking Swift toolchain..."
     
-    # First try: use xcrun to ensure proper toolchain
-    if command -v xcrun &>/dev/null && xcrun swift build -c release 2>/dev/null; then
-        print_info "✓ pdf22md-swift built successfully (using xcrun)"
-        return 0
-    fi
+    # Check for SWBBuildService.framework issue
+    local swift_build_output
+    swift_build_output=$(swift build -c release 2>&1)
+    local exit_code=$?
     
-    # Second try: standard swift build with error handling for framework issues
-    print_warning "xcrun failed, trying direct swift build..."
-    if swift build -c release 2>/dev/null; then
+    if [ $exit_code -eq 0 ]; then
         print_info "✓ pdf22md-swift built successfully"
         return 0
-    fi
-    
-    # Third try: reset package and try again
-    print_warning "Standard build failed, attempting package reset..."
-    swift package reset 2>/dev/null || true
-    
-    if swift build -c release; then
-        print_info "✓ pdf22md-swift built successfully (after reset)"
-        return 0
+    elif echo "$swift_build_output" | grep -q "SWBBuildService.framework"; then
+        print_error "Swift Package Manager framework missing: SWBBuildService.framework"
+        print_warning "This is a known issue with Command Line Tools installation"
+        print_info ""
+        print_info "To fix this issue, try ONE of these solutions:"
+        print_info ""
+        print_info "Option 1: If you have Xcode installed"
+        print_info "  sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
+        print_info ""
+        print_info "Option 2: Reinstall Command Line Tools"
+        print_info "  sudo rm -rf /Library/Developer/CommandLineTools"
+        print_info "  xcode-select --install"
+        print_info ""
+        print_info "Option 3: Use the Objective-C implementation instead"
+        print_info "  ./build.sh --objc-only"
+        return 1
     else
-        print_error "Failed to build pdf22md-swift"
-        print_error "This may indicate a corrupted Swift toolchain."
-        print_info "Try running: xcode-select --install"
-        print_info "Or reinstall Xcode Command Line Tools"
+        # Show the actual error
+        print_error "Swift build failed with error:"
+        echo "$swift_build_output" | tail -n 20
         return 1
     fi
 }
