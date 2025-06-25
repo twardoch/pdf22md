@@ -105,7 +105,7 @@
         
         if (exists && !isDirectory) {
             if (error) {
-                *error = [PDF22MDErrorHelper assetCreationFailedErrorWithPath:self.assetsFolderPath
+                *error = [PDF22MDErrorHelper assetFolderCreationErrorWithPath:self.assetsFolderPath
                                                                          reason:@"Path exists but is not a directory"];
             }
             return NO;

@@ -8,6 +8,15 @@ A blazingly fast PDF to Markdown converter for macOS.
 
 `pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
 
+## Project Structure
+
+This repository contains two separate implementations of pdf22md:
+
+- **[pdf22md-objc/](./pdf22md-objc/)**: Modern Objective-C implementation with thread-safe design
+- **[pdf22md-swift/](./pdf22md-swift/)**: Modern Swift implementation with async/await and structured concurrency
+
+Both implementations provide the same core functionality with different architectural approaches.
+
 ## Key Features
 
 - **High-Speed Conversion**: Uses all available CPU cores to process PDF pages concurrently
@@ -16,7 +25,6 @@ A blazingly fast PDF to Markdown converter for macOS.
 - **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality
 - **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`
 - **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps
-- **Clean Output**: Runs without verbose debug logging for a noise-free CLI experience
 
 ## Installation
 
@@ -31,16 +39,53 @@ brew install pdf22md
 
 To build the project manually, you need Xcode Command Line Tools installed.
 
+#### Quick Start - Build Everything
 ```bash
 # Clone the repository
 git clone https://github.com/twardoch/pdf22md.git
 cd pdf22md
 
-# Compile the tool
-make
+# Build both implementations
+./build.sh
 
-# Install it to /usr/local/bin (optional)
-sudo make install
+# Build, test, and install both implementations
+./build.sh --test --install
+
+# Build and create release archives
+./build.sh --release
+```
+
+#### Build Script Options
+```bash
+./build.sh                    # Build both implementations
+./build.sh --test             # Build and test both implementations  
+./build.sh --install          # Build and install both to /usr/local/bin
+./build.sh --test --install   # Build, test, and install both
+./build.sh --objc-only        # Build only Objective-C implementation
+./build.sh --swift-only       # Build only Swift implementation
+./build.sh --release          # Build both and create release archives
+./build.sh --help             # Show all options
+```
+
+#### Building Individual Implementations
+
+Each implementation can also be built independently:
+
+**Objective-C Implementation:**
+```bash
+cd pdf22md-objc
+./build.sh                    # Build only
+./build.sh --test             # Build and test
+./build.sh --install          # Build and install to /usr/local/bin/pdf22md
+```
+
+**Swift Implementation:**
+```bash
+cd pdf22md-swift
+./build.sh                    # Build only
+./build.sh --test             # Build and test
+./build.sh --install          # Build and install to /usr/local/bin/pdf22md-swift
+./release.sh                  # Create release archive
 ```
 
 ### Download Pre-built Binary

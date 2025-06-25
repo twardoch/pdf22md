@@ -40,6 +40,25 @@ pdf22md-swift/
 
 ## Building
 
+### Using the Build Script (Recommended)
+```bash
+# Build the project
+./build.sh
+
+# Build and run tests
+./build.sh --test
+
+# Build and install to /usr/local/bin
+./build.sh --install
+
+# Build, test, and install
+./build.sh --test --install
+
+# Create release archive
+./release.sh
+```
+
+### Using Swift Package Manager Directly
 ```bash
 # Build with Swift Package Manager
 swift build

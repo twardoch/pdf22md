@@ -150,7 +150,7 @@
         assetManager = [[PDF22MDAssetManager alloc] initWithAssetFolder:options.assetsFolderPath];
         if (!assetManager) {
             if (error) {
-                *error = [PDF22MDErrorHelper assetCreationFailedErrorWithPath:options.assetsFolderPath
+                *error = [PDF22MDErrorHelper assetFolderCreationErrorWithPath:options.assetsFolderPath
                                                                           reason:@"Failed to create asset manager"];
             }
             return nil;

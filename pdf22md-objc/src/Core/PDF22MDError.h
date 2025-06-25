@@ -19,7 +19,7 @@ typedef NS_ERROR_ENUM(PDF22MDErrorDomain, PDF22MDError) {
     /**
      * Failed to create the assets folder or save extracted images.
      */
-    PDF22MDErrorAssetCreationFailed = 1001,
+    PDF22MDErrorAssetFolderCreation = 1001,
     
     /**
      * General processing failure during conversion.
@@ -42,14 +42,39 @@ typedef NS_ERROR_ENUM(PDF22MDErrorDomain, PDF22MDError) {
     PDF22MDErrorIOFailure = 1005,
     
     /**
-     * Memory allocation failure.
+     * Memory allocation failure or insufficient memory to process PDF.
      */
-    PDF22MDErrorMemoryFailure = 1006,
+    PDF22MDErrorMemoryPressure = 1006,
     
     /**
      * Operation was cancelled.
      */
-    PDF22MDErrorCancelled = 1007
+    PDF22MDErrorCancelled = 1007,
+    
+    /**
+     * PDF processing timed out (document too complex).
+     */
+    PDF22MDErrorProcessingTimeout = 1008,
+    
+    /**
+     * Password-protected PDFs are not currently supported.
+     */
+    PDF22MDErrorEncryptedPDF = 1009,
+    
+    /**
+     * The PDF contains no readable content.
+     */
+    PDF22MDErrorEmptyDocument = 1010,
+    
+    /**
+     * Invalid input parameters provided.
+     */
+    PDF22MDErrorInvalidInput = 1011,
+    
+    /**
+     * File not found at specified path.
+     */
+    PDF22MDErrorFileNotFound = 1012
 };
 
 /**
@@ -60,9 +85,17 @@ extern NSString * const PDF22MDErrorFilePathKey;       // NSString containing th
 extern NSString * const PDF22MDErrorUnderlyingErrorKey; // Original NSError that caused this error
 
 /**
- * Helper class for creating consistent error objects.
+ * Helper class for creating consistent, user-friendly error objects.
  */
 @interface PDF22MDErrorHelper : NSObject
+
+/**
+ * Creates a user-friendly error with code, description, and actionable suggestion.
+ */
++ (NSError *)userFriendlyErrorWithCode:(PDF22MDError)code 
+                           description:(NSString *)description
+                            suggestion:(nullable NSString *)suggestion
+                       underlyingError:(nullable NSError *)underlyingError;
 
 /**
  * Creates an error for invalid PDF input.
@@ -75,10 +108,40 @@ extern NSString * const PDF22MDErrorUnderlyingErrorKey; // Original NSError that
 + (NSError *)invalidPDFErrorWithReason:(nullable NSString *)reason;
 
 /**
- * Creates an error for asset creation failure.
+ * Creates an error for file not found.
  */
-+ (NSError *)assetCreationFailedErrorWithPath:(NSString *)path 
-                                         reason:(nullable NSString *)reason;
++ (NSError *)fileNotFoundErrorWithPath:(NSString *)path;
+
+/**
+ * Creates an error for invalid input parameters.
+ */
++ (NSError *)invalidInputErrorWithReason:(NSString *)reason;
+
+/**
+ * Creates an error for asset folder creation failure.
+ */
++ (NSError *)assetFolderCreationErrorWithPath:(NSString *)path 
+                                       reason:(nullable NSString *)reason;
+
+/**
+ * Creates an error for memory pressure.
+ */
++ (NSError *)memoryPressureError;
+
+/**
+ * Creates an error for processing timeout.
+ */
++ (NSError *)processingTimeoutError;
+
+/**
+ * Creates an error for encrypted PDF.
+ */
++ (NSError *)encryptedPDFError;
+
+/**
+ * Creates an error for empty document.
+ */
++ (NSError *)emptyDocumentError;
 
 /**
  * Creates an error for page processing failure.

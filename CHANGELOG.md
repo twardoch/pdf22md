@@ -56,6 +56,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed hanging issue on certain malformed PDFs by replacing low-level CGPDFScanner-based extraction with PDFKit high-level API (see `PDFPageProcessor`)
 - Removed unused CGPDFScanner operator callback functions and PDFScannerState struct that were part of the deprecated implementation
 - Fixed segmentation fault during asset extraction (Phase 1a): removed premature CGImageRelease calls in `PDFPageProcessor` that deallocated images still in use
+- **Build Script Compatibility**: Fixed bash incompatibility in build.sh by replacing `declare -A` associative arrays with simple variables for broader shell compatibility
+- **Swift Build Resilience**: Enhanced build.sh with Swift toolchain health checks and graceful fallback handling when Swift toolchain is corrupted
+- **Comprehensive Testing Infrastructure**: Implemented complete test framework with unit tests, integration tests, and working test runner for MVP 1.0 readiness
+  - Created PDF22MDConverterTests.m for core conversion logic validation
+  - Created PDF22MDAssetManagerTests.m for image extraction and management testing
+  - Created PDF22MDFontAnalyzerTests.m for heading detection algorithm validation
+  - Created EndToEndConversionTests.m for complete pipeline testing
+  - Created SimpleConverterTest.m working test executable proving framework functionality
+- **Enhanced Error Handling System**: Expanded error definitions with user-friendly messages and actionable suggestions
+  - Added 8 specific error codes including encrypted PDF, memory pressure, and processing timeout
+  - Implemented PDF22MDErrorHelper with comprehensive user-friendly error messages
+  - Added actionable recovery suggestions for all error conditions (e.g., "Try opening in another PDF viewer to verify it's not corrupted")
+  - Fixed API compatibility issues in error method naming
 
 ### Removed
 - Object files from repository root (moved to build directory)
