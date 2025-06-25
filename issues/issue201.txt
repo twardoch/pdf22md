@@ -1,3 +1,4 @@
+./build.sh
 [BUILD] pdf22md - Multi-Implementation Build System
 [INFO] Building Objective-C Swift implementations
 [BUILD] Building pdf22md-objc...
@@ -5,25 +6,18 @@
 [INFO] Building pdf22md (Objective-C implementation)...
 rm -rf build pdf22md pdf22md-benchmark
 mkdir -p build
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/CLI/main.m -o build/CLI/main.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/CLI/pdf22md-benchmark.m -o build/CLI/pdf22md-benchmark.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/Core/PDF22MDConversionOptions.m -o build/Core/PDF22MDConversionOptions.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/Core/PDF22MDConverter.m -o build/Core/PDF22MDConverter.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/Core/PDF22MDError.m -o build/Core/PDF22MDError.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/Core/PDF22MDFontAnalyzer.m -o build/Core/PDF22MDFontAnalyzer.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/Core/PDF22MDPageProcessor.m -o build/Core/PDF22MDPageProcessor.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/Models/PDF22MDImageElement.m -o build/Models/PDF22MDImageElement.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/Models/PDF22MDTextElement.m -o build/Models/PDF22MDTextElement.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/Services/PDF22MDAssetManager.m -o build/Services/PDF22MDAssetManager.o
-clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-3-gdacc18e-dirty\" -Isrc -c src/Services/PDF22MDMarkdownGenerator.m -o build/Services/PDF22MDMarkdownGenerator.o
-clang -Wall -Wextra -O2 -fobjc-arc -framework Foundation -framework PDFKit -framework CoreGraphics -framework ImageIO -framework CoreServices -o pdf22md build/CLI/main.o build/CLI/pdf22md-benchmark.o build/Core/PDF22MDConversionOptions.o build/Core/PDF22MDConverter.o build/Core/PDF22MDError.o build/Core/PDF22MDFontAnalyzer.o build/Core/PDF22MDPageProcessor.o build/Models/PDF22MDImageElement.o build/Models/PDF22MDTextElement.o build/Services/PDF22MDAssetManager.o build/Services/PDF22MDMarkdownGenerator.o
-duplicate symbol '_main' in:
-    /Users/adam/Developer/pub/pdf22md/pdf22md-objc/build/CLI/main.o
-    /Users/adam/Developer/pub/pdf22md/pdf22md-objc/build/CLI/pdf22md-benchmark.o
-ld: 1 duplicate symbols
-clang: error: linker command failed with exit code 1 (use -v to see invocation)
-make: *** [pdf22md] Error 1
-[ERROR] Failed to build pdf22md-objc
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/CLI/main.m -o build/CLI/main.o
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/Core/PDF22MDConversionOptions.m -o build/Core/PDF22MDConversionOptions.o
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/Core/PDF22MDConverter.m -o build/Core/PDF22MDConverter.o
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/Core/PDF22MDError.m -o build/Core/PDF22MDError.o
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/Core/PDF22MDFontAnalyzer.m -o build/Core/PDF22MDFontAnalyzer.o
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/Core/PDF22MDPageProcessor.m -o build/Core/PDF22MDPageProcessor.o
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/Models/PDF22MDImageElement.m -o build/Models/PDF22MDImageElement.o
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/Models/PDF22MDTextElement.m -o build/Models/PDF22MDTextElement.o
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/Services/PDF22MDAssetManager.m -o build/Services/PDF22MDAssetManager.o
+clang -Wall -Wextra -O2 -fobjc-arc -DVERSION=\"v1.2.0-4-gf1d7a94-dirty\" -Isrc -c src/Services/PDF22MDMarkdownGenerator.m -o build/Services/PDF22MDMarkdownGenerator.o
+clang -Wall -Wextra -O2 -fobjc-arc -framework Foundation -framework PDFKit -framework CoreGraphics -framework ImageIO -framework CoreServices -o pdf22md build/CLI/main.o build/Core/PDF22MDConversionOptions.o build/Core/PDF22MDConverter.o build/Core/PDF22MDError.o build/Core/PDF22MDFontAnalyzer.o build/Core/PDF22MDPageProcessor.o build/Models/PDF22MDImageElement.o build/Models/PDF22MDTextElement.o build/Services/PDF22MDAssetManager.o build/Services/PDF22MDMarkdownGenerator.o
+[INFO] ✓ pdf22md-objc built successfully
 [INFO] Build complete!
 [INFO] Run './pdf22md --help' for usage information
 [INFO] ✓ pdf22md-objc built successfully
@@ -31,15 +25,15 @@ make: *** [pdf22md] Error 1
 [INFO] Starting pdf22md-swift build process...
 [INFO] Building pdf22md (Swift implementation)...
 [INFO] Checking Swift toolchain...
-./build.sh: line 31: 85414 Abort trap: 6           xcrun swift build -c release 2> /dev/null
+./build.sh: line 31: 12212 Abort trap: 6           xcrun swift build -c release 2> /dev/null
 [WARN] xcrun failed, trying direct swift build...
-./build.sh: line 31: 85415 Abort trap: 6           swift build -c release 2> /dev/null
+./build.sh: line 31: 12213 Abort trap: 6           swift build -c release 2> /dev/null
 [WARN] Standard build failed, attempting package reset...
-./build.sh: line 31: 85416 Abort trap: 6           swift package reset 2> /dev/null
-dyld[85417]: Library not loaded: @rpath/SWBBuildService.framework/Versions/A/SWBBuildService
+./build.sh: line 31: 12214 Abort trap: 6           swift package reset 2> /dev/null
+dyld[12215]: Library not loaded: @rpath/SWBBuildService.framework/Versions/A/SWBBuildService
   Referenced from: <DAAB41B3-19E5-3A14-8AFB-1A3635185E81> /Library/Developer/CommandLineTools/usr/bin/swift-package
   Reason: tried: '/Library/../SharedFrameworks/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/../SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/Frameworks/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/../SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildSystem.bundle/Contents/Frameworks/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/../Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/../Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/include/SwiftToolsSupport/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/Developer/CommandLineTools/usr/lib/swift/pm/llbuild/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/Developer/CommandLineTools/usr/lib/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/Developer/CommandLineTools/usr/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/../SharedFrameworks/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/../SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/Frameworks/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/../SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildSystem.bundle/Contents/Frameworks/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/../Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/../Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/include/SwiftToolsSupport/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/Developer/CommandLineTools/usr/lib/swift/pm/llbuild/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/Developer/CommandLineTools/usr/lib/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file), '/Library/Developer/CommandLineTools/usr/SWBBuildService.framework/Versions/A/SWBBuildService' (no such file)
-./build.sh: line 31: 85417 Abort trap: 6           swift build -c release
+./build.sh: line 31: 12215 Abort trap: 6           swift build -c release
 [ERROR] Failed to build pdf22md-swift
 [ERROR] This may indicate a corrupted Swift toolchain.
 [INFO] Try running: xcode-select --install
