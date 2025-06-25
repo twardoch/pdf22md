@@ -17,6 +17,15 @@ Transform pdf22md from a solid foundation (85% ready) into a production-ready, p
 
 ## 🚨 CRITICAL PATH - MUST COMPLETE FOR MVP 1.0
 
+### Phase 0: Build System Issues [NEW - HIGH PRIORITY]
+
+#### Fix Duplicate Symbol Errors
+- [ ] **Resolve pdf22md-objc Build Issues**
+  - [ ] Fix duplicate symbol errors in linking phase
+  - [ ] Update Makefile to properly handle object file dependencies
+  - [ ] Ensure clean builds work consistently
+  - [ ] Test builds on fresh system
+
 ### Phase 1: Foundation (Week 1) - Cannot Ship Without These
 
 #### Testing Infrastructure [COMPLETED ✅]
@@ -72,10 +81,10 @@ Transform pdf22md from a solid foundation (85% ready) into a production-ready, p
   - [x] Partial processing capabilities (framework in place)
   - [x] Resource cleanup on failures (proper error propagation)
 
-#### Performance Validation [BLOCKING]
-- [ ] **Benchmarking Infrastructure**
-  - [ ] Create pdf22md-benchmark utility
-  - [ ] Implement baseline measurement
+#### Performance Validation [IN PROGRESS]
+- [x] **Benchmarking Infrastructure**
+  - [x] Create pdf22md-benchmark utility
+  - [x] Implement baseline measurement with timing
   - [ ] Add memory profiling capability
   - [ ] Performance regression testing
 

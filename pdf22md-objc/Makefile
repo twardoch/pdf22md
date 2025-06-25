@@ -84,9 +84,14 @@ test-clean:
 	@rm -rf build/tests Tests/Resources/*.pdf
 
 # Build benchmark tool
-$(BENCHMARK): $(BUILD_DIR) $(filter-out $(BUILD_DIR)/CLI/main.o, $(OBJECTS))
+$(BUILD_DIR)/CLI/pdf22md-benchmark.o: $(BENCHMARK_SRC) | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -Isrc -c $< -o $@
+
+$(BENCHMARK): $(BUILD_DIR) $(BUILD_DIR)/CLI/pdf22md-benchmark.o $(filter-out $(BUILD_DIR)/CLI/main.o, $(OBJECTS))
 	@echo "🔨 Building benchmark tool..."
 	$(CC) $(CFLAGS) $(FRAMEWORKS) -o $(BENCHMARK) \
+		$(BUILD_DIR)/CLI/pdf22md-benchmark.o \
 		$(filter-out $(BUILD_DIR)/CLI/main.o, $(OBJECTS))
 
 # Benchmark and profiling

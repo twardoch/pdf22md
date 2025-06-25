@@ -11,10 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TROUBLESHOOTING.md documentation for common build and runtime issues
 - Enhanced Swift toolchain detection in build scripts
 - Better error messages for SWBBuildService.framework missing issue
+- pdf22md-benchmark utility for performance testing
+- Builder pattern for PDF22MDConversionOptions configuration
+- Verbose logging options for PDF loading and conversion processes
+- Timeout handling for conversion process to prevent hangs
+- Comprehensive test data with sample PDFs and expected output
 
 ### Improved
 - Build scripts now provide clearer guidance when Swift toolchain is corrupted
 - Swift build failures are handled more gracefully with specific remediation steps
+- Build process for pdf22md-objc to resolve duplicate symbol errors
+- Error reporting now includes process IDs for easier debugging
+- Conversion feedback with detailed status messages during operations
+
+### Changed
+- Restructured project with separate directories for each implementation (pdf22md-objc, pdf22md-swift)
+- Moved test files and resources to implementation-specific directories
+- Updated object file compilation commands in build scripts
+
+### Fixed
+- Duplicate symbol errors in pdf22md-objc build process
+- Build script compatibility issues with object file handling
+
+### Removed
+- Obsolete pdf22md-benchmark binary file from version control
 
 ### Added
 - **Complete Modern Objective-C Implementation**: Full feature-parity rewrite in modern Objective-C with nullability annotations, lightweight generics, and proper designated initializers
