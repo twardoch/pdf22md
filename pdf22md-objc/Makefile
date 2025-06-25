@@ -10,8 +10,8 @@ VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev
 SRC_DIR = src
 BUILD_DIR = build
 
-# Source and object files - look in all subdirectories
-SOURCES = $(wildcard $(SRC_DIR)/*/*.m $(SRC_DIR)/*/*/*.m)
+# Source and object files - look in all subdirectories, exclude benchmark
+SOURCES = $(filter-out $(BENCHMARK_SRC),$(wildcard $(SRC_DIR)/*/*.m $(SRC_DIR)/*/*/*.m))
 OBJECTS = $(patsubst $(SRC_DIR)/%.m,$(BUILD_DIR)/%.o,$(SOURCES))
 
 # Default prefix for installation

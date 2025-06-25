@@ -210,13 +210,17 @@ typedef struct {
     
     result.pageCount = converter.document.pageCount;
     
-    // Configure options
-    PDF22MDConversionOptions *options = [PDF22MDConversionOptions defaultOptions];
+    // Configure options using builder
+    PDF22MDConversionOptionsBuilder *builder = [[PDF22MDConversionOptionsBuilder alloc] init];
     if (self.outputPath) {
         NSString *assetDir = [[self.outputPath stringByDeletingLastPathComponent] 
                               stringByAppendingPathComponent:@"benchmark-assets"];
-        options.assetsFolderPath = assetDir;
+        builder.assetsFolderPath = assetDir;
+        builder.extractImages = YES;
     }
+    builder.rasterizationDPI = 144.0;
+    
+    PDF22MDConversionOptions *options = [builder build];
     
     // Conversion timing
     uint64_t convStart = mach_absolute_time();
@@ -230,6 +234,13 @@ typedef struct {
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
     [converter convertWithOptions:options completion:^(NSString *output, NSError *error) {
+        if (self.verbose) {
+            if (error) {
+                printf("  Conversion completed with error: %s\n", error.localizedDescription.UTF8String);
+            } else {
+                printf("  Conversion completed successfully, output length: %lu\n", (unsigned long)output.length);
+            }
+        }
         markdown = output;
         convError = error;
         dispatch_semaphore_signal(semaphore);
