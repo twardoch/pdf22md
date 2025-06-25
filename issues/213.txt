@@ -1,0 +1,240 @@
+echo "oc"; CG_PDF_VERBOSE=True time ./pdf22md-objc/pdf22md  -i _private/jlm.pdf -o _private/oc-jlm.md -a _private/oc-jlm; echo "sw"; CG_PDF_VERBOSE=True time ./pdf22md-swift/.build/release/pdf22md-swift -i _private/jlm.pdf -o _private/sw-jlm.md -a _private/sw-jlm
+
+We get this output but neither the ObjC nor the Swift app stalls when outputting the assets (it does produce 63 images), and neither ever produces an actual .md file at the end. If I drop `-a`, same thing. 
+
+```
+oc
+.notdef: no mapping.
+
+can't create CMap `Adobe-Identity-UCS2'.
+can't create CMap `Adobe-Identity-UCS2'..notdef: no mapping.
+CTLD took 0.000653982 seconds
+CTLD took 0.000602007 secondsCTLD took 0.000411987 seconds
+CTLD took 0.000732064 seconds.notdef: no mapping.
+CTLD took 0.000978947 seconds
+CTLD took 0.000844955 seconds
+CTLD took 0.000757933 seconds
+CTLD took 0.000715017 seconds
+CTLD took 0.000829101 seconds.notdef: no mapping.
+CTLD took 0.000563025 seconds.notdef: no mapping.
+CTLD took 0.000751972 seconds
+CTLD took 0.000300884 seconds
+CTLD took 0.00330091 seconds.notdef: no mapping.
+CTLD took 0.00941002 seconds
+CTLD took 0.00475395 seconds
+CTLD took 0.011969 seconds
+CTLD took 0.000597954 seconds
+CGPDFImage(0x6000009c40e0): Creating image with subsample_factor = 1
+CTLD took 0.00512898 seconds
+CTLD took 0.00300002 seconds.notdef: no mapping.
+CGPDFImage(0x6000009d5ce0): Creating image with subsample_factor = 1
+CGPDFImage(0x6000009dd340): Creating image with subsample_factor = 1
+CTLD took 0.000127912 seconds
+CGPDFImage(0x6000009c72c0): Creating image with subsample_factor = 2
+CTLD took 0.00284493 seconds
+CTLD took 0.00467098 seconds
+CTLD took 0.000177979 seconds
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.009727 seconds
+CTLD took 0.00303805 seconds
+CTLD took 0.00955796 seconds
+CGPDFImage(0x6000009c81c0): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'..notdef: no mapping.
+summationtext: no mapping.
+summationdisplay: no mapping.
+CTLD took 0.00125492 seconds
+CTLD took 0.001917 seconds
+CGPDFImage(0x6000009f0ee0): Creating image with subsample_factor = 2
+Failed to determine ascent and decent for font: DQXXEG+MSBM10
+Failed to determine ascent and decent for font: DQXXEG+CMSS8
+can't create CMap `Adobe-Identity-UCS2'.Failed to determine ascent and decent for font: DQXXEG+CMSS8
+CTLD took 0.000357032 seconds
+CTLD took 0.00164104 seconds
+CTLD took 0.000340939 seconds
+CTLD took 0.000397086 seconds
+CTLD took 0.00079 seconds
+CGPDFImage(0x6000009e47e0): Creating image with subsample_factor = 2
+CTLD took 0.000848055 seconds
+CGPDFImage(0x6000009f0540): Creating image with subsample_factor = 2
+CTLD took 0.019843 seconds
+CTLD took 0.000450969 seconds
+CTLD took 0.01502 seconds
+CGPDFImage(0x6000009c0e00): Creating image with subsample_factor = 2
+CTLD took 0.0198179 seconds
+CGPDFImage(0x6000009c0fc0): Creating image with subsample_factor = 1
+CGPDFImage(0x600000980c40): Creating image with subsample_factor = 1
+CTLD took 0.0255201 seconds
+CTLD took 0.000356078 seconds
+CTLD took 0.00462306 seconds
+CGPDFImage(0x6000009ecd20): Creating image with subsample_factor = 2
+CTLD took 0.000476003 seconds
+CTLD took 0.000283003 seconds
+CGPDFImage(0x6000009f41c0): Creating image with subsample_factor = 2
+CTLD took 0.00250304 seconds
+CGPDFImage(0x6000009f8a80): Creating image with subsample_factor = 2
+CTLD took 0.00572598 seconds
+CGPDFImage(0x6000009d0b60): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009ed6c0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009c3d40): Creating image with subsample_factor = 2
+CTLD took 0.00133491 seconds
+CGPDFImage(0x6000009ed7a0): Creating image with subsample_factor = 2
+CTLD took 0.000469089 seconds
+CTLD took 0.00609994 seconds
+CTLD took 0.00128305 seconds
+CTLD took 0.000147939 seconds
+CTLD took 0.00276101 seconds
+CTLD took 0.00181794 seconds
+CGPDFImage(0x600000980e00): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009f6ae0): Creating image with subsample_factor = 2
+CTLD took 8.79765e-05 seconds
+CTLD took 3.99351e-05 seconds
+CTLD took 0.0122609 seconds
+CGPDFImage(0x6000009e1960): Creating image with subsample_factor = 2
+CTLD took 6.29425e-05 seconds
+CGPDFImage(0x6000009fe220): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009de680): Creating image with subsample_factor = 1
+CGPDFImage(0x6000009f9f80): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009840e0): Creating image with subsample_factor = 1
+CGPDFImage(0x600000980d20): Creating image with subsample_factor = 1
+CGPDFImage(0x6000009e9340): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009dbb80): Creating image with subsample_factor = 1
+CGPDFImage(0x6000009f65a0): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000205994 seconds
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.
+CGPDFImage(0x600000984fc0): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009f10a0): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009fa4c0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009850a0): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.
+CGPDFImage(0x6000009e9180): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009d40e0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009db100): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009e3100): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009d10a0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009c96c0): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.00411701 seconds
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009d6220): Creating image with subsample_factor = 1
+can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009c9f80): Creating image with subsample_factor = 1
+CGPDFImage(0x6000009d0d20): Creating image with subsample_factor = 2
+CGPDFImage(0x600000985260): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009c5420): Creating image with subsample_factor = 1
+CGPDFImage(0x6000009c57a0): Creating image with subsample_factor = 1
+CGPDFImage(0x6000009d57a0): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.
+can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009db9c0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009d1a40): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009e8b60): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009d6a00): Creating image with subsample_factor = 1
+CGPDFImage(0x6000009d1b20): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009cf480): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009c9880): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009f01c0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009c40e0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009d4fc0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009cd180): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009d63e0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009ed340): Creating image with subsample_factor = 2
+CGPDFImage(0x600000984540): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009841c0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009e8620): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009e8460): Creating image with subsample_factor = 2
+CTLD took 0.000337005 secondscan't create CMap `Adobe-Identity-UCS2'.
+CGPDFImage(0x6000009e8000): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009d1420): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 3.89814e-05 seconds
+CGPDFImage(0x6000009ed0a0): Creating image with subsample_factor = 2
+CTLD took 0.000620008 secondscan't create CMap `Adobe-Identity-UCS2'.
+CGPDFImage(0x6000009c9ce0): Creating image with subsample_factor = 2
+CTLD took 0.000611067 seconds
+CGPDFImage(0x600000984000): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000129938 seconds
+CGPDFImage(0x6000009cd260): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.CGPDFImage(0x6000009ce060): Creating image with subsample_factor = 2
+CTLD took 0.000472069 seconds
+CTLD took 0.0001899 seconds
+CGPDFImage(0x6000009d64c0): Creating image with subsample_factor = 2
+CTLD took 0.00019598 secondscan't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.
+CGPDFImage(0x6000009d50a0): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009c9340): Creating image with subsample_factor = 2
+CGPDFImage(0x6000009d6300): Creating image with subsample_factor = 2
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'..notdef: no mapping.
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'..notdef: no mapping.
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'..notdef: no mapping.
+CTLD took 0.000244021 secondscan't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.000291944 seconds
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000329018 seconds
+CTLD took 0.000324965 seconds
+CTLD took 0.000223041 seconds
+CTLD took 0.000432968 secondscan't create CMap `Adobe-Identity-UCS2'.
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000442028 secondscan't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.00280309 secondscan't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.000681996 seconds
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000396013 seconds
+CTLD took 0.000270009 seconds
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000571966 seconds
+CTLD took 0.000347972 seconds
+CTLD took 0.000613928 seconds
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000285029 seconds
+CTLD took 0.000420928 seconds
+CTLD took 0.000167966 seconds
+can't create CMap `Adobe-Identity-UCS2'.can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000247002 seconds
+CTLD took 0.000275016 seconds
+CTLD took 0.000260949 secondscan't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.000298023 seconds
+CTLD took 0.000128984 seconds
+CTLD took 0.000571966 seconds
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000185013 secondscan't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.000249982 seconds
+CGPDFImage(0x60000098c0e0): Creating image with subsample_factor = 1
+CTLD took 0.000385046 secondscan't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.000419021 seconds
+CTLD took 0.000380039 seconds
+CTLD took 0.000307918 seconds
+CTLD took 0.000515938 seconds
+CTLD took 0.00030899 seconds
+CTLD took 0.000265002 seconds
+CTLD took 0.000656009 seconds
+CTLD took 0.000487924 seconds
+CGPDFImage(0x600000982bc0): Creating image with subsample_factor = 1
+CTLD took 0.00041604 seconds
+CTLD took 0.000374079 seconds
+CTLD took 0.000214934 seconds
+CTLD took 0.000257015 seconds
+CTLD took 0.00018394 seconds
+CTLD took 0.000224113 seconds
+CTLD took 0.000177026 seconds
+CGPDFImage(0x60000098e4c0): Creating image with subsample_factor = 1
+CGPDFImage(0x600000995500): Creating image with subsample_factor = 1
+CTLD took 0.000452042 seconds
+CTLD took 0.000467062 seconds
+CTLD took 0.000350952 seconds
+CGPDFImage(0x6000009fb720): Creating image with subsample_factor = 1
+CTLD took 4.1008e-05 secondscan't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.000113964 seconds
+CGPDFImage(0x60000098d260): Creating image with subsample_factor = 1
+CTLD took 0.000488997 secondscan't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.000198007 seconds
+CTLD took 0.000335932 seconds
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 4.49419e-05 seconds.notdef: no mapping.
+CTLD took 0.000362039 seconds
+CTLD took 0.00306404 secondscan't create CMap `Adobe-Identity-UCS2'.
+CTLD took 0.000468016 seconds
+Failed to determine ascent and decent for font: RFKYPW+LogoIPI
+CTLD took 0.00503898 secondscan't create CMap `Adobe-Identity-UCS2'.
+Failed to determine ascent and decent for font: SFNFNA+LogoIPI
+CTLD took 0.001001 seconds
+CTLD took 0.00483894 seconds
+CTLD took 0.00668895 seconds
+CTLD took 0.00563896 seconds
+CTLD took 0.00456691 seconds
+CTLD took 0.005018 seconds
+CTLD took 0.098114 seconds
+CTLD took 0.07416 seconds
+CTLD took 0.098618 seconds
+CTLD took 0.126832 seconds
+CTLD took 0.128235 seconds
+CTLD took 0.12195 seconds
+CTLD took 0.108265 seconds
+```

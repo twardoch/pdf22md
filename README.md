@@ -42,7 +42,7 @@ make
 ```bash
 cd pdf22md-swift
 swift build -c release
-# Note: CLI implementation in progress - currently library framework only
+cp .build/release/pdf22md-swift /usr/local/bin/pdf22md
 ```
 
 ## Usage
@@ -94,7 +94,7 @@ sudo make install
 ```bash
 cd pdf22md-swift  
 swift build -c release
-# Note: Currently library framework only - CLI implementation in progress
+cp .build/release/pdf22md-swift /usr/local/bin/pdf22md
 ```
 
 ## Requirements

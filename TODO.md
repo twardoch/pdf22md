@@ -1,12 +1,90 @@
-# TODO - Post-Restructuring Tasks and Release Preparation
+# TODO - CRITICAL BUG FIX: Markdown Output Generation Failure
 
-## 🎯 Mission: Complete Implementation Polish and Prepare for Public Release
+## 🚨 URGENT: Fix Markdown Output Generation (Issue #213)
 
-Current Status: **95% Complete** → Target: **100% Complete**
+**Current Status**: Both implementations process PDFs and extract assets but **FAIL to generate markdown output files**
 
-With the major codebase restructuring into two self-contained implementations complete, focus on implementation polish and open source release preparation.
+**Priority**: **CRITICAL** - Must fix before any other development
 
-## 📋 **Priority Tasks (Final 5% Completion)**
+### A. Objective-C Implementation Debugging (`pdf22md-objc/`)
+
+#### CLI Enhancement (`src/CLI/main.m`)
+- [ ] Add debug flag (`-v/--verbose`) to show conversion progress  
+- [ ] Log markdown string length and first 100 chars before file write
+- [ ] Add detailed error reporting for file write operations
+- [ ] Verify output path permissions and parent directory existence
+- [ ] Add fallback to stdout when file write fails
+
+#### Markdown Generator Validation (`src/Services/PDF22MDMarkdownGenerator.m`)
+- [ ] Add element count validation (log how many elements processed)
+- [ ] Log markdown generation stages (frontmatter, content, links)
+- [ ] Validate non-empty output before returning
+- [ ] Add error propagation for generation failures
+- [ ] Add null/empty string checks
+
+#### Converter Pipeline Monitoring (`src/Core/PDF22MDConverter.m`)
+- [ ] Log element extraction results per page
+- [ ] Validate font analysis results (heading detection working)
+- [ ] Monitor parallel processing completion
+- [ ] Add timeout handling for stuck operations
+
+### B. Swift Implementation Debugging (`pdf22md-swift/`)
+
+#### Enhanced Error Handling (`Sources/PDF22MD/`)
+- [ ] Add comprehensive try-catch blocks around file operations
+- [ ] Log conversion pipeline progress and intermediate results
+- [ ] Validate markdown content length before writing
+- [ ] Add permission and path validation  
+- [ ] Implement debug output mode
+
+#### File Writing Robustness
+- [ ] Add file write validation and retry logic
+- [ ] Check parent directory existence and permissions
+- [ ] Add atomic write operations with backup
+- [ ] Implement fallback to stdout on file write failure
+
+## Phase 2: Testing & Validation (Priority: HIGH)
+
+### A. Reproduce Issue with Test PDF
+- [ ] Test with `_private/jlm.pdf` to reproduce exact failure
+- [ ] Add minimal test PDF with predictable content
+- [ ] Verify conversion pipeline with simple document
+- [ ] Isolate complex document issues
+
+### B. Diagnostic Tools  
+- [ ] Create debug mode showing element extraction count per page
+- [ ] Add font analysis results logging
+- [ ] Monitor markdown generation progress
+- [ ] Log file write attempt details
+- [ ] Add validation scripts to verify markdown output quality
+
+## Phase 3: Prevention & Robustness (Priority: MEDIUM)
+
+### A. Comprehensive Error Handling
+- [ ] Ensure all failures are logged with actionable error messages
+- [ ] Add recovery strategies for common failure scenarios
+- [ ] Implement progress reporting for long conversions
+- [ ] Add user-friendly error messages
+
+### B. Integration Testing
+- [ ] End-to-end conversion validation with multiple PDFs
+- [ ] Asset and markdown coordination testing
+- [ ] Error recovery testing with simulated failures
+- [ ] Performance regression testing
+
+## SUCCESS CRITERIA FOR BUG FIX
+1. ✅ The test PDF (`_private/jlm.pdf`) successfully generates markdown output
+2. ✅ Clear, actionable error messages when conversion fails
+3. ✅ Assets and markdown coordination working correctly
+4. ✅ Both Objective-C and Swift implementations fixed
+5. ✅ No regression in existing functionality
+6. ✅ Debug mode provides sufficient troubleshooting information
+
+---
+
+# DEFERRED: Post-Restructuring Tasks and Release Preparation
+
+## 📋 **Original Priority Tasks (DEFERRED until bug fix complete)**
 
 ### Phase 1: Implementation Completion (CRITICAL) ✅ STRUCTURE COMPLETE
 - [x] **Codebase Restructuring**: Organized into pdf22md-objc/ and pdf22md-swift/
