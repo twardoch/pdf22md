@@ -7,7 +7,7 @@
 #import "../Services/PDF22MDMarkdownGenerator.h"
 #import "PDF22MDFontAnalyzer.h"
 #import "PDF22MDError.h"
-#import "../../shared/Core/PDF22MDConcurrencyManager.h"
+#import "../../shared-core/PDF22MDConcurrencyManager.h"
 
 @interface PDF22MDConverter ()
 @property (nonatomic, strong) dispatch_queue_t conversionQueue;

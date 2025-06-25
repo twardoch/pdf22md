@@ -17,7 +17,7 @@ let package = Package(
         // Executable product for CLI
         .executable(
             name: "pdf22md",
-            targets: ["pdf22md"]
+            targets: ["pdf22md-cli"]
         )
     ],
     dependencies: [
@@ -29,25 +29,28 @@ let package = Package(
         .target(
             name: "PDF22MD",
             dependencies: [],
+            path: "Sources/PDF22MD",
             swiftSettings: [
                 .define("VERSION", to: "\"1.0.0\"")
             ]
         ),
         // CLI executable target
         .executableTarget(
-            name: "pdf22md",
+            name: "pdf22md-cli",
             dependencies: [
                 "PDF22MD",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
-            ]
+            ],
+            path: "Sources/CLI"
         ),
         // Test target
         .testTarget(
             name: "PDF22MDTests",
             dependencies: ["PDF22MD"],
+            path: "Tests/PDF22MDTests",
             resources: [
-                .process("Resources")
+                .process("test-resources")
             ]
         )
     ]
-)
+) 

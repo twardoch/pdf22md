@@ -1,8 +1,8 @@
 #import "PDF22MDConversionOptions.h"
 #import "PDF22MDError.h"
-#import "../../shared/Core/PDF22MDErrorFactory.h"
-#import "../../shared/Core/PDF22MDConstants.h"
-#import "../../shared/Core/PDF22MDFileSystemUtils.h"
+#import "../../shared-core/PDF22MDErrorFactory.h"
+#import "../../shared-core/PDF22MDConstants.h"
+#import "../../shared-core/PDF22MDFileSystemUtils.h"
 
 @implementation PDF22MDConversionOptions
 

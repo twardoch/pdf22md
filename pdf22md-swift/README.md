@@ -1,4 +1,4 @@
-# pdf22md - Modern Swift Implementation
+# pdf22md-swift
 
 A high-performance PDF to Markdown converter built with modern Swift features including async/await, actors, and structured concurrency.
 
@@ -11,56 +11,11 @@ A high-performance PDF to Markdown converter built with modern Swift features in
 - **Actor-Based Assets**: Thread-safe image processing with actors
 - **Progress Streaming**: Real-time progress updates with AsyncSequence
 
-## Architecture
-
-```
-pdf22md-swift/
-├── Sources/
-│   ├── PDF22MD/                 # Library module
-│   │   ├── Core/                # Core conversion logic
-│   │   │   ├── PDFConverter     # Main coordinator
-│   │   │   ├── PDFPageProcessor # Page content extraction
-│   │   │   ├── FontAnalyzer     # Heading detection
-│   │   │   ├── PDFError         # Error handling
-│   │   │   └── ConversionOptions # Configuration
-│   │   ├── Models/              # Data models
-│   │   │   ├── ContentElement   # Protocol definition
-│   │   │   ├── TextElement      # Text content (struct)
-│   │   │   └── ImageElement     # Image content (class)
-│   │   └── Services/            # Business logic services
-│   │       ├── AssetManager     # Image extraction (actor)
-│   │       └── MarkdownGenerator # Markdown generation
-│   └── pdf22md/                 # CLI executable
-│       └── main.swift
-├── Tests/
-│   └── PDF22MDTests/
-├── Package.swift
-└── README.md
-```
-
 ## Building
 
-### Using the Build Script (Recommended)
+### Using Swift Package Manager
 ```bash
 # Build the project
-./build.sh
-
-# Build and run tests
-./build.sh --test
-
-# Build and install to /usr/local/bin
-./build.sh --install
-
-# Build, test, and install
-./build.sh --test --install
-
-# Create release archive
-./release.sh
-```
-
-### Using Swift Package Manager Directly
-```bash
-# Build with Swift Package Manager
 swift build
 
 # Build optimized release
@@ -69,8 +24,9 @@ swift build -c release
 # Run tests
 swift test
 
-# Generate documentation
-swift package generate-documentation
+# Install executable
+swift build -c release
+cp .build/release/pdf22md-cli /usr/local/bin/pdf22md
 ```
 
 ## Installation
@@ -81,18 +37,8 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/twardoch/pdf22md-swift", from: "1.0.0")
+    .package(path: "./pdf22md-swift")
 ]
-```
-
-### Executable
-
-```bash
-# Build executable
-swift build -c release
-
-# Copy to PATH
-cp .build/release/pdf22md /usr/local/bin/
 ```
 
 ## Usage
@@ -133,84 +79,6 @@ let options = ConversionOptions(
 )
 
 let markdown = try await converter.convert(options: options)
-
-// Using builder pattern
-let options = ConversionOptionsBuilder()
-    .assetsFolderPath("./images")
-    .rasterizationDPI(300)
-    .maxConcurrentPages(4)
-    .progressHandler { page, total in
-        print("Processing \(page)/\(total)")
-    }
-    .build()
-
-// Convenience method
-try await PDFConverter.convert(
-    inputURL: inputURL,
-    outputURL: outputURL,
-    options: options
-)
-```
-
-## Key Swift Features Used
-
-### 1. Async/Await
-```swift
-public func convert(options: ConversionOptions = .default) async throws -> String {
-    return try await withThrowingTaskGroup(of: (Int, [ContentElement]).self) { group in
-        // Process pages concurrently
-    }
-}
-```
-
-### 2. Actors for Thread Safety
-```swift
-public actor AssetManager {
-    private var usedFilenames: Set<String> = []
-    
-    public func saveImage(_ image: CGImage) async throws -> String {
-        // Thread-safe image saving
-    }
-}
-```
-
-### 3. Result Types
-```swift
-public enum PDFError: LocalizedError {
-    case invalidPDF(reason: String?)
-    case processingFailed(reason: String, underlyingError: Error?)
-    // ...
-}
-```
-
-### 4. Value Types
-```swift
-public struct TextElement: ContentElement, Equatable, Hashable {
-    public let text: String
-    public let bounds: CGRect
-    // Immutable by default
-}
-```
-
-### 5. Protocol Extensions
-```swift
-public extension ContentElement {
-    func isOnSameLine(as other: ContentElement) -> Bool {
-        // Default implementation
-    }
-}
-```
-
-### 6. Structured Concurrency
-```swift
-return try await withThrowingTaskGroup(of: (Int, [ContentElement]).self) { group in
-    for pageIndex in 0..<pageCount {
-        group.addTask {
-            // Process page concurrently
-        }
-    }
-    // Collect results
-}
 ```
 
 ## Testing
@@ -224,34 +92,6 @@ swift test --filter PDF22MDTests.testTextElementCreation
 
 # Run tests with coverage
 swift test --enable-code-coverage
-
-# Performance tests
-swift test --filter Performance
-```
-
-## Performance
-
-- Utilizes all available CPU cores with structured concurrency
-- Actor-based asset management for thread-safe operations
-- Memory-efficient with proper value/reference type usage
-- Cancellation support for long-running operations
-- Streaming progress updates
-
-## Error Handling
-
-```swift
-do {
-    let markdown = try await converter.convert()
-} catch PDFError.invalidPDF(let reason) {
-    print("Invalid PDF: \(reason ?? "Unknown error")")
-} catch PDFError.processingFailed(let reason, let underlying) {
-    print("Processing failed: \(reason)")
-    if let underlying = underlying {
-        print("Underlying error: \(underlying)")
-    }
-} catch {
-    print("Unexpected error: \(error)")
-}
 ```
 
 ## Requirements
@@ -260,20 +100,6 @@ do {
 - Swift 5.7 or later
 - Xcode 14.0 or later
 
-## Documentation
-
-Generate documentation with:
-
-```bash
-swift package generate-documentation
-```
-
-View documentation:
-
-```bash
-swift package preview-documentation
-```
-
 ## License
 
-MIT License - see LICENSE file in the root directory
+MIT License - see LICENSE file in the root directory 

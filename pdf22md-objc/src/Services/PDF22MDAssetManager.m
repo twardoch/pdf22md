@@ -1,9 +1,9 @@
 #import "PDF22MDAssetManager.h"
 #import "../Models/PDF22MDImageElement.h"
-#import "../../shared/Algorithms/PDF22MDImageFormatDetection.h"
-#import "../../shared/Core/PDF22MDConcurrencyManager.h"
-#import "../../shared/Core/PDF22MDFileSystemUtils.h"
-#import "../../shared/Core/PDF22MDConstants.h"
+#import "../../shared-algorithms/PDF22MDImageFormatDetection.h"
+#import "../../shared-core/PDF22MDConcurrencyManager.h"
+#import "../../shared-core/PDF22MDFileSystemUtils.h"
+#import "../../shared-core/PDF22MDConstants.h"
 #import <ImageIO/ImageIO.h>
 
 @interface PDF22MDAssetManager ()
