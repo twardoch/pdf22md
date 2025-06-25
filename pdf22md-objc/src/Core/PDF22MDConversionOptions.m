@@ -1,6 +1,8 @@
 #import "PDF22MDConversionOptions.h"
 #import "PDF22MDError.h"
 #import "../../shared/Core/PDF22MDErrorFactory.h"
+#import "../../shared/Core/PDF22MDConstants.h"
+#import "../../shared/Core/PDF22MDFileSystemUtils.h"
 
 @implementation PDF22MDConversionOptions
 
@@ -10,13 +12,13 @@
     self = [super init];
     if (self) {
         // Set default values
-        _rasterizationDPI = 144.0;
-        _maxConcurrentPages = [[NSProcessInfo processInfo] processorCount];
+        _rasterizationDPI = PDF22MD_DEFAULT_DPI;
+        _maxConcurrentPages = PDF22MD_DEFAULT_MAX_CONCURRENT_PAGES ?: [[NSProcessInfo processInfo] processorCount];
         _includeMetadata = YES;
         _extractImages = YES;
         _preserveOutline = YES;
-        _headingFontSizeThreshold = 2.0;
-        _maxHeadingLevel = 6;
+        _headingFontSizeThreshold = PDF22MD_DEFAULT_FONT_SIZE_THRESHOLD;
+        _maxHeadingLevel = PDF22MD_MAX_HEADING_LEVEL;
     }
     return self;
 }
@@ -47,7 +49,7 @@
 
 - (BOOL)validateWithError:(NSError * _Nullable * _Nullable)error {
     // Validate DPI
-    if (self.rasterizationDPI <= 0 || self.rasterizationDPI > 600) {
+    if (self.rasterizationDPI < PDF22MD_MINIMUM_DPI || self.rasterizationDPI > PDF22MD_MAXIMUM_DPI) {
         if (error) {
             *error = [PDF22MDErrorFactory invalidDPIErrorWithValue:self.rasterizationDPI];
         }
@@ -55,7 +57,7 @@
     }
     
     // Validate concurrent pages
-    if (self.maxConcurrentPages < 1 || self.maxConcurrentPages > 64) {
+    if (self.maxConcurrentPages < PDF22MD_MINIMUM_CONCURRENT_PAGES || self.maxConcurrentPages > PDF22MD_MAXIMUM_CONCURRENT_PAGES) {
         if (error) {
             *error = [PDF22MDErrorFactory invalidConcurrentPagesErrorWithValue:self.maxConcurrentPages];
         }
@@ -63,7 +65,7 @@
     }
     
     // Validate heading level
-    if (self.maxHeadingLevel < 1 || self.maxHeadingLevel > 6) {
+    if (self.maxHeadingLevel < PDF22MD_MIN_HEADING_LEVEL || self.maxHeadingLevel > PDF22MD_MAX_HEADING_LEVEL) {
         if (error) {
             *error = [PDF22MDErrorFactory invalidHeadingLevelErrorWithValue:self.maxHeadingLevel];
         }
@@ -71,7 +73,7 @@
     }
     
     // Validate font size threshold
-    if (self.headingFontSizeThreshold < 0.5 || self.headingFontSizeThreshold > 10.0) {
+    if (self.headingFontSizeThreshold < PDF22MD_MINIMUM_FONT_SIZE_THRESHOLD || self.headingFontSizeThreshold > PDF22MD_MAXIMUM_FONT_SIZE_THRESHOLD) {
         if (error) {
             *error = [PDF22MDErrorFactory invalidFontSizeThresholdErrorWithValue:self.headingFontSizeThreshold];
         }
@@ -80,14 +82,10 @@
     
     // Validate assets path if image extraction is enabled
     if (self.extractImages && self.assetsFolderPath) {
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        BOOL isDirectory = NO;
-        BOOL exists = [fileManager fileExistsAtPath:self.assetsFolderPath isDirectory:&isDirectory];
-        
-        if (exists && !isDirectory) {
+        NSError *validationError = nil;
+        if (![PDF22MDFileSystemUtils isValidFilePath:self.assetsFolderPath error:&validationError]) {
             if (error) {
-                *error = [PDF22MDErrorFactory assetCreationErrorWithPath:self.assetsFolderPath
-                                                                   reason:@"Path exists but is not a directory"];
+                *error = validationError;
             }
             return NO;
         }

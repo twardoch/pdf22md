@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **PDF22MDFileSystemUtils**: Unified file system operations consolidating scattered NSFileManager patterns
+- **PDF22MDConstants**: Centralized configuration constants eliminating magic numbers across 15+ files
+- Enhanced error handling with new file system error codes (InvalidPath, DirectoryNotFound, PermissionDenied)
+- Comprehensive codebase analysis using repomix (72,530 tokens, 52 files) for streamlining optimization
+- Detailed PLAN.md for systematic code streamlining approach
+- Updated TODO.md with final 3% streamlining tasks to reach 100% excellence
 - Comprehensive streamlining plan (PLAN.md) for codebase optimization
 - Unified build system using single Makefile and build.sh script
 - Shared component library (shared/ directory) for common algorithms
@@ -66,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Duplicate Swift build scripts** (pdf22md-swift/build.sh, release.sh)
 
 ### Streamlined
+- **File system operations**: Consolidated NSFileManager patterns from 4+ files into PDF22MDFileSystemUtils (~150 lines eliminated)
+- **Configuration constants**: Centralized all magic numbers (144.0 DPI, 2.0 threshold, etc.) from 15+ files into PDF22MDConstants
+- **Asset management**: Updated PDF22MDAssetManager to use shared file utilities and constants
+- **Validation logic**: Unified path validation and directory operations across implementations
 - Consolidated build system into single authoritative Makefile and build.sh
 - Unified documentation in single root README.md
 - Removed code duplication between root and implementation directories
@@ -73,7 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build system automatically compiles shared components with proper dependencies
 - **Error handling patterns**: Replaced manual NSError creation with standardized factory methods across all validation and processing code (40-60% reduction in error handling boilerplate)
 - **Concurrency patterns**: Unified GCD usage with shared queue management and standardized parallel processing patterns (eliminated duplicate queue creation across 4+ files)
-- **Shared component architecture**: Established professional foundation with Core/ directory containing ErrorFactory and ConcurrencyManager utilities
+- **Shared component architecture**: Established professional foundation with Core/ directory containing ErrorFactory, ConcurrencyManager, FileSystemUtils, and Constants
 - **Test resource consolidation**: Single shared/test-resources/ directory (58MB space saved)
 - **Documentation consolidation**: Single man page source (docs/pdf22md.1)
 - **Build script unification**: No implementation-specific build scripts

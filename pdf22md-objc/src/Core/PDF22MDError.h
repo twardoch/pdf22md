@@ -74,7 +74,22 @@ typedef NS_ERROR_ENUM(PDF22MDErrorDomain, PDF22MDError) {
     /**
      * File not found at specified path.
      */
-    PDF22MDErrorFileNotFound = 1012
+    PDF22MDErrorFileNotFound = 1012,
+    
+    /**
+     * Invalid file path provided.
+     */
+    PDF22MDErrorInvalidPath = 1013,
+    
+    /**
+     * Directory not found or does not exist.
+     */
+    PDF22MDErrorDirectoryNotFound = 1014,
+    
+    /**
+     * Permission denied for file system operation.
+     */
+    PDF22MDErrorPermissionDenied = 1015
 };
 
 /**

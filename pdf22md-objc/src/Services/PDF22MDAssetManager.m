@@ -2,6 +2,8 @@
 #import "../Models/PDF22MDImageElement.h"
 #import "../../shared/Algorithms/PDF22MDImageFormatDetection.h"
 #import "../../shared/Core/PDF22MDConcurrencyManager.h"
+#import "../../shared/Core/PDF22MDFileSystemUtils.h"
+#import "../../shared/Core/PDF22MDConstants.h"
 #import <ImageIO/ImageIO.h>
 
 @interface PDF22MDAssetManager ()
@@ -24,22 +26,9 @@
         
         // Create assets folder if it doesn't exist
         NSError *error = nil;
-        BOOL isDirectory = NO;
-        BOOL exists = [_fileManager fileExistsAtPath:folderPath isDirectory:&isDirectory];
-        
-        if (exists && !isDirectory) {
-            NSLog(@"Asset path exists but is not a directory: %@", folderPath);
+        if (![PDF22MDFileSystemUtils ensureDirectoryExists:folderPath error:&error]) {
+            NSLog(@"Failed to create assets folder: %@", error);
             return nil;
-        }
-        
-        if (!exists) {
-            if (![_fileManager createDirectoryAtPath:folderPath
-                         withIntermediateDirectories:YES
-                                          attributes:nil
-                                               error:&error]) {
-                NSLog(@"Failed to create assets folder: %@", error);
-                return nil;
-            }
         }
     }
     return self;
@@ -80,8 +69,7 @@
     if (shouldUseJPEG) {
         properties = @{(__bridge NSString *)kCGImageDestinationLossyCompressionQuality: @(0.85)};
     } else {
-        // For PNG, we can set compression level
-        properties = @{(__bridge NSString *)kCGImagePropertyPNGCompressionFilter: @(1)}; // Best compression
+        properties = @{(__bridge NSString *)kCGImagePropertyPNGCompressionFilter: @(1)};
     }
     
     // Add image to destination
@@ -119,18 +107,18 @@
     __block NSString *filename = nil;
     
     dispatch_sync(self.fileAccessQueue, ^{
-        NSString *candidate = [NSString stringWithFormat:@"%@.%@", baseName, extension];
-        NSInteger counter = 1;
-        
-        // Check if filename is already used
-        while ([self.usedFilenames containsObject:candidate] ||
-               [self.fileManager fileExistsAtPath:[self.assetsFolderPath stringByAppendingPathComponent:candidate]]) {
-            candidate = [NSString stringWithFormat:@"%@_%03ld.%@", baseName, (long)counter, extension];
-            counter++;
+        NSString *fullPath = [PDF22MDFileSystemUtils uniqueFilePathForBaseName:baseName
+                                                                      extension:extension
+                                                                    inDirectory:self.assetsFolderPath];
+        if (fullPath) {
+            filename = [fullPath lastPathComponent];
+            [self.usedFilenames addObject:filename];
+        } else {
+            // Fallback to timestamp-based naming if unique path generation fails
+            NSTimeInterval timestamp = [[NSDate date] timeIntervalSince1970];
+            filename = [NSString stringWithFormat:@"%@_%.0f.%@", baseName, timestamp, extension];
+            [self.usedFilenames addObject:filename];
         }
-        
-        [self.usedFilenames addObject:candidate];
-        filename = candidate;
     });
     
     return filename;

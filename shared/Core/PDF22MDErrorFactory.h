@@ -83,6 +83,13 @@ typedef NS_ENUM(NSInteger, PDF22MDError);
 + (NSError *)assetCreationErrorWithPath:(NSString *)path
                                  reason:(NSString *)reason;
 
+/**
+ * Creates a file system error with code, description, and suggestion.
+ */
++ (NSError *)createFileSystemErrorWithCode:(NSInteger)code
+                               description:(NSString *)description
+                                suggestion:(NSString *)suggestion;
+
 #pragma mark - Processing Error Factory Methods
 
 /**

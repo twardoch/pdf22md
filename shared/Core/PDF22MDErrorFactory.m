@@ -178,6 +178,16 @@ extern NSString * const PDF22MDErrorUnderlyingErrorKey;
                            userInfo:userInfo];
 }
 
++ (NSError *)createFileSystemErrorWithCode:(NSInteger)code
+                               description:(NSString *)description
+                                suggestion:(NSString *)suggestion {
+    return [self createErrorForDomain:PDF22MDErrorDomain
+                                 code:code
+                          description:description
+                           suggestion:suggestion
+                      underlyingError:nil];
+}
+
 #pragma mark - Processing Error Factory Methods
 
 + (NSError *)memoryPressureErrorWithContext:(NSString *)context {
