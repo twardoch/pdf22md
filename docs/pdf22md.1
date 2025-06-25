@@ -1,0 +1,333 @@
+.TH PDF22MD 1 "June 2025" "pdf22md v1.0" "User Commands"
+.SH NAME
+pdf22md \- high-performance PDF to Markdown converter
+.SH SYNOPSIS
+.B pdf22md
+[\fB\-i\fR \fIinput.pdf\fR]
+[\fB\-o\fR \fIoutput.md\fR]
+[\fB\-a\fR \fIassets_folder\fR]
+[\fB\-d\fR \fIdpi\fR]
+[\fB\-v\fR]
+[\fB\-h\fR]
+.SH DESCRIPTION
+.B pdf22md
+is a blazingly fast PDF to Markdown converter that extracts text and images from PDF documents and converts them into clean, structured Markdown format. It uses parallel processing to achieve high performance on multi-page documents.
+
+The tool automatically detects heading hierarchy based on font size analysis, extracts images with intelligent format optimization (PNG/JPEG), and generates YAML frontmatter with document metadata.
+
+.SH OPTIONS
+.TP
+\fB\-i\fR \fIinput.pdf\fR
+Specify the input PDF file to convert. If not provided, pdf22md reads from standard input (stdin).
+.TP
+\fB\-o\fR \fIoutput.md\fR
+Specify the output Markdown file. If not provided, pdf22md writes to standard output (stdout).
+.TP
+\fB\-a\fR \fIassets_folder\fR
+Specify the folder where extracted images will be saved. The folder will be created if it doesn't exist. Images are automatically referenced in the generated Markdown with relative paths.
+.TP
+\fB\-d\fR \fIdpi\fR
+Set the DPI (dots per inch) for rasterizing vector graphics. Default is 144. Higher values produce better quality but larger file sizes. Common values: 72 (screen), 144 (default), 300 (print quality).
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+Display version information and exit.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Display usage information and exit.
+
+.SH EXAMPLES
+.TP
+Convert a PDF file to Markdown:
+.B pdf22md \-i document.pdf \-o document.md
+
+.TP
+Extract images to an assets folder:
+.B pdf22md \-i document.pdf \-o document.md \-a ./assets
+
+.TP
+Use higher DPI for better image quality:
+.B pdf22md \-i document.pdf \-o document.md \-a ./assets \-d 300
+
+.TP
+Convert using pipes (stdin/stdout):
+.B cat document.pdf | pdf22md > document.md
+
+.TP
+Process a document with custom settings:
+.B pdf22md \-i report.pdf \-o report.md \-a ./images \-d 200
+
+.SH INPUT/OUTPUT
+.SS Input Sources
+.B pdf22md
+accepts PDF input from:
+.IP • 2
+File path specified with \fB\-i\fR flag
+.IP • 2
+Standard input (stdin) when no \fB\-i\fR flag is provided
+
+.SS Output Destinations
+Markdown output is written to:
+.IP • 2
+File path specified with \fB\-o\fR flag
+.IP • 2
+Standard output (stdout) when no \fB\-o\fR flag is provided
+
+.SS Image Assets
+When the \fB\-a\fR flag is used:
+.IP • 2
+Images are extracted and saved to the specified folder
+.IP • 2
+Filenames follow the pattern: image_001.png, image_002.jpg, etc.
+.IP • 2
+Format selection is automatic (PNG for graphics, JPEG for photos)
+.IP • 2
+Markdown contains relative references to the images
+
+.SH FEATURES
+.SS Intelligent Content Processing
+.IP • 2
+\fBHeading Detection\fR: Automatically identifies headings (H1-H6) based on font size analysis
+.IP • 2
+\fBText Extraction\fR: Preserves text formatting and structure
+.IP • 2
+\fBImage Processing\fR: Extracts both raster and vector graphics
+.IP • 2
+\fBSmart Formatting\fR: Maintains document hierarchy and readability
+
+.SS Performance Optimizations
+.IP • 2
+\fBParallel Processing\fR: Uses all available CPU cores for maximum speed
+.IP • 2
+\fBMemory Efficiency\fR: Processes large documents without excessive memory usage
+.IP • 2
+\fBFormat Optimization\fR: Automatic PNG/JPEG selection based on image content
+
+.SS Output Features
+.IP • 2
+\fBYAML Frontmatter\fR: Includes document metadata (title, author, creation date)
+.IP • 2
+\fBClean Markdown\fR: Well-structured output compatible with all Markdown processors
+.IP • 2
+\fBAsset Management\fR: Organized image extraction with proper linking
+
+.SH FILE FORMATS
+.SS Supported Input
+.IP • 2
+PDF files (version 1.4 and higher)
+.IP • 2
+Unencrypted PDFs (password-protected PDFs are not supported)
+.IP • 2
+PDFs with text, images, and vector graphics
+.IP • 2
+Multi-page documents of any size
+
+.SS Generated Output
+.IP • 2
+\fBMarkdown (.md)\fR: GitHub Flavored Markdown compatible
+.IP • 2
+\fBImages (.png/.jpg)\fR: Extracted graphics in optimal formats
+.IP • 2
+\fBYAML Frontmatter\fR: Document metadata in standard format
+
+.SH PERFORMANCE
+Typical conversion speeds on modern hardware:
+.IP • 2
+Simple text documents: <1 second per page
+.IP • 2
+Complex documents with images: 2-5 seconds per page
+.IP • 2
+Large documents (100+ pages): Scales linearly with parallel processing
+
+Memory usage is optimized for documents up to 1000 pages. Very large documents may require additional system memory.
+
+.SH ERROR HANDLING
+.B pdf22md
+provides detailed error messages with suggestions for common issues:
+
+.SS Common Errors and Solutions
+.TP
+\fBInvalid PDF file\fR
+.IP • 2
+Verify the file exists and is a valid PDF
+.IP • 2
+Check if the file is corrupted
+.IP • 2
+Ensure you have read permissions
+
+.TP
+\fBCannot create assets folder\fR
+.IP • 2
+Check if the parent directory exists
+.IP • 2
+Verify you have write permissions
+.IP • 2
+Ensure sufficient disk space
+
+.TP
+\fBPassword-protected PDF\fR
+.IP • 2
+Remove password protection using another tool first
+.IP • 2
+Use: qpdf \-\-decrypt input.pdf output.pdf
+
+.TP
+\fBMemory pressure\fR
+.IP • 2
+Close other applications to free memory
+.IP • 2
+Try using a lower DPI setting (\-d 72)
+.IP • 2
+Process smaller sections of large documents
+
+.SH EXIT STATUS
+.TP
+.B 0
+Successful conversion
+.TP
+.B 1
+Error occurred (invalid input, processing failure, I/O error)
+
+.SH ENVIRONMENT
+No special environment variables are required. The tool uses standard macOS frameworks (PDFKit, CoreGraphics) and runs on macOS 10.15 and later.
+
+.SH LIMITATIONS
+.IP • 2
+Password-protected PDFs are not supported
+.IP • 2
+Scanned PDFs without OCR text layer will only extract images
+.IP • 2
+Complex table layouts may not convert perfectly
+.IP • 2
+Some advanced PDF features (forms, annotations) are not preserved
+
+.SH COMPATIBILITY
+.SS Platform Support
+.IP • 2
+macOS 10.15 (Catalina) and later
+.IP • 2
+Intel and Apple Silicon processors
+.IP • 2
+Universal binary for optimal performance
+
+.SS Markdown Compatibility
+Output is compatible with:
+.IP • 2
+GitHub Flavored Markdown
+.IP • 2
+CommonMark specification
+.IP • 2
+Popular Markdown processors (pandoc, Jekyll, etc.)
+.IP • 2
+Static site generators (Hugo, Jekyll, Gatsby)
+
+.SH FILES
+.TP
+.I ~/.pdf22md/
+User configuration directory (future use)
+.TP
+.I /usr/local/bin/pdf22md
+Default installation location
+.TP
+.I /usr/local/share/man/man1/pdf22md.1
+This manual page
+
+.SH EXAMPLES WORKFLOW
+.SS Basic Document Conversion
+.nf
+# Convert a simple document
+pdf22md \-i report.pdf \-o report.md
+
+# Result: clean Markdown with YAML frontmatter
+# Output includes: title, headings, body text, metadata
+.fi
+
+.SS Academic Paper with Images
+.nf
+# Convert research paper with figure extraction
+pdf22md \-i paper.pdf \-o paper.md \-a figures \-d 300
+
+# Result: 
+# - paper.md with structured content
+# - figures/ folder with high-quality images
+# - Proper cross-references to figures
+.fi
+
+.SS Batch Processing
+.nf
+# Process multiple documents
+for pdf in *.pdf; do
+    pdf22md \-i "$pdf" \-o "${pdf%.pdf}.md" \-a "assets_${pdf%.pdf}"
+done
+.fi
+
+.SS Integration with Other Tools
+.nf
+# Combine with pandoc for further processing
+pdf22md \-i document.pdf | pandoc \-f markdown \-t html \-o document.html
+
+# Use with static site generators
+pdf22md \-i post.pdf \-o content/posts/post.md \-a static/images
+.fi
+
+.SH TROUBLESHOOTING
+.SS Performance Issues
+If conversion is slow:
+.IP • 2
+Check available memory and CPU usage
+.IP • 2
+Close unnecessary applications
+.IP • 2
+Try lower DPI setting for faster processing
+.IP • 2
+Process documents in smaller batches
+
+.SS Quality Issues
+If output quality is poor:
+.IP • 2
+Increase DPI setting (\-d 300) for better images
+.IP • 2
+Verify the source PDF has good quality text
+.IP • 2
+Check if the PDF has a proper text layer (not just scanned images)
+
+.SS Memory Errors
+For large documents:
+.IP • 2
+Ensure sufficient RAM (8GB+ recommended for large PDFs)
+.IP • 2
+Close other memory-intensive applications
+.IP • 2
+Split very large PDFs into smaller parts first
+
+.SH REPORTING BUGS
+Report bugs and feature requests at:
+.UR https://github.com/twardoch/pdf22md/issues
+.UE
+
+Include in your report:
+.IP • 2
+pdf22md version (\fBpdf22md \-v\fR)
+.IP • 2
+macOS version
+.IP • 2
+Sample PDF file (if possible)
+.IP • 2
+Complete error message
+.IP • 2
+Steps to reproduce the issue
+
+.SH AUTHORS
+Written by Adam Twardoch and contributors.
+
+.SH LICENSE
+MIT License. See the LICENSE file for details.
+
+.SH SEE ALSO
+.BR pandoc (1),
+.BR qpdf (1),
+.BR pdftotext (1),
+.BR markdown (7)
+
+Project homepage: 
+.UR https://github.com/twardoch/pdf22md
+.UE

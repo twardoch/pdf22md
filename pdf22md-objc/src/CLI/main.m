@@ -1,10 +1,10 @@
 #import <Foundation/Foundation.h>
 #import <PDFKit/PDFKit.h>
-#import "PDFMarkdownConverter.h"
-#import "PDF22MDErrorHelper.h"
+#import "../Core/PDF22MDConverter.h"
+#import "../Core/PDF22MDConversionOptions.h"
 
 #ifndef VERSION
-#define VERSION "dev"
+#define VERSION "1.0.0"
 #endif
 
 void printUsage(const char *programName) {
@@ -63,16 +63,14 @@ int main(int argc, const char *argv[]) {
         }
         
         // Initialize converter
-        PDFMarkdownConverter *converter = nil;
+        PDF22MDConverter *converter = nil;
         
         if (inputPath) {
             // Read from file
             NSURL *pdfURL = [NSURL fileURLWithPath:inputPath];
-            converter = [[PDFMarkdownConverter alloc] initWithPDFAtURL:pdfURL];
+            converter = [[PDF22MDConverter alloc] initWithPDFURL:pdfURL];
             if (!converter) {
-                NSError *error = [PDF22MDErrorHelper invalidPDFErrorWithPath:inputPath];
-                NSString *userMessage = [PDF22MDErrorHelper userFriendlyMessageForError:error];
-                fprintf(stderr, "%s\n", [userMessage UTF8String]);
+                fprintf(stderr, "Failed to load PDF from: %s\n", [inputPath UTF8String]);
                 return 1;
             }
         } else {
@@ -81,28 +79,32 @@ int main(int argc, const char *argv[]) {
             NSData *pdfData = [stdinHandle readDataToEndOfFile];
             
             if (!pdfData || [pdfData length] == 0) {
-                NSError *error = [PDF22MDErrorHelper errorWithCode:PDF22MDErrorIOError
-                                                        description:@"No PDF data received from stdin"
-                                                         suggestion:@"• Pipe a valid PDF file to stdin\n"
-                                                                   @"• Example: cat document.pdf | pdf22md > output.md\n"
-                                                                   @"• Check that the input source contains PDF data"];
-                NSString *userMessage = [PDF22MDErrorHelper userFriendlyMessageForError:error];
-                fprintf(stderr, "%s\n", [userMessage UTF8String]);
+                fprintf(stderr, "No PDF data received from stdin\n");
                 return 1;
             }
             
-            converter = [[PDFMarkdownConverter alloc] initWithPDFData:pdfData];
+            converter = [[PDF22MDConverter alloc] initWithPDFData:pdfData];
             if (!converter) {
-                NSError *error = [PDF22MDErrorHelper errorWithCode:PDF22MDErrorInvalidPDF
-                                                        description:@"Failed to create PDF document from stdin data"
-                                                         suggestion:@"• Ensure the piped data is a valid PDF file\n"
-                                                                   @"• Verify the PDF is not corrupted\n"
-                                                                   @"• Check if the PDF is password-protected"];
-                NSString *userMessage = [PDF22MDErrorHelper userFriendlyMessageForError:error];
-                fprintf(stderr, "%s\n", [userMessage UTF8String]);
+                fprintf(stderr, "Failed to create PDF document from stdin data\n");
                 return 1;
             }
         }
+        
+        // Create conversion options
+        PDF22MDConversionOptionsBuilder *builder = [[PDF22MDConversionOptionsBuilder alloc] init];
+        builder.assetsFolderPath = assetsPath;
+        builder.rasterizationDPI = dpi;
+        builder.extractImages = (assetsPath != nil);
+        
+        // Add progress handler for interactive terminals
+        if (isatty(STDERR_FILENO)) {
+            builder.progressHandler = ^(NSInteger currentPage, NSInteger totalPages) {
+                fprintf(stderr, "\rProcessing page %ld of %ld...", (long)currentPage, (long)totalPages);
+                fflush(stderr);
+            };
+        }
+        
+        PDF22MDConversionOptions *options = [builder build];
         
         // Perform conversion
         __block NSString *markdown = nil;
@@ -110,19 +112,23 @@ int main(int argc, const char *argv[]) {
         
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         
-        [converter convertWithAssetsFolderPath:assetsPath
-                                rasterizedDPI:dpi
-                                   completion:^(NSString *result, NSError *error) {
+        [converter convertWithOptions:options
+                           completion:^(NSString *result, NSError *error) {
             markdown = result;
             conversionError = error;
             dispatch_semaphore_signal(semaphore);
         }];
         
+        // Wait for completion
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         
+        if (isatty(STDERR_FILENO) && options.progressHandler) {
+            fprintf(stderr, "\n"); // Clear progress line
+        }
+        
         if (conversionError) {
-            NSString *userMessage = [PDF22MDErrorHelper userFriendlyMessageForError:conversionError];
-            fprintf(stderr, "%s\n", [userMessage UTF8String]);
+            fprintf(stderr, "Conversion failed: %s\n", 
+                    [[conversionError localizedDescription] UTF8String]);
             return 1;
         }
         
@@ -135,18 +141,8 @@ int main(int argc, const char *argv[]) {
                                         encoding:NSUTF8StringEncoding
                                            error:&writeError];
             if (!success) {
-                NSError *enhancedError = [PDF22MDErrorHelper ioErrorWithPath:outputPath operation:@"write"];
-                if (writeError) {
-                    enhancedError = [PDF22MDErrorHelper errorWithCode:PDF22MDErrorIOError
-                                                           description:[NSString stringWithFormat:@"Failed to write output file: %@", outputPath]
-                                                            suggestion:@"• Check if you have write permissions for the directory\n"
-                                                                      @"• Ensure sufficient disk space\n"
-                                                                      @"• Verify the path is correct and accessible\n"
-                                                                      @"• Check if the file is locked by another application"
-                                                       underlyingError:writeError];
-                }
-                NSString *userMessage = [PDF22MDErrorHelper userFriendlyMessageForError:enhancedError];
-                fprintf(stderr, "%s\n", [userMessage UTF8String]);
+                fprintf(stderr, "Failed to write output file: %s\n",
+                        [[writeError localizedDescription] UTF8String]);
                 return 1;
             }
         } else {
@@ -154,6 +150,11 @@ int main(int argc, const char *argv[]) {
             NSFileHandle *stdoutHandle = [NSFileHandle fileHandleWithStandardOutput];
             NSData *markdownData = [markdown dataUsingEncoding:NSUTF8StringEncoding];
             [stdoutHandle writeData:markdownData];
+            
+            // Add newline if not present
+            if (![markdown hasSuffix:@"\n"]) {
+                [stdoutHandle writeData:[@"\n" dataUsingEncoding:NSUTF8StringEncoding]];
+            }
         }
         
         return 0;
