@@ -15,9 +15,9 @@ This repository contains two complete, self-contained implementations:
 - **Memory Efficient**: Careful resource management with ARC
 
 ### ⚡ [pdf22md-swift](./pdf22md-swift/) - Swift Implementation  
-- **Modern Swift**: Built with Swift 5.7+ async/await and structured concurrency
+- **Modern Swift**: Built with Swift 5.7+ async/await and structured concurrency (framework ready)
 - **Type Safe**: Strong typing with enums, protocols, and generic constraints
-- **Actor-Based**: Thread-safe image processing with Swift actors
+- **Library Foundation**: Swift Package Manager library ready for implementation
 - **Memory Safe**: Automatic memory management with value types
 
 ## Key Features (Both Implementations)
@@ -42,7 +42,7 @@ make
 ```bash
 cd pdf22md-swift
 swift build -c release
-.build/release/pdf22md-cli -i document.pdf -o document.md -a ./assets
+# Note: CLI implementation in progress - currently library framework only
 ```
 
 ## Usage
@@ -94,7 +94,7 @@ sudo make install
 ```bash
 cd pdf22md-swift  
 swift build -c release
-cp .build/release/pdf22md-cli /usr/local/bin/pdf22md
+# Note: Currently library framework only - CLI implementation in progress
 ```
 
 ## Requirements
