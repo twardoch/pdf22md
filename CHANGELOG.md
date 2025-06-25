@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shared component library (shared/ directory) for common algorithms
 - PDF22MDImageFormatDetection utility for optimal image format selection
 - Unified test resource directory (shared/test-resources/) for all implementations
+- **PDF22MDErrorFactory**: Unified error creation factory eliminating error handling duplication across 9+ files with specialized methods for configuration, file system, and processing errors
+- **PDF22MDConcurrencyManager**: Standardized GCD patterns and queue management for consistent concurrency across implementations with shared queues and parallel processing utilities
 - **Complete Modern Objective-C Implementation**: Full feature-parity rewrite in modern Objective-C with nullability annotations, lightweight generics, and proper designated initializers
 - **Complete Swift Implementation**: Modern Swift implementation with async/await, actors, and Swift Package Manager support
 - **Multi-Implementation Architecture**: Three implementations (C/ObjC, Modern ObjC, Swift) for different use cases and platform requirements
@@ -69,6 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed code duplication between root and implementation directories
 - Extracted image format detection algorithm into shared utility (~100 lines deduplicated)
 - Build system automatically compiles shared components with proper dependencies
+- **Error handling patterns**: Replaced manual NSError creation with standardized factory methods across all validation and processing code
+- **Concurrency patterns**: Unified GCD usage with shared queue management and standardized parallel processing patterns
 - **Test resource consolidation**: Single shared/test-resources/ directory (58MB space saved)
 - **Documentation consolidation**: Single man page source (docs/pdf22md.1)
 - **Build script unification**: No implementation-specific build scripts

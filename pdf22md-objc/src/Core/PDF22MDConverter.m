@@ -7,6 +7,7 @@
 #import "../Services/PDF22MDMarkdownGenerator.h"
 #import "PDF22MDFontAnalyzer.h"
 #import "PDF22MDError.h"
+#import "../../shared/Core/PDF22MDConcurrencyManager.h"
 
 @interface PDF22MDConverter ()
 @property (nonatomic, strong) dispatch_queue_t conversionQueue;
@@ -54,7 +55,7 @@
     self = [super init];
     if (self) {
         _document = document;
-        _conversionQueue = dispatch_queue_create("com.twardoch.pdf22md.converter", DISPATCH_QUEUE_SERIAL);
+        _conversionQueue = [PDF22MDConcurrencyManager sharedConverterQueue];
         _allElements = [NSMutableArray array];
         _fontAnalyzer = [[PDF22MDFontAnalyzer alloc] init];
         _progress = [NSProgress progressWithTotalUnitCount:[document pageCount]];
@@ -89,18 +90,18 @@
     self.fontAnalyzer.fontSizeThreshold = options.headingFontSizeThreshold;
     self.fontAnalyzer.maxHeadingLevel = options.maxHeadingLevel;
     
-    // Perform conversion on background queue
-    dispatch_async(self.conversionQueue, ^{
+    // Perform conversion using shared concurrency manager
+    [PDF22MDConcurrencyManager performConverterOperation:^{
         @autoreleasepool {
             NSError *error = nil;
             NSString *markdown = [self performConversionWithOptions:options error:&error];
             
             // Call completion on main queue
-            dispatch_async(dispatch_get_main_queue(), ^{
+            [PDF22MDConcurrencyManager executeOnMainQueue:^{
                 completion(markdown, error);
-            });
+            }];
         }
-    });
+    } completion:nil];
 }
 
 - (void)cancelConversion {

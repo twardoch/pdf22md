@@ -1,6 +1,7 @@
 #import "PDF22MDAssetManager.h"
 #import "../Models/PDF22MDImageElement.h"
 #import "../../shared/Algorithms/PDF22MDImageFormatDetection.h"
+#import "../../shared/Core/PDF22MDConcurrencyManager.h"
 #import <ImageIO/ImageIO.h>
 
 @interface PDF22MDAssetManager ()
@@ -18,7 +19,7 @@
     if (self) {
         _assetsFolderPath = [folderPath copy];
         _fileManager = [[NSFileManager alloc] init];
-        _fileAccessQueue = dispatch_queue_create("com.twardoch.pdf22md.assetmanager", DISPATCH_QUEUE_SERIAL);
+        _fileAccessQueue = [PDF22MDConcurrencyManager sharedFileAccessQueue];
         _usedFilenames = [NSMutableSet set];
         
         // Create assets folder if it doesn't exist

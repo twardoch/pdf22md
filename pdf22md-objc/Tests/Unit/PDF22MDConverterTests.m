@@ -9,6 +9,7 @@
 #import "PDF22MDConverter.h"
 #import "PDF22MDConversionOptions.h"
 #import "PDF22MDError.h"
+#import "../../../shared/Core/PDF22MDErrorFactory.h"
 
 @interface PDF22MDConverterTests : XCTestCase
 @property (nonatomic, strong) PDF22MDConverter *converter;

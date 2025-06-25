@@ -1,5 +1,6 @@
 #import "PDF22MDConversionOptions.h"
 #import "PDF22MDError.h"
+#import "../../shared/Core/PDF22MDErrorFactory.h"
 
 @implementation PDF22MDConversionOptions
 
@@ -48,12 +49,7 @@
     // Validate DPI
     if (self.rasterizationDPI <= 0 || self.rasterizationDPI > 600) {
         if (error) {
-            *error = [NSError errorWithDomain:PDF22MDErrorDomain
-                                         code:PDF22MDErrorInvalidConfiguration
-                                     userInfo:@{
-                NSLocalizedDescriptionKey: @"Invalid rasterization DPI",
-                NSLocalizedFailureReasonErrorKey: @"DPI must be between 1 and 600"
-            }];
+            *error = [PDF22MDErrorFactory invalidDPIErrorWithValue:self.rasterizationDPI];
         }
         return NO;
     }
@@ -61,12 +57,7 @@
     // Validate concurrent pages
     if (self.maxConcurrentPages < 1 || self.maxConcurrentPages > 64) {
         if (error) {
-            *error = [NSError errorWithDomain:PDF22MDErrorDomain
-                                         code:PDF22MDErrorInvalidConfiguration
-                                     userInfo:@{
-                NSLocalizedDescriptionKey: @"Invalid max concurrent pages",
-                NSLocalizedFailureReasonErrorKey: @"Value must be between 1 and 64"
-            }];
+            *error = [PDF22MDErrorFactory invalidConcurrentPagesErrorWithValue:self.maxConcurrentPages];
         }
         return NO;
     }
@@ -74,12 +65,7 @@
     // Validate heading level
     if (self.maxHeadingLevel < 1 || self.maxHeadingLevel > 6) {
         if (error) {
-            *error = [NSError errorWithDomain:PDF22MDErrorDomain
-                                         code:PDF22MDErrorInvalidConfiguration
-                                     userInfo:@{
-                NSLocalizedDescriptionKey: @"Invalid max heading level",
-                NSLocalizedFailureReasonErrorKey: @"Heading level must be between 1 and 6"
-            }];
+            *error = [PDF22MDErrorFactory invalidHeadingLevelErrorWithValue:self.maxHeadingLevel];
         }
         return NO;
     }
@@ -87,12 +73,7 @@
     // Validate font size threshold
     if (self.headingFontSizeThreshold < 0.5 || self.headingFontSizeThreshold > 10.0) {
         if (error) {
-            *error = [NSError errorWithDomain:PDF22MDErrorDomain
-                                         code:PDF22MDErrorInvalidConfiguration
-                                     userInfo:@{
-                NSLocalizedDescriptionKey: @"Invalid heading font size threshold",
-                NSLocalizedFailureReasonErrorKey: @"Threshold must be between 0.5 and 10.0 points"
-            }];
+            *error = [PDF22MDErrorFactory invalidFontSizeThresholdErrorWithValue:self.headingFontSizeThreshold];
         }
         return NO;
     }
@@ -105,8 +86,8 @@
         
         if (exists && !isDirectory) {
             if (error) {
-                *error = [PDF22MDErrorHelper assetFolderCreationErrorWithPath:self.assetsFolderPath
-                                                                         reason:@"Path exists but is not a directory"];
+                *error = [PDF22MDErrorFactory assetCreationErrorWithPath:self.assetsFolderPath
+                                                                   reason:@"Path exists but is not a directory"];
             }
             return NO;
         }
