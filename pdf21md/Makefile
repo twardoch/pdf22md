@@ -35,9 +35,9 @@ test: $(TARGET)
 	# Add test commands here
 
 # Build benchmark
-benchmark: pdf22md-benchmark
+benchmark: pdf21md-benchmark
 
-pdf22md-benchmark: $(SRCDIR)/CLI/pdf22md-benchmark.m $(filter-out $(SRCDIR)/CLI/main.o,$(OBJECTS))
+pdf21md-benchmark: $(SRCDIR)/CLI/pdf21md-benchmark.m $(filter-out $(SRCDIR)/CLI/main.o,$(OBJECTS))
 	$(CC) $(OBJCFLAGS) -o $@ $^
 
 # Phony targets
