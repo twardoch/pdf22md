@@ -67,7 +67,7 @@ final class PDFPageProcessorOptimized {
             
             // Extract font information using cached values
             var fontSize: CGFloat = 12.0
-            let fontName = "Helvetica"
+            // The font name can be derived from the descriptor if needed. Omit unused placeholder to silence warnings.
             var isBold = false
             var isItalic = false
             
@@ -105,8 +105,10 @@ final class PDFPageProcessorOptimized {
     
     @inline(__always)
     private func extractImageElements() {
-        // Implementation remains similar but uses elementBuffer.append directly
-        // This is a placeholder - would need full implementation
+        let imgs = CGPDFImageExtractor.extractImages(from: pdfPage,
+                                                     pageIndex: pageIndex,
+                                                     dpi: dpi)
+        elementBuffer.append(contentsOf: imgs)
     }
     
     @inline(__always)

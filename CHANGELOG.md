@@ -99,6 +99,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation script (release.sh) for macOS
 - GitHub Actions workflow for automated releases
 - Package installer (.pkg) generation for macOS
+- **Plan**: Detailed roadmap for robust raster-image extraction across Swift and Objective-C implementations appended to PLAN.md.
+- **TODO**: Simplified checklist for the above work inserted into TODO.md.
 
 ### Changed
 - Restructured project with separate directories for each implementation (pdf21md, pdf22md)
@@ -117,6 +119,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build script compatibility issues with object file handling
 - PDF processing hang issue with timeout implementation
 - Memory leaks in asset management
+- **Swift Markdown Output**: Ensured the Swift converter now creates parent directories before writing and reliably writes the generated Markdown file instead of silently failing when the directory is missing.
+- **Code Quality**: Removed unused `fontName` variable in `PDFPageProcessorOptimized` to silence compiler warnings.
 
 ### Removed
 - Legacy archived-old-implementation directory (2,000+ lines of obsolete code)
@@ -211,3 +215,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Customizable DPI for vector graphics rasterization
 - Grand Central Dispatch (GCD) for multi-core performance
 - Comprehensive documentation
+
+### Changed
+- **Swift Raster Extraction (Phase 1)**: Added `CGPDFImageExtractor` and integrated it into both page processors; now ignores tiny annotation icons and discards blank/white images to prevent false assets.

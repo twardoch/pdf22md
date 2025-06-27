@@ -70,7 +70,8 @@
 - [ ] Add comprehensive try-catch blocks around file operations
 - [ ] Log conversion pipeline progress and intermediate results
 - [ ] Validate markdown content length before writing
-- [ ] Add permission and path validation
+- [x] Add permission and path validation
+- [x] Check parent directory existence and permissions
 - [ ] Implement debug output mode
 
 #### File Writing Robustness
@@ -86,14 +87,31 @@
 - [ ] Create debug mode showing element extraction details
 - [ ] Add validation scripts to verify markdown output quality
 
-## Priority 3: Fix CMap Warnings
-- [ ] Research PDF font encoding requirements
-- [ ] Check if warnings affect text extraction quality
-- [ ] Implement proper CMap handling or suppress if benign
-- [ ] Test with various PDFs to ensure text extraction works
+## 🚨 PRIORITY 2.5: Raster Image Extraction Improvements (Both Implementations)
+- [ ] Create docs/IMAGE_EXTRACTION_ALGORITHM.md describing approach
+- [ ] Add test PDFs with raster images for unit tests
+
+### Swift (`pdf22md`)
+- [x] Add CGPDFImageExtractor.swift (phase-1: annotation-based) and integrated into processors
+- [x] Wire extractor into PDFPageProcessor & Optimized variant
+- [ ] Implement down-scale (>20 MP) safeguard
+- [ ] Update AssetExtractor with optional maxDimension parameter
+- [ ] Unit test: verify images saved & format choice
+
+### Objective-C (`pdf21md`)
+- [ ] Add PDF21MDRawImageExtractor helper (category on CGPDFPage)
+- [ ] Integrate into PageProcessor before heuristic grid scan
+- [ ] Ensure PNG/JPEG selection parity with Swift
+- [ ] Unit test raster extraction
+
+### Shared / CLI / Tooling
+- [ ] Add --no-images flag & hidden -m max-dimension flag
+- [ ] Update test_new.sh assertions for asset counts
+- [ ] Update README/man-pages with image extraction notes
+- [ ] Update build.sh to include new files
 
 ## Priority 4: Code Quality Fixes
-- [ ] Remove unused `fontName` variable in PDFPageProcessorOptimized.swift:70
+- [x] Remove unused `fontName` variable in PDFPageProcessorOptimized.swift:70
 - [ ] Add comprehensive error messages throughout codebase
 - [ ] Implement progress reporting for long conversions
 - [ ] Add user-friendly error messages

@@ -67,7 +67,18 @@ public final class PDFMarkdownConverterOptimized {
         
         // Write output
         if let outputPath = outputPath {
-            try markdown.write(toFile: outputPath, atomically: true, encoding: String.Encoding.utf8)
+            // Ensure parent directory exists
+            let outputURL = URL(fileURLWithPath: outputPath)
+            let directoryURL = outputURL.deletingLastPathComponent()
+            let fileManager = FileManager.default
+            if !fileManager.fileExists(atPath: directoryURL.path) {
+                try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+            }
+            do {
+                try markdown.write(to: outputURL, atomically: true, encoding: .utf8)
+            } catch {
+                throw PDFConversionError.invalidPDF
+            }
         } else {
             print(markdown)
         }

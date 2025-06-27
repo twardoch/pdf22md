@@ -22,7 +22,9 @@ final class PDFPageProcessor {
         elements.append(contentsOf: extractTextElements())
         
         // Extract image elements
-        elements.append(contentsOf: extractImageElements())
+        elements.append(contentsOf: CGPDFImageExtractor.extractImages(from: pdfPage,
+                                                                      pageIndex: pageIndex,
+                                                                      dpi: dpi))
         
         // Extract vector graphics as images
         elements.append(contentsOf: extractVectorGraphics())

@@ -117,6 +117,7 @@ pdf22md/
   Sources/
     PDF22MD/
       AssetExtractor.swift
+      CGPDFImageExtractor.swift
       FontStatistics.swift
       PDFElement.swift
       PDFMarkdownConverter.swift
@@ -135,6 +136,8 @@ pdf22md/
   Package.resolved
   Package.swift
   README.md
+testdata/
+  test2.md
 .cursorrules
 .gitignore
 AGENTS.md
@@ -146,12 +149,373 @@ LICENSE
 PLAN.md
 README.md
 test_both.sh
+test_new.sh
 TODO.md
 TROUBLESHOOTING.md
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="pdf22md/Sources/PDF22MD/CGPDFImageExtractor.swift">
+import Foundation
+import PDFKit
+import CoreGraphics
+
+/// Utility responsible for extracting raster images from a PDF page using a best-effort heuristic.
+///
+/// Phase 1 implementation: look for image-like annotations (link, stamp, etc.) that have no text
+/// and are reasonably big; render their bounds into a bitmap at the requested DPI.
+/// This already captures embedded photos in most PDFs created by office software.
+///
+/// Later phases will add direct XObject scanning for perfect coverage.
+struct CGPDFImageExtractor {
+    /// Extract raster images from `page`.
+    /// - Parameters:
+    ///   - page: PDFKit page to analyse.
+    ///   - pageIndex: Zero-based page index – passed into resulting `ImageElement`s.
+    ///   - dpi: Desired rasterisation DPI (defaults to 144 the same as vector capture).
+    /// - Returns: Array of `ImageElement`s ready for markdown generator.
+    static func extractImages(from page: PDFPage,
+                              pageIndex: Int,
+                              dpi: CGFloat = 144.0) -> [ImageElement] {
+        var elements: [ImageElement] = []
+
+        // 1. Scan annotations for potential images.
+        for annotation in page.annotations {
+            guard annotationMayContainImage(annotation) else { continue }
+            if let img = render(annotation: annotation, on: page, dpi: dpi) {
+                let element = ImageElement(image: img,
+                                           bounds: annotation.bounds,
+                                           pageIndex: pageIndex,
+                                           isVectorSource: false)
+                elements.append(element)
+            }
+        }
+
+        // 2. (Future) Scan XObject dictionary here.
+
+        return elements
+    }
+
+    // MARK: - Private helpers
+
+    private static func annotationMayContainImage(_ annotation: PDFAnnotation) -> Bool {
+        let bounds = annotation.bounds
+        // Ignore tiny icons/logo-like annotations.
+        // Require both dimensions ≥ 50 pt **and** area ≥ 5 000 pt² to treat as a photo.
+        guard bounds.width >= 50, bounds.height >= 50, (bounds.width * bounds.height) >= 5000 else {
+            return false
+        }
+
+        // If the annotation carries any textual contents we treat it as non-image.
+        if let contents = annotation.contents, !contents.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return false
+        }
+        return true
+    }
+
+    private static func render(annotation: PDFAnnotation,
+                               on page: PDFPage,
+                               dpi: CGFloat) -> CGImage? {
+        let bounds = annotation.bounds
+        let scale = dpi / 72.0
+        let width = Int(bounds.width * scale)
+        let height = Int(bounds.height * scale)
+        guard width > 0, height > 0, width <= 4096, height <= 4096 else { return nil }
+
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(data: nil,
+                                   width: width,
+                                   height: height,
+                                   bitsPerComponent: 8,
+                                   bytesPerRow: 0,
+                                   space: colorSpace,
+                                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+
+        // White background so transparent images look OK.
+        ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.translateBy(x: -bounds.origin.x, y: -bounds.origin.y)
+        page.draw(with: .mediaBox, to: ctx)
+
+        guard let cgImage = ctx.makeImage() else { return nil }
+        // Filter out blank/white images (e.g. empty pages or whitespace boxes)
+        if isMostlyWhite(cgImage) {
+            return nil
+        }
+        return cgImage
+    }
+
+    /// Quick heuristic: returns true when >99% pixels have brightness > 0.97 (near white).
+    private static func isMostlyWhite(_ image: CGImage) -> Bool {
+        guard let dataProvider = image.dataProvider,
+              let cfData = dataProvider.data,
+              let ptr = CFDataGetBytePtr(cfData) else { return false }
+
+        let bytesPerPixel = image.bitsPerPixel / 8
+        guard bytesPerPixel >= 3 else { return false }
+
+        let width = image.width
+        let height = image.height
+        let totalPixels = width * height
+        var whiteCount = 0
+        let step = max(1, totalPixels / 10000) // sample at most 10k pixels
+
+        for i in stride(from: 0, to: totalPixels, by: step) {
+            let offset = i * bytesPerPixel
+            let r = ptr[offset]
+            let g = ptr[offset + 1]
+            let b = ptr[offset + 2]
+            // consider pixel white if all channels > 245 (out of 255)
+            if r > 245 && g > 245 && b > 245 {
+                whiteCount += 1
+            }
+        }
+
+        let samplePixels = totalPixels / step
+        return Double(whiteCount) / Double(samplePixels) > 0.99
+    }
+}
+</file>
+
+<file path="testdata/test2.md">
+![Vector graphic](image_001.png)
+
+![Vector graphic](image_002.png)
+
+![Vector graphic](image_003.png)
+
+![Vector graphic](image_004.png)
+
+![Vector graphic](image_005.png)
+
+![Vector graphic](image_006.png)
+
+HELLO WORLD ![Vector graphic](image_007.png)
+
+![Vector graphic](image_008.png)
+
+![Vector graphic](image_009.png)
+
+![Vector graphic](image_010.png)
+
+![Vector graphic](image_011.png)
+
+![Vector graphic](image_012.png)
+
+![Vector graphic](image_013.png)
+
+![Vector graphic](image_014.png)
+
+![Vector graphic](image_015.png)
+
+![Vector graphic](image_016.png)
+
+![Vector graphic](image_017.png)
+
+![Vector graphic](image_018.png)
+
+![Vector graphic](image_019.png)
+
+![Vector graphic](image_020.png)
+
+![Vector graphic](image_021.png)
+
+![Vector graphic](image_022.png)
+
+![Vector graphic](image_023.png)
+
+![Vector graphic](image_024.png)
+
+![Vector graphic](image_025.png)
+
+![Vector graphic](image_026.png)
+
+![Vector graphic](image_027.png)
+
+![Vector graphic](image_028.png)
+
+![Vector graphic](image_029.png)
+
+![Vector graphic](image_030.png)
+
+![Vector graphic](image_031.png)
+
+![Vector graphic](image_032.png)
+
+![Vector graphic](image_033.png)
+
+![Vector graphic](image_034.png)
+
+![Vector graphic](image_035.png)
+
+![Vector graphic](image_036.png)
+
+![Vector graphic](image_037.png)
+
+![Vector graphic](image_038.png)
+
+![Vector graphic](image_039.png)
+
+![Vector graphic](image_040.png)
+
+![Vector graphic](image_041.png)
+
+![Vector graphic](image_042.png)
+
+![Vector graphic](image_043.png)
+
+![Vector graphic](image_044.png)
+
+![Vector graphic](image_045.png)
+
+![Vector graphic](image_046.png)
+
+![Vector graphic](image_047.png)
+
+![Vector graphic](image_048.png)
+
+![Vector graphic](image_049.png)
+
+![Vector graphic](image_050.png)
+
+![Vector graphic](image_051.png)
+
+![Vector graphic](image_052.png)
+
+![Vector graphic](image_053.png)
+
+![Vector graphic](image_054.png)
+</file>
+
+<file path="test_new.sh">
+#!/usr/bin/env bash
+# test_new.sh – quick sanity tests for both Swift (pdf22md) and Objective-C (pdf21md) implementations
+#
+# 1. Converts a small PDF that contains only text and expects:
+#    • markdown file produced
+#    • NO assets directory (or it is empty)
+# 2. Converts a larger PDF with photos and expects:
+#    • markdown file produced
+#    • assets directory exists and contains at least one file
+#
+# Each conversion is aborted after 60 seconds to avoid accidental hangs.
+# The script exits non-zero on the first failed assertion.
+#
+# Usage: ./test_new.sh
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SWIFT_BIN="$ROOT_DIR/pdf22md/.build/release/pdf22md"
+OBJC_BIN="$ROOT_DIR/pdf21md/pdf21md"
+
+# Verify binaries exist
+for BIN in "$SWIFT_BIN" "$OBJC_BIN"; do
+    if [[ ! -x "$BIN" ]]; then
+        echo "❌ Binary not found or not executable: $BIN" >&2
+        exit 1
+    fi
+done
+
+small_pdf="$ROOT_DIR/testdata/test2.pdf"
+large_pdf="$ROOT_DIR/testdata/test.pdf"
+
+# Helper to run a command with a 60-second timeout (uses `timeout` if available,
+# otherwise falls back to background job + kill).
+run_with_timeout() {
+    local cmd="$1"
+    local seconds=60
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "$seconds" bash -c "$cmd"
+    else
+        # Fallback for macOS without coreutils timeout
+        bash -c "($cmd) & pid=$!; (sleep $seconds && kill -9 $pid 2>/dev/null) & wait $pid"
+    fi
+}
+
+# Clean helper
+clean_outputs() {
+    local md_file="$1"
+    shift
+    local assets_dir="$1"
+    rm -f "$md_file"
+    rm -rf "$assets_dir"
+}
+
+assert_file_nonempty() {
+    local file="$1"
+    if [[ ! -s "$file" ]]; then
+        echo "❌ Expected non-empty file: $file" >&2
+        exit 1
+    fi
+}
+
+assert_dir_missing_or_empty() {
+    local dir="$1"
+    if [[ -d "$dir" && -n "$(ls -A "$dir" 2>/dev/null)" ]]; then
+        echo "❌ Expected no assets in $dir" >&2
+        exit 1
+    fi
+}
+
+assert_dir_has_files() {
+    local dir="$1"
+    if [[ ! -d "$dir" ]]; then
+        echo "❌ Expected assets directory $dir to exist" >&2
+        exit 1
+    fi
+    if [[ -z "$(ls -A "$dir" 2>/dev/null)" ]]; then
+        echo "❌ Expected assets in $dir but directory is empty" >&2
+        exit 1
+    fi
+}
+
+echo "🟣 Running Swift converter tests…"
+
+echo "• Small PDF (text-only)"
+small_md_sw="$ROOT_DIR/testdata/test2.md"
+small_assets_sw="$ROOT_DIR/testdata/test2_assets"
+clean_outputs "$small_md_sw" "$small_assets_sw"
+run_with_timeout "$SWIFT_BIN -i $small_pdf -o $small_md_sw -a $small_assets_sw"
+assert_file_nonempty "$small_md_sw"
+assert_dir_missing_or_empty "$small_assets_sw"
+
+echo "• Large PDF (with photos)"
+large_md_sw="$ROOT_DIR/testdata/test.md"
+large_assets_sw="$ROOT_DIR/testdata/test_assets"
+clean_outputs "$large_md_sw" "$large_assets_sw"
+run_with_timeout "$SWIFT_BIN --optimized -i $large_pdf -o $large_md_sw -a $large_assets_sw"
+assert_file_nonempty "$large_md_sw"
+assert_dir_has_files "$large_assets_sw"
+
+echo "🟢 Swift converter tests passed\n"
+
+echo "🟣 Running Objective-C converter tests…"
+
+echo "• Small PDF (text-only)"
+small_md_oc="$ROOT_DIR/testdata/test2_oc.md"
+small_assets_oc="$ROOT_DIR/testdata/test2_oc_assets"
+clean_outputs "$small_md_oc" "$small_assets_oc"
+run_with_timeout "$OBJC_BIN -i $small_pdf -o $small_md_oc -a $small_assets_oc"
+assert_file_nonempty "$small_md_oc"
+assert_dir_missing_or_empty "$small_assets_oc"
+
+echo "• Large PDF (with photos)"
+large_md_oc="$ROOT_DIR/testdata/test_oc.md"
+large_assets_oc="$ROOT_DIR/testdata/test_oc_assets"
+clean_outputs "$large_md_oc" "$large_assets_oc"
+run_with_timeout "$OBJC_BIN -i $large_pdf -o $large_md_oc -a $large_assets_oc"
+assert_file_nonempty "$large_md_oc"
+assert_dir_has_files "$large_assets_oc"
+
+echo "🟢 Objective-C converter tests passed\n"
+
+echo "✅ All tests succeeded!"
+</file>
 
 <file path=".cursor/rules/content-element-models.mdc">
 ---
@@ -429,403 +793,6 @@ A clear and concise description of any alternative solutions or features you've 
 
 **Additional context**
 Add any other context or screenshots about the feature request here.
-</file>
-
-<file path=".cursorrules">
-# pdf22md
-
-A blazingly fast PDF to Markdown converter for macOS.
-
-`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
-
-### Key Features
-
-  * **High-Speed Conversion**: Uses all available CPU cores to process PDF pages concurrently.
-  * **Intelligent Heading Detection**: Analyzes font sizes and usage frequency to automatically format titles and headings (`#`, `##`, etc.).
-  * **Asset Extraction**: Saves raster and vector images into a specified assets folder and links them correctly in the Markdown file.
-  * **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality.
-  * **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`.
-  * **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps.
-
-### Installation
-
-Once the Homebrew tap is set up (see plan below), installation is simple:
-
-```bash
-brew install <your-username>/pdf22md/pdf22md
-```
-
-### Building from Source
-
-To build the project manually, you need Xcode Command Line Tools installed.
-
-```bash
-# Clone the repository (once it's public)
-git clone https://github.com/<your-username>/pdf22md.git
-cd pdf22md
-
-# Compile the tool
-make
-
-# Install it to /usr/local/bin
-sudo make install
-```
-
-### Usage
-
-```
-Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
-  Converts PDF documents to Markdown format
-  -i <path>: Input PDF file (default: stdin)
-  -o <path>: Output Markdown file (default: stdout)
-  -a <path>: Assets folder for extracted images
-  -d <dpi>: DPI for rasterizing vector graphics (default: 144)
-```
-
-**Example:**
-
-```bash
-# Convert a local PDF file and save images to an 'assets' folder
-pdf22md -i report.pdf -o report.md -a ./assets
-```
-
----
-
-
-# main-overview
-
-## Development Guidelines
-
-- Only modify code directly relevant to the specific request. Avoid changing unrelated functionality.
-- Never replace code with placeholders like `# ... rest of the processing ...`. Always include complete code.
-- Break problems into smaller steps. Think through each step separately before implementing.
-- Always provide a complete PLAN with REASONING based on evidence from code and logs before making changes.
-- Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
-
-
-pdf22md is a PDF to Markdown converter that transforms PDF documents while preserving their semantic structure and content relationships.
-
-Core Business Components:
-
-1. Document Structure Analysis (Importance: 95)
-- Hierarchical heading detection using font statistics
-- Document structure preservation through positional element sorting
-- Automated heading level assignment (H1-H6) based on font usage patterns
-
-2. Content Classification System (Importance: 85)
-- TextElement: Handles formatted text with style attributes
-- ImageElement: Manages both raster and vector graphics
-- Content relationship tracking between elements
-
-3. Asset Processing Pipeline (Importance: 80)
-- Intelligent format selection between PNG/JPEG based on:
-  * Transparency detection
-  * Color complexity analysis
-  * Dimension-based optimization
-- Asset extraction with maintained document references
-
-4. PDF Content Processing (Importance: 90)
-- Text styling and formatting context preservation
-- Vector graphics path construction tracking
-- Coordinate system transformation management
-- Element bounds calculation for layout fidelity
-
-Key Integration Points:
-
-1. Content Extraction Layer
-- Connects PDF parsing with markdown generation
-- Maintains element relationships and hierarchy
-- Preserves formatting context across transformations
-
-2. Asset Management Layer
-- Links extracted images with markdown references
-- Maintains asset organization structure
-- Handles format conversions while preserving quality
-
-The system organizes business logic around content transformation pipelines while maintaining document semantic structure throughout the conversion process.
-
-—— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates.
-</file>
-
-<file path="CONTRIBUTING.md">
-# Contributing to pdf22md
-
-Thank you for your interest in contributing to `pdf22md`! This document outlines how you can contribute to the project, focusing on technical details, code structure, and development guidelines.
-
-## Project Overview
-
-`pdf22md` is a PDF to Markdown converter with two primary implementations:
-
-1.  **Objective-C Implementation (`pdf21md`)**: Located in the `pdf21md/` directory. This is the mature, production-ready version, optimized for macOS using Grand Central Dispatch (GCD) and native PDFKit integration.
-2.  **Swift Implementation (`pdf22md`)**: Located in the `pdf22md/` directory. This is a modern implementation built with Swift Package Manager, leveraging Swift's latest concurrency features (async/await, actors).
-
-Both implementations share the goal of high-performance, accurate PDF to Markdown conversion, including intelligent heading detection and smart image extraction.
-
-## Codebase Structure
-
-The project root contains shared documentation, build scripts, and the two main implementation directories:
-
--   `pdf21md/`: Contains the Objective-C source code, Makefile, and its specific test resources.
-    -   `pdf21md/src/CLI/`: Command-line interface entry points.
-    -   `pdf21md/src/Core/`: Core conversion logic, options, and error handling.
-    -   `pdf21md/src/Models/`: Data models for PDF elements (text, images).
-    -   `pdf21md/src/Services/`: Services like asset management and Markdown generation.
-    -   `pdf21md/shared-core/`: Shared Objective-C utilities (concurrency, constants, error factory, file system).
-    -   `pdf21md/shared-algorithms/`: Shared Objective-C algorithms (e.g., image format detection).
-    -   `pdf21md/Tests/`: Unit and integration tests for the Objective-C version.
-
--   `pdf22md/`: Contains the Swift source code, `Package.swift` (Swift Package Manager manifest), and its specific test resources.
-    -   `pdf22md/Sources/PDF22MD/`: Core Swift library modules.
-    -   `pdf22md/Sources/PDF22MDCli/`: Swift command-line interface entry point.
-    -   `pdf22md/Tests/PDF22MDTests/`: Unit tests for the Swift version.
-
--   `build.sh`: The main build script that compiles both implementations.
--   `test_both.sh`: Script to run tests for both implementations.
--   `docs/`: General project documentation.
--   `issues/`: Issue tracking files.
-
-## Technical Requirements and Conventions
-
-### General Guidelines
-
--   **Platform**: Development is primarily for macOS. Ensure compatibility with macOS 10.12+ for Objective-C and macOS 12.0+ for Swift.
--   **Language Standards**: Adhere to modern Objective-C (ARC, nullability annotations, lightweight generics) and Swift (Swift 5.7+, async/await, structured concurrency).
--   **Performance**: Given the nature of PDF processing, performance is critical. Contributions should be mindful of CPU and memory efficiency.
--   **Error Handling**: Use the established error handling patterns (e.g., `PDF21MDErrorFactory` for Objective-C, Swift's native `Error` protocol).
--   **Testing**: All new features and bug fixes should be accompanied by appropriate unit and/or integration tests.
-
-### Objective-C (`pdf21md`)
-
--   **Prefixes**: All new classes and categories should use the `PDF21MD` prefix.
--   **Memory Management**: Use ARC. Avoid manual `retain`/`release`/`autorelease` calls.
--   **Concurrency**: Utilize `PDF21MDConcurrencyManager` for GCD-based parallel processing and queue management.
--   **File System Operations**: Use `PDF21MDFileSystemUtils` for all file and directory operations.
--   **Constants**: Refer to `PDF21MDConstants` for all configuration values and magic numbers.
-
-### Swift (`pdf22md`)
-
--   **Swift Package Manager**: The project is managed with SPM. Ensure your changes integrate seamlessly.
--   **Concurrency**: Prefer Swift's `async/await` and `Actors` for concurrent operations.
--   **Error Handling**: Define custom `Error` enums where appropriate and propagate errors using `throws`.
--   **Value Types**: Prefer `struct`s over `class`es where appropriate to leverage Swift's value semantics and improve memory safety.
-
-## Development Workflow
-
-1.  **Fork the Repository**: Start by forking the `pdf22md` repository on GitHub.
-2.  **Clone Your Fork**: `git clone https://github.com/YOUR_USERNAME/pdf22md.git`
-3.  **Create a New Branch**: `git checkout -b feature/your-feature-name` or `bugfix/issue-number`.
-4.  **Make Your Changes**: Implement your feature or bug fix, adhering to the technical requirements and conventions.
-5.  **Write Tests**: Add or update tests to cover your changes.
-6.  **Run Tests**: Ensure all tests pass for both implementations:
-    ```bash
-    ./test_both.sh
-    ```
-7.  **Build the Project**: Verify that both implementations build successfully:
-    ```bash
-    ./build.sh
-    ```
-8.  **Update Documentation**: If your changes affect functionality or usage, update `README.md`, `CHANGELOG.md`, or other relevant documentation.
-9.  **Commit Your Changes**: Write clear, concise commit messages.
-10. **Push to Your Fork**: `git push origin feature/your-feature-name`
-11. **Open a Pull Request**: Submit a pull request to the `main` branch of the original `pdf22md` repository.
-
-## How to Orchestrate Code Changes (Detailed)
-
-### Identifying the Right Implementation
-
--   **General Features/Bug Fixes**: If a feature or bug fix applies to the core PDF conversion logic, it should ideally be implemented in *both* the Objective-C (`pdf21md`) and Swift (`pdf22md`) versions to maintain feature parity and ensure cross-language robustness. Look for existing patterns in both codebases.
--   **Performance Optimizations**: Analyze the performance bottlenecks. Some optimizations might be language-specific (e.g., GCD tuning for Objective-C, `async/await` patterns for Swift).
--   **CLI Enhancements**: Changes to command-line arguments or basic I/O will likely affect `pdf21md/src/CLI/main.m` and `pdf22md/Sources/PDF22MDCli/main.swift`.
--   **Shared Logic**: For logic that is truly independent of language-specific frameworks (e.g., complex algorithms), consider if it can be abstracted or if a direct port is more appropriate.
-
-### Step-by-Step Implementation Example (Placeholder)
-
-*(This section will be expanded with a detailed walkthrough of a typical code change, including how to apply it to both implementations, considerations for shared components, and testing strategies.)*
-
-## Reporting Issues
-
-If you find a bug or have a feature request, please open an issue on the [GitHub Issues page](https://github.com/twardoch/pdf22md/issues). Provide as much detail as possible, including steps to reproduce, expected behavior, and your environment.
-
-## Code of Conduct
-
-This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md - *link to be added*). By participating, you are expected to uphold this code.
-
-## License
-
-By contributing to `pdf22md`, you agree that your contributions will be licensed under the MIT License.
-</file>
-
-<file path="PLAN.md">
-# PDF to Markdown Converter - Project Plan
-
-## 🚨 **PRIORITY 1: Implementation Renaming (pdf21md / pdf22md)**
-
-### Overview
-The project will maintain two implementations with distinct names:
-- **pdf21md**: Objective-C implementation (formerly pdf22md-objc)
-- **pdf22md**: Swift implementation (formerly pdf22md-swift)
-
-### Renaming Strategy - CRITICAL FIRST STEPS
-
-#### Phase 1: Directory Structure (DO FIRST)
-1. ✅ Rename `pdf22md-objc/` directory to `pdf21md/`
-2. Keep `pdf22md-swift/` directory as is (already correct)
-
-#### Phase 2: Update Objective-C Implementation (pdf21md)
-1. **Makefile Updates**:
-   - Change target name from `pdf22md` to `pdf21md`
-   - Update `BINARY_NAME = pdf21md`
-   - Update installation path references
-
-2. **Source Code Class Prefix Changes**:
-   - Change all class prefixes from `PDF22MD` to `PDF21MD` in:
-     - `src/CLI/` - all `.h` and `.m` files
-     - `src/Core/` - all `.h` and `.m` files  
-     - `src/Models/` - all `.h` and `.m` files
-     - `src/Services/` - all `.h` and `.m` files
-     - `shared-core/` - all utility classes
-     - `shared-algorithms/` - all algorithm classes
-     - `Tests/` - all test files
-   - Update all `#import` statements to use new class names
-   - Update all `@class` forward declarations
-
-#### Phase 3: Update Swift Implementation (pdf22md)
-1. **Package.swift**:
-   - Change executable product name from `pdf22md-swift` to `pdf22md`
-   - Update executable target name
-
-2. **main.swift**:
-   - Change `commandName` from `pdf22md-swift` to `pdf22md`
-
-#### Phase 4: Update Build and Test Scripts
-1. **build.sh**:
-   - Replace all `pdf22md-objc` with `pdf21md`
-   - Update binary paths and installation logic
-   - Ensure both binaries are installed: `pdf21md` and `pdf22md`
-
-2. **test_both.sh**:
-   - Update all directory references
-   - Update binary execution paths
-   - Fix test output paths
-
-3. **release.sh** (if exists):
-   - Update all references
-
-#### Phase 5: Update Documentation
-1. **Main documentation**:
-   - README.md - update all references
-   - CHANGELOG.md - add renaming entry
-   - TODO.md - update as linearized PLAN.md
-   - CLAUDE.md - update project description
-
-2. **Implementation docs**:
-   - pdf21md/README.md (formerly pdf22md-objc/README.md)
-   - pdf22md-swift/README.md
-
-3. **Other docs**:
-   - docs/pdf22md.1 - create separate man pages for pdf21md and pdf22md
-   - Any other documentation files
-
-## 🚨 **PRIORITY 2: Critical Bug Fix - No Markdown Output**
-
-### Issue Summary
-Both implementations currently:
-- ✅ Successfully process PDF pages
-- ✅ Extract and save images to assets folder (134 PNGs)
-- ❌ **FAIL to generate the actual Markdown file**
-
-### Root Cause Analysis
-The conversion pipeline completes all steps except writing the final markdown file. Possible causes:
-1. Text extraction returning empty results
-2. Markdown generator producing empty string
-3. File writing silently failing
-4. Output path calculation errors
-
-### Investigation Plan
-
-#### Objective-C (pdf21md) Investigation
-1. **Check PDF21MDConverter**:
-   - Add logging for extracted elements count
-   - Verify text elements are being created
-   - Log markdown string before file write
-
-2. **Check PDF21MDMarkdownGenerator**:
-   - Validate input elements array
-   - Log each markdown generation stage
-   - Ensure non-empty output
-
-3. **Check main.m**:
-   - Add file write validation
-   - Check output path permissions
-   - Add fallback to stdout if file write fails
-
-#### Swift (pdf22md) Investigation  
-1. **Check PDFConverter**:
-   - Verify text extraction logic exists
-   - Log element extraction results
-   - Validate markdown generation call
-
-2. **Check MarkdownWriter**:
-   - Ensure file writing is implemented
-   - Add error handling for I/O operations
-   - Validate output path
-
-### Fix Implementation Steps
-1. Add comprehensive logging throughout conversion pipeline
-2. Implement missing markdown generation if not present
-3. Add error handling and validation at each stage
-4. Test with simple PDF to isolate issues
-5. Ensure both implementations have feature parity
-
-## Priority 3: Fix CMap Warnings
-
-### Issue
-"can't create CMap 'Adobe-Identity-UCS2'" warnings appear during processing
-
-### Plan
-1. Research PDF font encoding requirements
-2. Check if warnings affect text extraction quality
-3. Implement proper CMap handling or suppress if benign
-
-## Priority 4: Minor Code Quality Fixes
-
-### Swift Implementation
-- Remove unused `fontName` variable in PDFPageProcessorOptimized.swift:70
-
-## Implementation Roadmap
-
-### Week 1: Critical Fixes
-1. **Days 1-2**: Complete renaming of implementations
-2. **Days 3-4**: Fix markdown output generation bug
-3. **Day 5**: Test and validate fixes
-
-### Week 2: Polish and Testing
-1. Fix CMap warnings
-2. Add comprehensive test coverage
-3. Performance optimization
-4. Documentation updates
-
-### Week 3: Release Preparation
-1. Create Homebrew formulas
-2. Set up GitHub Actions CI/CD
-3. Prepare release documentation
-4. Community guidelines
-
-## Success Criteria
-1. ✅ `pdf21md` (Objective-C) compiles and runs correctly
-2. ✅ `pdf22md` (Swift) compiles and runs correctly  
-3. ✅ Both tools successfully generate Markdown files from PDFs
-4. ✅ Image extraction works correctly
-5. ✅ No critical warnings or errors
-6. ✅ Documentation is accurate and complete
-7. ✅ Ready for public release
-
-## Key Decisions
-- Maintain two implementations with distinct binary names
-- pdf21md for Objective-C (legacy/stable)
-- pdf22md for Swift (modern/future)
-- Focus on fixing critical bugs before adding new features
-- Ensure both implementations have feature parity
 </file>
 
 <file path=".github/workflows/release.yml">
@@ -8041,7 +8008,19 @@ public final class PDFMarkdownConverter {
         
         // Write output
         if let outputPath = outputPath {
-            try markdown.write(toFile: outputPath, atomically: true, encoding: String.Encoding.utf8)
+            // Ensure parent directory exists
+            let outputURL = URL(fileURLWithPath: outputPath)
+            let directoryURL = outputURL.deletingLastPathComponent()
+            let fileManager = FileManager.default
+            if !fileManager.fileExists(atPath: directoryURL.path) {
+                try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+            }
+            // Attempt to write the file and throw a descriptive error on failure
+            do {
+                try markdown.write(to: outputURL, atomically: true, encoding: .utf8)
+            } catch {
+                throw PDFConversionError.invalidPDF // reuse existing error, ideally define new but keep simple
+            }
         } else {
             print(markdown)
         }
@@ -8225,7 +8204,18 @@ public final class PDFMarkdownConverterOptimized {
         
         // Write output
         if let outputPath = outputPath {
-            try markdown.write(toFile: outputPath, atomically: true, encoding: String.Encoding.utf8)
+            // Ensure parent directory exists
+            let outputURL = URL(fileURLWithPath: outputPath)
+            let directoryURL = outputURL.deletingLastPathComponent()
+            let fileManager = FileManager.default
+            if !fileManager.fileExists(atPath: directoryURL.path) {
+                try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+            }
+            do {
+                try markdown.write(to: outputURL, atomically: true, encoding: .utf8)
+            } catch {
+                throw PDFConversionError.invalidPDF
+            }
         } else {
             print(markdown)
         }
@@ -8553,7 +8543,9 @@ final class PDFPageProcessor {
         elements.append(contentsOf: extractTextElements())
         
         // Extract image elements
-        elements.append(contentsOf: extractImageElements())
+        elements.append(contentsOf: CGPDFImageExtractor.extractImages(from: pdfPage,
+                                                                      pageIndex: pageIndex,
+                                                                      dpi: dpi))
         
         // Extract vector graphics as images
         elements.append(contentsOf: extractVectorGraphics())
@@ -8784,7 +8776,7 @@ final class PDFPageProcessorOptimized {
             
             // Extract font information using cached values
             var fontSize: CGFloat = 12.0
-            let fontName = "Helvetica"
+            // The font name can be derived from the descriptor if needed. Omit unused placeholder to silence warnings.
             var isBold = false
             var isItalic = false
             
@@ -8822,8 +8814,10 @@ final class PDFPageProcessorOptimized {
     
     @inline(__always)
     private func extractImageElements() {
-        // Implementation remains similar but uses elementBuffer.append directly
-        // This is a placeholder - would need full implementation
+        let imgs = CGPDFImageExtractor.extractImages(from: pdfPage,
+                                                     pageIndex: pageIndex,
+                                                     dpi: dpi)
+        elementBuffer.append(contentsOf: imgs)
     }
     
     @inline(__always)
@@ -9404,6 +9398,230 @@ swift test --enable-code-coverage
 MIT License - see LICENSE file in the root directory
 </file>
 
+<file path=".cursorrules">
+# pdf22md
+
+A blazingly fast PDF to Markdown converter for macOS.
+
+`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
+
+### Key Features
+
+  * **High-Speed Conversion**: Uses all available CPU cores to process PDF pages concurrently.
+  * **Intelligent Heading Detection**: Analyzes font sizes and usage frequency to automatically format titles and headings (`#`, `##`, etc.).
+  * **Asset Extraction**: Saves raster and vector images into a specified assets folder and links them correctly in the Markdown file.
+  * **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality.
+  * **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`.
+  * **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps.
+
+### Installation
+
+Once the Homebrew tap is set up (see plan below), installation is simple:
+
+```bash
+brew install <your-username>/pdf22md/pdf22md
+```
+
+### Building from Source
+
+To build the project manually, you need Xcode Command Line Tools installed.
+
+```bash
+# Clone the repository (once it's public)
+git clone https://github.com/<your-username>/pdf22md.git
+cd pdf22md
+
+# Compile the tool
+make
+
+# Install it to /usr/local/bin
+sudo make install
+```
+
+### Usage
+
+```
+Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
+  Converts PDF documents to Markdown format
+  -i <path>: Input PDF file (default: stdin)
+  -o <path>: Output Markdown file (default: stdout)
+  -a <path>: Assets folder for extracted images
+  -d <dpi>: DPI for rasterizing vector graphics (default: 144)
+```
+
+**Example:**
+
+```bash
+# Convert a local PDF file and save images to an 'assets' folder
+pdf22md -i report.pdf -o report.md -a ./assets
+```
+
+---
+
+
+# main-overview
+
+## Development Guidelines
+
+- Only modify code directly relevant to the specific request. Avoid changing unrelated functionality.
+- Never replace code with placeholders like `# ... rest of the processing ...`. Always include complete code.
+- Break problems into smaller steps. Think through each step separately before implementing.
+- Always provide a complete PLAN with REASONING based on evidence from code and logs before making changes.
+- Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
+
+
+pdf22md is a PDF to Markdown converter that transforms PDF documents while preserving their semantic structure and content relationships.
+
+Core Business Components:
+
+1. Document Structure Analysis (Importance: 95)
+- Hierarchical heading detection using font statistics
+- Document structure preservation through positional element sorting
+- Automated heading level assignment (H1-H6) based on font usage patterns
+
+2. Content Classification System (Importance: 85)
+- TextElement: Handles formatted text with style attributes
+- ImageElement: Manages both raster and vector graphics
+- Content relationship tracking between elements
+
+3. Asset Processing Pipeline (Importance: 80)
+- Intelligent format selection between PNG/JPEG based on:
+  * Transparency detection
+  * Color complexity analysis
+  * Dimension-based optimization
+- Asset extraction with maintained document references
+
+4. PDF Content Processing (Importance: 90)
+- Text styling and formatting context preservation
+- Vector graphics path construction tracking
+- Coordinate system transformation management
+- Element bounds calculation for layout fidelity
+
+Key Integration Points:
+
+1. Content Extraction Layer
+- Connects PDF parsing with markdown generation
+- Maintains element relationships and hierarchy
+- Preserves formatting context across transformations
+
+2. Asset Management Layer
+- Links extracted images with markdown references
+- Maintains asset organization structure
+- Handles format conversions while preserving quality
+
+The system organizes business logic around content transformation pipelines while maintaining document semantic structure throughout the conversion process.
+
+—— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates.
+</file>
+
+<file path="CONTRIBUTING.md">
+# Contributing to pdf22md
+
+Thank you for your interest in contributing to `pdf22md`! This document outlines how you can contribute to the project, focusing on technical details, code structure, and development guidelines.
+
+## Project Overview
+
+`pdf22md` is a PDF to Markdown converter with two primary implementations:
+
+1.  **Objective-C Implementation (`pdf21md`)**: Located in the `pdf21md/` directory. This is the mature, production-ready version, optimized for macOS using Grand Central Dispatch (GCD) and native PDFKit integration.
+2.  **Swift Implementation (`pdf22md`)**: Located in the `pdf22md/` directory. This is a modern implementation built with Swift Package Manager, leveraging Swift's latest concurrency features (async/await, actors).
+
+Both implementations share the goal of high-performance, accurate PDF to Markdown conversion, including intelligent heading detection and smart image extraction.
+
+## Codebase Structure
+
+The project root contains shared documentation, build scripts, and the two main implementation directories:
+
+-   `pdf21md/`: Contains the Objective-C source code, Makefile, and its specific test resources.
+    -   `pdf21md/src/CLI/`: Command-line interface entry points.
+    -   `pdf21md/src/Core/`: Core conversion logic, options, and error handling.
+    -   `pdf21md/src/Models/`: Data models for PDF elements (text, images).
+    -   `pdf21md/src/Services/`: Services like asset management and Markdown generation.
+    -   `pdf21md/shared-core/`: Shared Objective-C utilities (concurrency, constants, error factory, file system).
+    -   `pdf21md/shared-algorithms/`: Shared Objective-C algorithms (e.g., image format detection).
+    -   `pdf21md/Tests/`: Unit and integration tests for the Objective-C version.
+
+-   `pdf22md/`: Contains the Swift source code, `Package.swift` (Swift Package Manager manifest), and its specific test resources.
+    -   `pdf22md/Sources/PDF22MD/`: Core Swift library modules.
+    -   `pdf22md/Sources/PDF22MDCli/`: Swift command-line interface entry point.
+    -   `pdf22md/Tests/PDF22MDTests/`: Unit tests for the Swift version.
+
+-   `build.sh`: The main build script that compiles both implementations.
+-   `test_both.sh`: Script to run tests for both implementations.
+-   `docs/`: General project documentation.
+-   `issues/`: Issue tracking files.
+
+## Technical Requirements and Conventions
+
+### General Guidelines
+
+-   **Platform**: Development is primarily for macOS. Ensure compatibility with macOS 10.12+ for Objective-C and macOS 12.0+ for Swift.
+-   **Language Standards**: Adhere to modern Objective-C (ARC, nullability annotations, lightweight generics) and Swift (Swift 5.7+, async/await, structured concurrency).
+-   **Performance**: Given the nature of PDF processing, performance is critical. Contributions should be mindful of CPU and memory efficiency.
+-   **Error Handling**: Use the established error handling patterns (e.g., `PDF21MDErrorFactory` for Objective-C, Swift's native `Error` protocol).
+-   **Testing**: All new features and bug fixes should be accompanied by appropriate unit and/or integration tests.
+
+### Objective-C (`pdf21md`)
+
+-   **Prefixes**: All new classes and categories should use the `PDF21MD` prefix.
+-   **Memory Management**: Use ARC. Avoid manual `retain`/`release`/`autorelease` calls.
+-   **Concurrency**: Utilize `PDF21MDConcurrencyManager` for GCD-based parallel processing and queue management.
+-   **File System Operations**: Use `PDF21MDFileSystemUtils` for all file and directory operations.
+-   **Constants**: Refer to `PDF21MDConstants` for all configuration values and magic numbers.
+
+### Swift (`pdf22md`)
+
+-   **Swift Package Manager**: The project is managed with SPM. Ensure your changes integrate seamlessly.
+-   **Concurrency**: Prefer Swift's `async/await` and `Actors` for concurrent operations.
+-   **Error Handling**: Define custom `Error` enums where appropriate and propagate errors using `throws`.
+-   **Value Types**: Prefer `struct`s over `class`es where appropriate to leverage Swift's value semantics and improve memory safety.
+
+## Development Workflow
+
+1.  **Fork the Repository**: Start by forking the `pdf22md` repository on GitHub.
+2.  **Clone Your Fork**: `git clone https://github.com/YOUR_USERNAME/pdf22md.git`
+3.  **Create a New Branch**: `git checkout -b feature/your-feature-name` or `bugfix/issue-number`.
+4.  **Make Your Changes**: Implement your feature or bug fix, adhering to the technical requirements and conventions.
+5.  **Write Tests**: Add or update tests to cover your changes.
+6.  **Run Tests**: Ensure all tests pass for both implementations:
+    ```bash
+    ./test_both.sh
+    ```
+7.  **Build the Project**: Verify that both implementations build successfully:
+    ```bash
+    ./build.sh
+    ```
+8.  **Update Documentation**: If your changes affect functionality or usage, update `README.md`, `CHANGELOG.md`, or other relevant documentation.
+9.  **Commit Your Changes**: Write clear, concise commit messages.
+10. **Push to Your Fork**: `git push origin feature/your-feature-name`
+11. **Open a Pull Request**: Submit a pull request to the `main` branch of the original `pdf22md` repository.
+
+## How to Orchestrate Code Changes (Detailed)
+
+### Identifying the Right Implementation
+
+-   **General Features/Bug Fixes**: If a feature or bug fix applies to the core PDF conversion logic, it should ideally be implemented in *both* the Objective-C (`pdf21md`) and Swift (`pdf22md`) versions to maintain feature parity and ensure cross-language robustness. Look for existing patterns in both codebases.
+-   **Performance Optimizations**: Analyze the performance bottlenecks. Some optimizations might be language-specific (e.g., GCD tuning for Objective-C, `async/await` patterns for Swift).
+-   **CLI Enhancements**: Changes to command-line arguments or basic I/O will likely affect `pdf21md/src/CLI/main.m` and `pdf22md/Sources/PDF22MDCli/main.swift`.
+-   **Shared Logic**: For logic that is truly independent of language-specific frameworks (e.g., complex algorithms), consider if it can be abstracted or if a direct port is more appropriate.
+
+### Step-by-Step Implementation Example (Placeholder)
+
+*(This section will be expanded with a detailed walkthrough of a typical code change, including how to apply it to both implementations, considerations for shared components, and testing strategies.)*
+
+## Reporting Issues
+
+If you find a bug or have a feature request, please open an issue on the [GitHub Issues page](https://github.com/twardoch/pdf22md/issues). Provide as much detail as possible, including steps to reproduce, expected behavior, and your environment.
+
+## Code of Conduct
+
+This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md - *link to be added*). By participating, you are expected to uphold this code.
+
+## License
+
+By contributing to `pdf22md`, you agree that your contributions will be licensed under the MIT License.
+</file>
+
 <file path="LICENSE">
 MIT License
 
@@ -9426,6 +9644,249 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+</file>
+
+<file path="PLAN.md">
+# PDF to Markdown Converter - Project Plan
+
+## 1. 🚨 **PRIORITY 1: Implementation Renaming (pdf21md / pdf22md)**
+
+### 1.1. Overview
+The project will maintain two implementations with distinct names:
+- **pdf21md**: Objective-C implementation (formerly pdf22md-objc)
+- **pdf22md**: Swift implementation (formerly pdf22md-swift)
+
+### 1.2. Renaming Strategy - CRITICAL FIRST STEPS
+
+#### 1.2.1. Phase 1: Directory Structure (DO FIRST)
+1. ✅ Rename `pdf22md-objc/` directory to `pdf21md/`
+2. Keep `pdf22md-swift/` directory as is (already correct)
+
+#### 1.2.2. Phase 2: Update Objective-C Implementation (pdf21md)
+1. **Makefile Updates**:
+   - Change target name from `pdf22md` to `pdf21md`
+   - Update `BINARY_NAME = pdf21md`
+   - Update installation path references
+
+2. **Source Code Class Prefix Changes**:
+   - Change all class prefixes from `PDF22MD` to `PDF21MD` in:
+     - `src/CLI/` - all `.h` and `.m` files
+     - `src/Core/` - all `.h` and `.m` files  
+     - `src/Models/` - all `.h` and `.m` files
+     - `src/Services/` - all `.h` and `.m` files
+     - `shared-core/` - all utility classes
+     - `shared-algorithms/` - all algorithm classes
+     - `Tests/` - all test files
+   - Update all `#import` statements to use new class names
+   - Update all `@class` forward declarations
+
+#### 1.2.3. Phase 3: Update Swift Implementation (pdf22md)
+1. **Package.swift**:
+   - Change executable product name from `pdf22md-swift` to `pdf22md`
+   - Update executable target name
+
+2. **main.swift**:
+   - Change `commandName` from `pdf22md-swift` to `pdf22md`
+
+#### 1.2.4. Phase 4: Update Build and Test Scripts
+1. **build.sh**:
+   - Replace all `pdf22md-objc` with `pdf21md`
+   - Update binary paths and installation logic
+   - Ensure both binaries are installed: `pdf21md` and `pdf22md`
+
+2. **test_both.sh**:
+   - Update all directory references
+   - Update binary execution paths
+   - Fix test output paths
+
+3. **release.sh** (if exists):
+   - Update all references
+
+#### 1.2.5. Phase 5: Update Documentation
+1. **Main documentation**:
+   - README.md - update all references
+   - CHANGELOG.md - add renaming entry
+   - TODO.md - update as linearized PLAN.md
+   - CLAUDE.md - update project description
+
+2. **Implementation docs**:
+   - pdf21md/README.md (formerly pdf22md-objc/README.md)
+   - pdf22md-swift/README.md
+
+3. **Other docs**:
+   - docs/pdf22md.1 - create separate man pages for pdf21md and pdf22md
+   - Any other documentation files
+
+## 2. 🚨 **PRIORITY 2: Critical Bug Fix - No Markdown Output**
+
+### 2.1. Issue Summary
+Both implementations currently:
+- ✅ Successfully process PDF pages
+- ✅ Extract and save images to assets folder (134 PNGs)
+- ❌ **FAIL to generate the actual Markdown file**
+
+### 2.2. Root Cause Analysis
+The conversion pipeline completes all steps except writing the final markdown file. Possible causes:
+1. Text extraction returning empty results
+2. Markdown generator producing empty string
+3. File writing silently failing
+4. Output path calculation errors
+
+### 2.3. Investigation Plan
+
+#### 2.3.1. Objective-C (pdf21md) Investigation
+1. **Check PDF21MDConverter**:
+   - Add logging for extracted elements count
+   - Verify text elements are being created
+   - Log markdown string before file write
+
+2. **Check PDF21MDMarkdownGenerator**:
+   - Validate input elements array
+   - Log each markdown generation stage
+   - Ensure non-empty output
+
+3. **Check main.m**:
+   - Add file write validation
+   - Check output path permissions
+   - Add fallback to stdout if file write fails
+
+#### 2.3.2. Swift (pdf22md) Investigation  
+1. **Check PDFConverter**:
+   - Verify text extraction logic exists
+   - Log element extraction results
+   - Validate markdown generation call
+
+2. **Check MarkdownWriter**:
+   - Ensure file writing is implemented
+   - Add error handling for I/O operations
+   - Validate output path
+
+### 2.4. Fix Implementation Steps
+1. Add comprehensive logging throughout conversion pipeline
+2. Implement missing markdown generation if not present
+3. Add error handling and validation at each stage
+4. Test with simple PDF to isolate issues
+5. Ensure both implementations have feature parity
+
+## 3. Priority 3: Fix CMap Warnings
+
+### 3.1. Issue
+"can't create CMap 'Adobe-Identity-UCS2'" warnings appear during processing
+
+### 3.2. Plan
+1. Research PDF font encoding requirements
+2. Check if warnings affect text extraction quality
+3. Implement proper CMap handling or suppress if benign
+
+## 4. Priority 4: Minor Code Quality Fixes
+
+### 4.1. Swift Implementation
+- Remove unused `fontName` variable in PDFPageProcessorOptimized.swift:70
+
+## 5. 🚨 **PRIORITY 2.5: Add Robust Raster-Image Extraction (Swift & Objective-C)**
+
+### 5.1. Current State
+1. **Swift (`pdf22md`)**
+   • `PDFPageProcessor.extractImageElements()` and the optimized variant are stubs – raster images are never detected.
+2. **Objective-C (`pdf21md`)**
+   • There is a heuristic that renders page regions and annotation snapshots, but it misses many photos and performs unnecessary rasterisation work.
+
+### 5.2. Overarching Goals
+1. Extract every raster image that exists inside the PDF (embedded XObject images) **without** unnecessary re-rasterisation.
+2. Preserve image quality and original dimensions; use smart format selection (PNG vs JPEG) already present in `AssetExtractor` / `PDF21MDAssetManager`.
+3. Keep processing fast by avoiding full-page renders; leverage multi-core.
+4. Maintain identical Markdown references between implementations.
+
+### 5.3. Detailed Step-by-Step Plan
+
+#### 5.3.1. Groundwork
+0.1 Create shared documentation page `docs/IMAGE_EXTRACTION_ALGORITHM.md` describing the algorithm flow once implemented.  
+0.2 Add new unit-test PDFs (tiny with single photo; complex with mixed vector + raster).
+
+#### 5.3.2. Swift Implementation
+1.1 Add new file `CGPDFImageExtractor.swift` under `PDF22MD/Sources/PDF22MD/` implementing:  
+ • Scans each `CGPDFPage` resource dictionary → `/XObject` → image objects (`Subtype = Image`).  
+ • Extracts the image stream into `CGImage` via `CGPDFImageCreate` or manual decode when necessary.  
+ • Returns `[ImageElement]` array.
+1.2 Wire this into `PDFPageProcessor.extractImageElements()` (standard & optimised). Fallback to annotation/grid heuristic **only if** XObject scan returns 0 images.
+1.3 Add caching of colour-spaces to reduce allocations.
+1.4 Guard against very large images (>20 MP) by down-scaling using `vImageScale`.
+1.5 Unit tests: `PDF22MDTests/AssetExtractorImageTests.swift` verifying:
+ • Number of images saved matches expectation.  
+ • PNG chosen when alpha; JPEG chosen otherwise.
+1.6 Integration test updates in `test_new.sh` – assert asset count ≥ 1 for large PDF.
+
+#### 5.3.3. Objective-C Implementation
+2.1 Create helper class `PDF21MDRawImageExtractor` (ObjC category on `CGPDFPage`).  
+ • Mirrors Swift's XObject traversal using Core Graphics C APIs.  
+ • Converts image streams into `CGImageRef`.
+2.2 Refactor existing `extractImageElements` to first call raw extractor; keep annotation/grid heuristics as fallback only.
+2.3 Implement identical down-scale rule & smart PNG/JPEG selection (reuse existing utility).
+2.4 Add lock-free batching to allow concurrent extraction on separate pages.
+2.5 Add unit test `PDF21MDAssetExtractorImageTests.m` validating same conditions as Swift.
+
+#### 5.3.4. Shared Enhancements
+3.1 Extend `AssetExtractor` / `PDF21MDAssetManager` with optional `maxDimension` parameter (default = no resize) so down-scale can be configured via CLI (`-m` flag, hidden for now).
+3.2 CLI: add `--no-images` switch to skip extraction when user not interested (helps benchmarking).
+3.3 Progress reporting: include per-page "images found" count in verbose/debug modes.
+
+#### 5.3.5. Documentation & Tooling
+4.1 Update man-pages, README examples, and usage descriptions to mention image extraction improvements.  
+4.2 Update `CHANGELOG.md` under **Added** & **Changed**.
+4.3 Ensure `build.sh` includes new Swift source file and Objective-C .m file automatically.
+4.4 Update Homebrew formula placeholders with new version.
+
+#### 5.3.6. Timeline / Milestones
+• Day 1: Swift extractor prototype (single image PDF) + tests passing.  
+• Day 2: Finish Swift integration + down-scale; update AssetExtractor.  
+• Day 3: Objective-C raw extractor & integration.  
+• Day 4: CLI flags, shared docs, unit/integration test green.  
+• Day 5: Clean-up, docs, release candidate.
+
+### 5.4. Risks & Mitigations
+• **Complex encodings (JPEG2000, CCITT)** – rely on Core Graphics decode; fallback to region render if decode fails.  
+• **Large images memory spikes** – cap size, process in autoreleasepool, use down-scale.  
+• **Performance regressions** – keep XObject scan light, use concurrent queues.
+
+### 5.5. Success Criteria
+✔ `test_new.sh` passes with ≥ 1 asset for large PDF on both implementations.  
+✔ Code coverage > 85 % for new extractor classes.  
+✔ No hangs with 500-page mixed PDF in < 2× current conversion time.
+
+## 6. Implementation Roadmap
+
+### 6.1. Week 1: Critical Fixes
+1. **Days 1-2**: Complete renaming of implementations
+2. **Days 3-4**: Fix markdown output generation bug
+3. **Day 5**: Test and validate fixes
+
+### 6.2. Week 2: Polish and Testing
+1. Fix CMap warnings
+2. Add comprehensive test coverage
+3. Performance optimization
+4. Documentation updates
+
+### 6.3. Week 3: Release Preparation
+1. Create Homebrew formulas
+2. Set up GitHub Actions CI/CD
+3. Prepare release documentation
+4. Community guidelines
+
+## 7. Success Criteria
+1. ✅ `pdf21md` (Objective-C) compiles and runs correctly
+2. ✅ `pdf22md` (Swift) compiles and runs correctly  
+3. ✅ Both tools successfully generate Markdown files from PDFs
+4. ✅ Image extraction works correctly
+5. ✅ No critical warnings or errors
+6. ✅ Documentation is accurate and complete
+7. ✅ Ready for public release
+
+## 8. Key Decisions
+- Maintain two implementations with distinct binary names
+- pdf21md for Objective-C (legacy/stable)
+- pdf22md for Swift (modern/future)
+- Focus on fixing critical bugs before adding new features
+- Ensure both implementations have feature parity
 </file>
 
 <file path="TROUBLESHOOTING.md">
@@ -10619,44 +11080,6 @@ make benchmark
 MIT License - see LICENSE file in the root directory
 </file>
 
-<file path="test_both.sh">
-#!/bin/bash
-# Test both Objective-C and Swift implementations
-# Change to script directory
-
-set -e
-
-if [ $# -ne 1 ]; then
-    PDF="testdata/test.pdf"
-else
-    PDF=$(realpath $1)
-fi
-
-cd "$(dirname "$0")"
-
-PDF_DIR=$(dirname $PDF)
-PDF_NAME=$(basename $PDF .pdf)
-MD_DIR_OC="$PDF_DIR/$PDF_NAME-oc"
-MD_DIR_SW="$PDF_DIR/$PDF_NAME-sw"
-
-# Build both versions first
-./build.sh
-
-# Run Objective-C version
-echo "oc"
-CG_PDF_VERBOSE=True time ./pdf21md/pdf21md \
-    -i "$PDF" \
-    -o "$MD_DIR_OC.md" \
-    -a "$MD_DIR_OC"
-
-# Run Swift version
-echo "sw"
-CG_PDF_VERBOSE=True time ./pdf22md/.build/release/pdf22md \
-    -i "$PDF" \
-    -o "$MD_DIR_SW.md" \
-    -a "$MD_DIR_SW"
-</file>
-
 <file path="AGENTS.md">
 # pdf22md
 
@@ -10896,68 +11319,39 @@ The system organizes business logic around content transformation pipelines whil
 —— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates.
 </file>
 
-<file path=".gitignore">
-_private/
-!AGENTS.md
-!CHANGELOG.md
-!CLAUDE.md
-!default.mode1v3
-!default.mode2v3
-!default.pbxuser
-!default.perspectivev3
-!docs/*.md
-!README.md
-!TODO.md
-._*
-.AppleDouble
-.build/
-.cursorindexingignore
-.DS_Store
-.idea/
-.LSOverride
-.specstory/
-.Spotlight-V100
-.Trashes
-.vscode/
-*.a
-*.dmg
-*.dSYM/
-*.dylib
-*.gcda
-*.gcno
-*.gcov
-*.mode1v3
-*.mode2v3
-*.moved-aside
-*.o
-*.pbxuser
-*.pdf
-*.perspectivev3
-*.swo
-*.swp
-*.tar.gz
-*.xccheckout
-*.xcodeproj/
-*.xcscmblueprint
-*.xcworkspace
-*.zip
-*~
-build/
-cmake_install.cmake
-CMakeCache.txt
-CMakeFiles/
-coverage/
-debug-assets/
-DerivedData/
-dist/
-docs/_build/
-issues/
-Makefile.cmake
-pdf22md/.build
-test-results/
-test/out/
-testdata/test.pdf-oc/.test*
-xcuserdata/
+<file path="test_both.sh">
+#!/bin/bash
+# Test both Objective-C and Swift implementations
+# Change to script directory
+
+set -e
+
+if [ $# -ne 1 ]; then
+    PDF="testdata/test.pdf"
+else
+    PDF=$(realpath $1)
+fi
+
+cd "$(dirname "$0")"
+
+PDF_DIR=$(dirname $PDF)
+PDF_NAME=$(basename $PDF .pdf)
+MD_DIR_OC="$PDF_DIR/$PDF_NAME-oc"
+MD_DIR_SW="$PDF_DIR/$PDF_NAME-sw"
+
+# Build both versions first
+./build.sh
+
+# Run Objective-C version
+echo "oc"
+CG_PDF_VERBOSE=True time ./pdf21md/pdf21md \
+    -i "$PDF" \
+    -o "$MD_DIR_OC.md" \
+    -a "$MD_DIR_OC"
+
+# Run Swift version
+echo "sw"
+CG_PDF_VERBOSE=True time ./pdf22md/.build/release/pdf22md -i "$PDF" -o "$MD_DIR_SW.md" -a "$MD_DIR_SW"
 </file>
 
 <file path="build.sh">
@@ -11169,6 +11563,70 @@ if [ "$BUILD_SWIFT" = true ]; then
 fi
 </file>
 
+<file path=".gitignore">
+_private/
+!AGENTS.md
+!CHANGELOG.md
+!CLAUDE.md
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3
+!docs/*.md
+!README.md
+!TODO.md
+._*
+.AppleDouble
+.build/
+.cursorindexingignore
+.DS_Store
+.idea/
+.LSOverride
+.specstory/
+.Spotlight-V100
+.Trashes
+.vscode/
+*.a
+*.dmg
+*.dSYM/
+*.dylib
+*.gcda
+*.gcno
+*.gcov
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.o
+*.pbxuser
+*.pdf
+*.perspectivev3
+*.swo
+*.swp
+*.tar.gz
+*.xccheckout
+*.xcodeproj/
+*.xcscmblueprint
+*.xcworkspace
+*.zip
+*~
+build/
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles/
+coverage/
+debug-assets/
+DerivedData/
+dist/
+docs/_build/
+issues/
+Makefile.cmake
+pdf22md/.build
+test-results/
+test/out/
+testdata/test.pdf-oc/.test*
+xcuserdata/
+</file>
+
 <file path="README.md">
 # pdf22md: Your Fast PDF to Markdown Converter
 
@@ -11372,6 +11830,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation script (release.sh) for macOS
 - GitHub Actions workflow for automated releases
 - Package installer (.pkg) generation for macOS
+- **Plan**: Detailed roadmap for robust raster-image extraction across Swift and Objective-C implementations appended to PLAN.md.
+- **TODO**: Simplified checklist for the above work inserted into TODO.md.
 
 ### Changed
 - Restructured project with separate directories for each implementation (pdf21md, pdf22md)
@@ -11390,6 +11850,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build script compatibility issues with object file handling
 - PDF processing hang issue with timeout implementation
 - Memory leaks in asset management
+- **Swift Markdown Output**: Ensured the Swift converter now creates parent directories before writing and reliably writes the generated Markdown file instead of silently failing when the directory is missing.
+- **Code Quality**: Removed unused `fontName` variable in `PDFPageProcessorOptimized` to silence compiler warnings.
 
 ### Removed
 - Legacy archived-old-implementation directory (2,000+ lines of obsolete code)
@@ -11484,6 +11946,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Customizable DPI for vector graphics rasterization
 - Grand Central Dispatch (GCD) for multi-core performance
 - Comprehensive documentation
+
+### Changed
+- **Swift Raster Extraction (Phase 1)**: Added `CGPDFImageExtractor` and integrated it into both page processors; now ignores tiny annotation icons and discards blank/white images to prevent false assets.
 </file>
 
 <file path="TODO.md">
@@ -11559,7 +12024,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Add comprehensive try-catch blocks around file operations
 - [ ] Log conversion pipeline progress and intermediate results
 - [ ] Validate markdown content length before writing
-- [ ] Add permission and path validation
+- [x] Add permission and path validation
+- [x] Check parent directory existence and permissions
 - [ ] Implement debug output mode
 
 #### File Writing Robustness
@@ -11575,14 +12041,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Create debug mode showing element extraction details
 - [ ] Add validation scripts to verify markdown output quality
 
-## Priority 3: Fix CMap Warnings
-- [ ] Research PDF font encoding requirements
-- [ ] Check if warnings affect text extraction quality
-- [ ] Implement proper CMap handling or suppress if benign
-- [ ] Test with various PDFs to ensure text extraction works
+## 🚨 PRIORITY 2.5: Raster Image Extraction Improvements (Both Implementations)
+- [ ] Create docs/IMAGE_EXTRACTION_ALGORITHM.md describing approach
+- [ ] Add test PDFs with raster images for unit tests
+
+### Swift (`pdf22md`)
+- [x] Add CGPDFImageExtractor.swift (phase-1: annotation-based) and integrated into processors
+- [x] Wire extractor into PDFPageProcessor & Optimized variant
+- [ ] Implement down-scale (>20 MP) safeguard
+- [ ] Update AssetExtractor with optional maxDimension parameter
+- [ ] Unit test: verify images saved & format choice
+
+### Objective-C (`pdf21md`)
+- [ ] Add PDF21MDRawImageExtractor helper (category on CGPDFPage)
+- [ ] Integrate into PageProcessor before heuristic grid scan
+- [ ] Ensure PNG/JPEG selection parity with Swift
+- [ ] Unit test raster extraction
+
+### Shared / CLI / Tooling
+- [ ] Add --no-images flag & hidden -m max-dimension flag
+- [ ] Update test_new.sh assertions for asset counts
+- [ ] Update README/man-pages with image extraction notes
+- [ ] Update build.sh to include new files
 
 ## Priority 4: Code Quality Fixes
-- [ ] Remove unused `fontName` variable in PDFPageProcessorOptimized.swift:70
+- [x] Remove unused `fontName` variable in PDFPageProcessorOptimized.swift:70
 - [ ] Add comprehensive error messages throughout codebase
 - [ ] Implement progress reporting for long conversions
 - [ ] Add user-friendly error messages
