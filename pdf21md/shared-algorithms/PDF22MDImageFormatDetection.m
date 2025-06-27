@@ -1,14 +1,14 @@
 //
-//  PDF22MDImageFormatDetection.m
+//  PDF21MDImageFormatDetection.m
 //  pdf22md - Shared Components
 //
 //  Shared utility for determining optimal image format (JPEG vs PNG)
 //  based on image characteristics and source type.
 //
 
-#import "PDF22MDImageFormatDetection.h"
+#import "PDF21MDImageFormatDetection.h"
 
-@implementation PDF22MDImageFormatDetection
+@implementation PDF21MDImageFormatDetection
 
 + (BOOL)shouldUseJPEGForImage:(CGImageRef)image 
                isVectorSource:(BOOL)isVectorSource {

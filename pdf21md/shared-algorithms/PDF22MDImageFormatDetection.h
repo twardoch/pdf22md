@@ -1,5 +1,5 @@
 //
-//  PDF22MDImageFormatDetection.h
+//  PDF21MDImageFormatDetection.h
 //  pdf22md - Shared Components
 //
 //  Shared utility for determining optimal image format (JPEG vs PNG)
@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Shared utility class for image format detection and optimization.
  * Determines whether to use JPEG or PNG format based on image characteristics.
  */
-@interface PDF22MDImageFormatDetection : NSObject
+@interface PDF21MDImageFormatDetection : NSObject
 
 /**
  * Determines whether JPEG format should be used for an image.
