@@ -1,5 +1,5 @@
 //
-//  PDF22MDConcurrencyManager.h
+//  PDF21MDConcurrencyManager.h
 //  pdf22md - Shared Components
 //
 //  Standardized concurrency patterns and queue management
@@ -12,9 +12,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Standardized concurrency manager providing unified GCD patterns
- * and queue management across all PDF22MD implementations.
+ * and queue management across all PDF21MD implementations.
  */
-@interface PDF22MDConcurrencyManager : NSObject
+@interface PDF21MDConcurrencyManager : NSObject
 
 #pragma mark - Shared Queue Access
 
