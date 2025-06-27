@@ -56,7 +56,8 @@ public final class PDFMarkdownConverterUltraOptimized {
                     let processor = PDFPageProcessorUltraOptimized(
                         page: page,
                         pageIndex: pageIndex,
-                        dpi: self.dpi
+                        dpi: self.dpi,
+                        assetsPath: self.assetsPath
                     )
                     
                     let elements = processor.processPage()
@@ -150,12 +151,14 @@ final class PDFPageProcessorUltraOptimized {
     private let pdfPage: PDFPage
     private let pageIndex: Int
     private let dpi: CGFloat
+    private let assetsPath: String?
     private var elementBuffer: ContiguousArray<PDFElement>
     
-    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0) {
+    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0, assetsPath: String? = nil) {
         self.pdfPage = page
         self.pageIndex = pageIndex
         self.dpi = dpi
+        self.assetsPath = assetsPath
         self.elementBuffer = ContiguousArray<PDFElement>()
         self.elementBuffer.reserveCapacity(500)
     }

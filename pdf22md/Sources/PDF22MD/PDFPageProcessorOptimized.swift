@@ -7,14 +7,16 @@ final class PDFPageProcessorOptimized {
     private let pdfPage: PDFPage
     private let pageIndex: Int
     private let dpi: CGFloat
+    private let assetsPath: String?
     
     // Pre-allocated buffers
     private var elementBuffer: ContiguousArray<PDFElement>
     
-    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0) {
+    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0, assetsPath: String? = nil) {
         self.pdfPage = page
         self.pageIndex = pageIndex
         self.dpi = dpi
+        self.assetsPath = assetsPath
         // Pre-allocate with estimated capacity
         self.elementBuffer = ContiguousArray<PDFElement>()
         self.elementBuffer.reserveCapacity(1000)
@@ -28,11 +30,14 @@ final class PDFPageProcessorOptimized {
         // Extract text elements
         extractTextElements()
         
-        // Extract image elements
-        extractImageElements()
-        
-        // Extract vector graphics as images
-        extractVectorGraphics()
+        // Only extract images if assets path is provided
+        if assetsPath != nil {
+            // Extract image elements
+            extractImageElements()
+            
+            // Extract vector graphics as images
+            extractVectorGraphics()
+        }
         
         return Array(elementBuffer)
     }

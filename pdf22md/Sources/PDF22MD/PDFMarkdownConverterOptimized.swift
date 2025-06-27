@@ -39,7 +39,7 @@ public final class PDFMarkdownConverterOptimized {
                         return
                     }
                     
-                    let processor = PDFPageProcessorOptimized(page: page, pageIndex: pageIndex, dpi: self.dpi)
+                    let processor = PDFPageProcessorOptimized(page: page, pageIndex: pageIndex, dpi: self.dpi, assetsPath: self.assetsPath)
                     let elements = processor.processPage()
                     
                     // Thread-safe append
@@ -119,7 +119,10 @@ public final class PDFMarkdownConverterOptimized {
     
     private func generateMarkdown(from elements: [PDFElement], fontStats: FontStatistics) -> String {
         let markdown = NSMutableString()
-        let assetExtractor = AssetExtractor(assetsPath: assetsPath)
+        
+        // Extract PDF basename for asset naming
+        let pdfBasename = pdfURL.deletingPathExtension().lastPathComponent
+        let assetExtractor = AssetExtractor(assetsPath: assetsPath, pdfBasename: pdfBasename)
         var previousElement: PDFElement?
         
         for element in elements {
@@ -153,7 +156,9 @@ public final class PDFMarkdownConverterOptimized {
                 
             case let imageElement as ImageElement:
                 if let image = imageElement.image,
-                   let imagePath = assetExtractor.saveImage(image, isVector: imageElement.isVectorSource) {
+                   let imagePath = assetExtractor.saveImage(image, 
+                                                           pageIndex: imageElement.pageIndex,
+                                                           isVector: imageElement.isVectorSource) {
                     let altText = imageElement.isVectorSource ? "Vector graphic" : "Image"
                     markdown.append("![\(altText)](\(imagePath))\n\n")
                 }

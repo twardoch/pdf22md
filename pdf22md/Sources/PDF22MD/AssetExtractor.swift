@@ -6,27 +6,37 @@ import UniformTypeIdentifiers
 /// Handles extraction and saving of image assets from PDFs
 final class AssetExtractor {
     private let assetsPath: String?
-    private var imageCounter = 0
+    private let pdfBasename: String
+    private var pageImageCounts: [Int: Int] = [:]
     private let fileManager = FileManager.default
     
-    init(assetsPath: String?) {
+    init(assetsPath: String?, pdfBasename: String) {
         self.assetsPath = assetsPath
+        self.pdfBasename = pdfBasename
         
-        // Create assets directory if specified
-        if let path = assetsPath {
+        // Create assets directory if specified and valid
+        if let path = assetsPath, !path.isEmpty {
             try? fileManager.createDirectory(atPath: path, withIntermediateDirectories: true)
         }
     }
     
     /// Save an image asset and return the relative path for markdown reference
-    func saveImage(_ image: CGImage, isVector: Bool) -> String? {
+    func saveImage(_ image: CGImage, pageIndex: Int, isVector: Bool) -> String? {
         guard let assetsPath = assetsPath else { return nil }
         
-        imageCounter += 1
+        // Get or initialize count for this page
+        let assetNumber = (pageImageCounts[pageIndex] ?? 0) + 1
+        pageImageCounts[pageIndex] = assetNumber
         
         // Determine format based on image characteristics
         let format = shouldUsePNG(for: image) ? "png" : "jpg"
-        let fileName = String(format: "image_%03d.%@", imageCounter, format)
+        
+        // Create filename: basename-pagenumber-assetnumber.ext
+        let fileName = String(format: "%@-%03d-%02d.%@", 
+                            pdfBasename, 
+                            pageIndex + 1,  // Convert to 1-based page numbering
+                            assetNumber, 
+                            format)
         let filePath = (assetsPath as NSString).appendingPathComponent(fileName)
         
         // Save the image

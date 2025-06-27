@@ -3,7 +3,7 @@
 
 set -e # Exit on any error
 
-npx repomix -o llms.txt .
+npx repomix -i "docs" -o llms.txt .
 
 # Colors for output
 RED='\033[0;31m'

@@ -7,11 +7,13 @@ final class PDFPageProcessor {
     private let pdfPage: PDFPage
     private let pageIndex: Int
     private let dpi: CGFloat
+    private let assetsPath: String?
     
-    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0) {
+    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0, assetsPath: String? = nil) {
         self.pdfPage = page
         self.pageIndex = pageIndex
         self.dpi = dpi
+        self.assetsPath = assetsPath
     }
     
     /// Process the page and extract all content elements
@@ -21,13 +23,16 @@ final class PDFPageProcessor {
         // Extract text elements
         elements.append(contentsOf: extractTextElements())
         
-        // Extract image elements
-        elements.append(contentsOf: CGPDFImageExtractor.extractImages(from: pdfPage,
-                                                                      pageIndex: pageIndex,
-                                                                      dpi: dpi))
-        
-        // Extract vector graphics as images
-        elements.append(contentsOf: extractVectorGraphics())
+        // Only extract images if assets path is provided
+        if assetsPath != nil {
+            // Extract image elements
+            elements.append(contentsOf: CGPDFImageExtractor.extractImages(from: pdfPage,
+                                                                          pageIndex: pageIndex,
+                                                                          dpi: dpi))
+            
+            // Extract vector graphics as images
+            elements.append(contentsOf: extractVectorGraphics())
+        }
         
         return elements
     }

@@ -32,7 +32,7 @@ public final class PDFMarkdownConverter {
                         return (pageIndex, [])
                     }
                     
-                    let processor = PDFPageProcessor(page: page, pageIndex: pageIndex, dpi: self.dpi)
+                    let processor = PDFPageProcessor(page: page, pageIndex: pageIndex, dpi: self.dpi, assetsPath: self.assetsPath)
                     let elements = processor.processPage()
                     return (pageIndex, elements)
                 }
@@ -110,7 +110,10 @@ public final class PDFMarkdownConverter {
     
     private func generateMarkdown(from elements: [PDFElement], fontStats: FontStatistics) -> String {
         var markdown = ""
-        let assetExtractor = AssetExtractor(assetsPath: assetsPath)
+        
+        // Extract PDF basename for asset naming
+        let pdfBasename = pdfURL.deletingPathExtension().lastPathComponent
+        let assetExtractor = AssetExtractor(assetsPath: assetsPath, pdfBasename: pdfBasename)
         
         // Sort elements by page and vertical position
         let sortedElements = elements.sorted { lhs, rhs in
@@ -166,6 +169,7 @@ public final class PDFMarkdownConverter {
             case let imageElement as ImageElement:
                 if let image = imageElement.image,
                    let imagePath = assetExtractor.saveImage(image, 
+                                                           pageIndex: imageElement.pageIndex,
                                                            isVector: imageElement.isVectorSource) {
                     let altText = imageElement.isVectorSource ? "Vector graphic" : "Image"
                     markdown += "![\(altText)](\(imagePath))\n\n"
