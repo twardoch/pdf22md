@@ -1,10 +1,10 @@
-# pdf22md-objc Makefile
-# this_file: pdf22md-objc/Makefile
+# pdf21md Makefile
+# this_file: pdf21md/Makefile
 
 CC = clang
 CFLAGS = -Wall -Wextra -std=c11 -O2
 OBJCFLAGS = -fobjc-arc -framework Foundation -framework CoreGraphics -framework PDFKit -framework ImageIO -framework AppKit
-TARGET = pdf22md
+TARGET = pdf21md
 SRCDIR = src
 SOURCES = $(SRCDIR)/CLI/main.m $(wildcard $(SRCDIR)/Core/*.m) $(wildcard $(SRCDIR)/Models/*.m) $(wildcard $(SRCDIR)/Services/*.m) $(wildcard shared-core/*.m) $(wildcard shared-algorithms/*.m)
 HEADERS = $(wildcard $(SRCDIR)/**/*.h) $(wildcard shared-core/*.h) $(wildcard shared-algorithms/*.h)
