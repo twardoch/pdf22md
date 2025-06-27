@@ -29,7 +29,4 @@ CG_PDF_VERBOSE=True time ./pdf21md/pdf21md \
 
 # Run Swift version
 echo "sw"
-CG_PDF_VERBOSE=True time ./pdf22md/.build/release/pdf22md \
-    -i "$PDF" \
-    -o "$MD_DIR_SW.md" \
-    -a "$MD_DIR_SW"
+CG_PDF_VERBOSE=True time ./pdf22md/.build/release/pdf22md -i "$PDF" -o "$MD_DIR_SW.md" -a "$MD_DIR_SW"

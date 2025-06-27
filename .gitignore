@@ -1,45 +1,62 @@
-# Swift build directory
-pdf22md/.build/
 
-# Build products
-build/
-*.o
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Thumbnails
-._*
-
-# Files that might appear on external disk
-.Spotlight-V100
-.Trashes
-
-# Editor-specific
-.vscode/
-*.swp
-.idea/
-*.xcodeproj/
-*.xcworkspace/
-
-# Cursor and other AI assistants
-.cursor/
-.cursorrules
-.cursorindexingignore
-.giga/
-.specstory/
-
-# Test artifacts
-test/out/
-*.md
-!README.md
-!TODO.md
-!CLAUDE.md
+_private/
 !AGENTS.md
 !CHANGELOG.md
+!CLAUDE.md
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3
 !docs/*.md
-_private/
-pdf22md/.build
+!README.md
+!TODO.md
+._*
+.AppleDouble
+.build/
+.cursorindexingignore
+.DS_Store
+.idea/
+.LSOverride
+.specstory/
+.Spotlight-V100
+.Trashes
+.vscode/
+*.a
+*.dmg
+*.dSYM/
+*.dylib
+*.gcda
+*.gcno
+*.gcov
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.o
+*.pbxuser
+*.pdf
+*.perspectivev3
+*.swo
+*.swp
+*.tar.gz
+*.xccheckout
+*.xcodeproj/
+*.xcscmblueprint
+*.xcworkspace
+*.zip
+*~
+build/
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles/
+coverage/
 debug-assets/
+DerivedData/
+dist/
+docs/_build/
+issues/
+Makefile.cmake
+pdf22md/.build
+test-results/
+test/out/
+testdata/test.pdf-oc/.test*
+xcuserdata/

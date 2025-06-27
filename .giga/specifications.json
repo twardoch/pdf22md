@@ -1,0 +1,22 @@
+[
+  {
+    "fileName": "main-overview.mdc",
+    "description": "Complete system overview documenting the PDF to Markdown conversion architecture, key components, and their interactions"
+  },
+  {
+    "fileName": "document-processing-algorithms.mdc",
+    "description": "Detailed documentation of core algorithms including font hierarchy analysis, heading detection, and parallel page processing using GCD"
+  },
+  {
+    "fileName": "image-processing-algorithms.mdc",
+    "description": "Documentation of image extraction, format optimization algorithms, and asset handling including transparency detection and color complexity analysis"
+  },
+  {
+    "fileName": "content-element-models.mdc",
+    "description": "Specification of TextElement and ImageElement data models, their attributes, and relationships within the document structure"
+  },
+  {
+    "fileName": "data-flow.mdc",
+    "description": "Documentation of data flow between components including PDF parsing, content extraction, parallel processing, and Markdown generation"
+  }
+]

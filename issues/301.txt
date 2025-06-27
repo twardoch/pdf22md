@@ -1,3 +1,0 @@
-Run ./build.sh and ./test_both.sh, then analyze their output and analyze the entire codebase ( captured in ./llms.txt ). Implement necessary fixes for failures. 
-
-Analyze PLAN.md and TODO.md, and work on the issues listed there. As you work, periodically update CHANGELOG.md and PLAN.md and TODO.md to reflect the recent changes, and periodically run ./build.sh and also ./test_both.sh to check the progress. 

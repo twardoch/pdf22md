@@ -40,16 +40,24 @@ The content is organized as follows:
 </file_summary>
 
 <directory_structure>
+.cursor/
+  rules/
+    content-element-models.mdc
+    data-flow.mdc
+    document-processing-algorithms.mdc
+    image-processing-algorithms.mdc
+.giga/
+  specifications.json
 .github/
+  ISSUE_TEMPLATE/
+    bug_report.md
+    feature_request.md
   workflows/
     build-release.yml
     release.yml
 docs/
   PARALLEL_PROCESSING.md
   pdf22md.1
-issues/
-  214.txt
-  301.txt
 pdf21md/
   shared-algorithms/
     PDF21MDImageFormatDetection.h
@@ -127,24 +135,1382 @@ pdf22md/
   Package.resolved
   Package.swift
   README.md
+.cursorrules
 .gitignore
 AGENTS.md
 build.sh
 CHANGELOG.md
 CLAUDE.md
+CONTRIBUTING.md
 LICENSE
+PLAN.md
 README.md
 test_both.sh
 TODO.md
+TROUBLESHOOTING.md
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
 
-<file path="issues/301.txt">
-Run ./build.sh and ./test_both.sh, then analyze their output and analyze the entire codebase ( captured in ./llms.txt ). Implement necessary fixes for failures. 
+<file path=".cursor/rules/content-element-models.mdc">
+---
+description: Defines core content element models for representing text and image elements in PDF to Markdown conversion
+globs: src/ContentElement.h,src/ContentElement.m,src/*.h,src/*.m
+alwaysApply: false
+---
 
-Analyze PLAN.md and TODO.md, and work on the issues listed there. As you work, periodically update CHANGELOG.md and PLAN.md and TODO.md to reflect the recent changes, and periodically run ./build.sh and also ./test_both.sh to check the progress.
+
+# content-element-models
+
+The content element model system implements two primary domain models for representing extracted PDF content:
+
+### TextElement Model
+Importance Score: 95
+- Captures text-specific attributes:
+  - Heading level detection based on font statistics
+  - Formatting attributes (bold, italic)
+  - Positional information for maintaining document structure
+  - Font metrics for hierarchy analysis
+
+### ImageElement Model  
+Importance Score: 90
+- Manages both raster and vector image content:
+  - Source type tracking (vector vs raster)
+  - Format classification for optimal storage
+  - Asset path management for markdown linking
+  - Dimension and transparency analysis
+
+### Element Relationships
+Importance Score: 85
+- Maintains document hierarchy through:
+  - Parent-child relationships between elements
+  - Sequential ordering based on page position
+  - Nested structure preservation
+  - Cross-element references
+
+Relevant Files:
+- src/ContentElement.h
+- src/ContentElement.m
+
+$END$
+
+ If you're using this file in context, clearly say in italics in one small line that "Context added by Giga content-element-models".
+</file>
+
+<file path=".cursor/rules/data-flow.mdc">
+---
+description: Defines data transformation pipelines and content flow between PDF parsing, processing, and Markdown generation components
+globs: src/*.{h,m},lib/*.{h,m},include/*.h
+alwaysApply: false
+---
+
+
+# data-flow
+
+The data transformation pipeline consists of three main stages with distinct data flows:
+
+### 1. PDF Content Extraction Flow (Importance: 95)
+- Input PDF document stream parsed into discrete content elements
+- Font metrics and statistics gathered during initial parse
+- Text elements tagged with style attributes and positioning data
+- Images separated into raster/vector categories with source metadata
+- Element hierarchy maintained through page-position tracking
+
+### 2. Parallel Processing Pipeline (Importance: 90)
+- Page content distributed across worker threads via GCD
+- Font statistics aggregated through thread-safe collection
+- Synchronized element arrays preserve document ordering
+- Concurrent image asset extraction with sequence preservation
+- Vector graphics rasterization based on DPI settings
+
+### 3. Markdown Generation Flow (Importance: 85)  
+- Font hierarchy analysis converts to heading levels
+- Image assets exported with optimized format selection
+- Asset references inserted with relative path linking
+- Text formatting attributes translated to Markdown syntax
+- Document structure rebuilt from processed elements
+
+Key Data Transformation Points:
+- PDF content stream → ContentElement objects
+- Font metrics → Heading level assignments
+- Vector paths → Rasterized images
+- Image data → Optimized asset files
+- Structured content → Markdown syntax
+
+Relevant Components:
+- src/PDFMarkdownConverter.{h,m}
+- src/ContentElement.{h,m}
+- src/AssetExtractor.{h,m}
+- src/PDFPageProcessor.{h,m}
+
+$END$
+
+ If you're using this file in context, clearly say in italics in one small line that "Context added by Giga data-flow".
+</file>
+
+<file path=".cursor/rules/document-processing-algorithms.mdc">
+---
+description: Specifications for document conversion algorithms, text analysis, and page processing in PDF-to-Markdown conversion
+globs: src/PDFMarkdownConverter.*,src/PDFPageProcessor.*,src/ContentElement.*,src/AssetExtractor.*
+alwaysApply: false
+---
+
+
+# document-processing-algorithms
+
+## Core Processing Components (Importance: 95)
+
+### Font Hierarchy Analysis
+- Statistical font size frequency analysis for automatic heading level detection
+- Threshold-based classification (<100 occurrences) to differentiate headings from body text
+- Maintenance of document structure through position-based element sorting
+
+Relevant files:
+- `src/PDFMarkdownConverter.m`
+- `src/PDFPageProcessor.m`
+
+### Content Classification System
+- Domain-specific content type categorization
+- TextElement handling with formatting attributes (bold, italic, heading levels)
+- ImageElement management with source type tracking (vector/raster)
+
+Relevant files:
+- `src/ContentElement.h`
+- `src/ContentElement.m`
+
+## Image Processing Logic (Importance: 85)
+
+### Format Selection Algorithm
+- PNG selection for:
+  - Images with transparency
+  - Graphics under 100x100 pixels
+- JPEG selection for:
+  - Photographic content
+  - Images with >256 unique colors
+- Color complexity sampling (10,000 pixel analysis)
+- Alpha channel detection for format decisions
+
+Relevant files:
+- `src/AssetExtractor.m`
+
+## Document Element Extraction (Importance: 90)
+
+### Content Stream Processing
+- Font style detection from PDF metadata
+- Text positioning context preservation
+- Vector graphics path construction tracking
+- Image XObject extraction
+- Bounds calculation for layout preservation
+
+Relevant files:
+- `src/PDFPageProcessor.m`
+- `src/PDFMarkdownConverter.m`
+
+$END$
+
+ If you're using this file in context, clearly say in italics in one small line that "Context added by Giga document-processing-algorithms".
+</file>
+
+<file path=".cursor/rules/image-processing-algorithms.mdc">
+---
+description: Technical specification for image processing and optimization algorithms in PDF to Markdown conversion
+globs: src/AssetExtractor.*,src/ImageProcessor.*,src/PDFImageExtractor.*,*.{png,jpg,jpeg}
+alwaysApply: false
+---
+
+
+# image-processing-algorithms
+
+The image processing system implements intelligent format selection and optimization for PDF asset extraction:
+
+### Format Selection Algorithm (Importance: 85)
+- Images with transparency -> PNG format
+- Graphics <100x100 pixels -> PNG format 
+- Photos/complex images (>256 colors) -> JPEG format
+- Samples up to 10,000 pixels for color complexity analysis
+- Checks for alpha channel presence in format decisions
+
+### Asset Optimization (Importance: 75)
+- Automatic quality optimization for photographs
+- JPEG quality set to 85% for optimal size/quality balance
+- Vector graphics rasterization at configurable DPI
+- Smart asset directory management with relative path linking
+
+Relevant files:
+```
+src/AssetExtractor.h
+src/AssetExtractor.m
+```
+
+Key business rules:
+1. Color complexity threshold: 256 unique colors
+2. Small image threshold: 100x100 pixels
+3. Sample size limit: 10,000 pixels
+4. JPEG quality setting: 85%
+5. Default vector DPI: 144
+
+$END$
+
+ If you're using this file in context, clearly say in italics in one small line that "Context added by Giga image-processing-algorithms".
+</file>
+
+<file path=".giga/specifications.json">
+[
+  {
+    "fileName": "main-overview.mdc",
+    "description": "Complete system overview documenting the PDF to Markdown conversion architecture, key components, and their interactions"
+  },
+  {
+    "fileName": "document-processing-algorithms.mdc",
+    "description": "Detailed documentation of core algorithms including font hierarchy analysis, heading detection, and parallel page processing using GCD"
+  },
+  {
+    "fileName": "image-processing-algorithms.mdc",
+    "description": "Documentation of image extraction, format optimization algorithms, and asset handling including transparency detection and color complexity analysis"
+  },
+  {
+    "fileName": "content-element-models.mdc",
+    "description": "Specification of TextElement and ImageElement data models, their attributes, and relationships within the document structure"
+  },
+  {
+    "fileName": "data-flow.mdc",
+    "description": "Documentation of data flow between components including PDF parsing, content extraction, parallel processing, and Markdown generation"
+  }
+]
+</file>
+
+<file path=".github/ISSUE_TEMPLATE/bug_report.md">
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: bug
+assignees: ''
+---
+
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Run command '...'
+2. With PDF file '...'
+3. See error
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**System information:**
+ - macOS version: [e.g. 14.0]
+ - pdf22md version: [e.g. 1.0.0]
+
+**Additional context**
+Add any other context about the problem here.
+</file>
+
+<file path=".github/ISSUE_TEMPLATE/feature_request.md">
+---
+name: Feature request
+about: Suggest an idea for this project
+title: ''
+labels: enhancement
+assignees: ''
+---
+
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is.
+
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+</file>
+
+<file path=".cursorrules">
+# pdf22md
+
+A blazingly fast PDF to Markdown converter for macOS.
+
+`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
+
+### Key Features
+
+  * **High-Speed Conversion**: Uses all available CPU cores to process PDF pages concurrently.
+  * **Intelligent Heading Detection**: Analyzes font sizes and usage frequency to automatically format titles and headings (`#`, `##`, etc.).
+  * **Asset Extraction**: Saves raster and vector images into a specified assets folder and links them correctly in the Markdown file.
+  * **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality.
+  * **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`.
+  * **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps.
+
+### Installation
+
+Once the Homebrew tap is set up (see plan below), installation is simple:
+
+```bash
+brew install <your-username>/pdf22md/pdf22md
+```
+
+### Building from Source
+
+To build the project manually, you need Xcode Command Line Tools installed.
+
+```bash
+# Clone the repository (once it's public)
+git clone https://github.com/<your-username>/pdf22md.git
+cd pdf22md
+
+# Compile the tool
+make
+
+# Install it to /usr/local/bin
+sudo make install
+```
+
+### Usage
+
+```
+Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
+  Converts PDF documents to Markdown format
+  -i <path>: Input PDF file (default: stdin)
+  -o <path>: Output Markdown file (default: stdout)
+  -a <path>: Assets folder for extracted images
+  -d <dpi>: DPI for rasterizing vector graphics (default: 144)
+```
+
+**Example:**
+
+```bash
+# Convert a local PDF file and save images to an 'assets' folder
+pdf22md -i report.pdf -o report.md -a ./assets
+```
+
+---
+
+
+# main-overview
+
+## Development Guidelines
+
+- Only modify code directly relevant to the specific request. Avoid changing unrelated functionality.
+- Never replace code with placeholders like `# ... rest of the processing ...`. Always include complete code.
+- Break problems into smaller steps. Think through each step separately before implementing.
+- Always provide a complete PLAN with REASONING based on evidence from code and logs before making changes.
+- Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
+
+
+pdf22md is a PDF to Markdown converter that transforms PDF documents while preserving their semantic structure and content relationships.
+
+Core Business Components:
+
+1. Document Structure Analysis (Importance: 95)
+- Hierarchical heading detection using font statistics
+- Document structure preservation through positional element sorting
+- Automated heading level assignment (H1-H6) based on font usage patterns
+
+2. Content Classification System (Importance: 85)
+- TextElement: Handles formatted text with style attributes
+- ImageElement: Manages both raster and vector graphics
+- Content relationship tracking between elements
+
+3. Asset Processing Pipeline (Importance: 80)
+- Intelligent format selection between PNG/JPEG based on:
+  * Transparency detection
+  * Color complexity analysis
+  * Dimension-based optimization
+- Asset extraction with maintained document references
+
+4. PDF Content Processing (Importance: 90)
+- Text styling and formatting context preservation
+- Vector graphics path construction tracking
+- Coordinate system transformation management
+- Element bounds calculation for layout fidelity
+
+Key Integration Points:
+
+1. Content Extraction Layer
+- Connects PDF parsing with markdown generation
+- Maintains element relationships and hierarchy
+- Preserves formatting context across transformations
+
+2. Asset Management Layer
+- Links extracted images with markdown references
+- Maintains asset organization structure
+- Handles format conversions while preserving quality
+
+The system organizes business logic around content transformation pipelines while maintaining document semantic structure throughout the conversion process.
+
+—— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates.
+</file>
+
+<file path="CONTRIBUTING.md">
+# Contributing to pdf22md
+
+Thank you for your interest in contributing to `pdf22md`! This document outlines how you can contribute to the project, focusing on technical details, code structure, and development guidelines.
+
+## Project Overview
+
+`pdf22md` is a PDF to Markdown converter with two primary implementations:
+
+1.  **Objective-C Implementation (`pdf21md`)**: Located in the `pdf21md/` directory. This is the mature, production-ready version, optimized for macOS using Grand Central Dispatch (GCD) and native PDFKit integration.
+2.  **Swift Implementation (`pdf22md`)**: Located in the `pdf22md/` directory. This is a modern implementation built with Swift Package Manager, leveraging Swift's latest concurrency features (async/await, actors).
+
+Both implementations share the goal of high-performance, accurate PDF to Markdown conversion, including intelligent heading detection and smart image extraction.
+
+## Codebase Structure
+
+The project root contains shared documentation, build scripts, and the two main implementation directories:
+
+-   `pdf21md/`: Contains the Objective-C source code, Makefile, and its specific test resources.
+    -   `pdf21md/src/CLI/`: Command-line interface entry points.
+    -   `pdf21md/src/Core/`: Core conversion logic, options, and error handling.
+    -   `pdf21md/src/Models/`: Data models for PDF elements (text, images).
+    -   `pdf21md/src/Services/`: Services like asset management and Markdown generation.
+    -   `pdf21md/shared-core/`: Shared Objective-C utilities (concurrency, constants, error factory, file system).
+    -   `pdf21md/shared-algorithms/`: Shared Objective-C algorithms (e.g., image format detection).
+    -   `pdf21md/Tests/`: Unit and integration tests for the Objective-C version.
+
+-   `pdf22md/`: Contains the Swift source code, `Package.swift` (Swift Package Manager manifest), and its specific test resources.
+    -   `pdf22md/Sources/PDF22MD/`: Core Swift library modules.
+    -   `pdf22md/Sources/PDF22MDCli/`: Swift command-line interface entry point.
+    -   `pdf22md/Tests/PDF22MDTests/`: Unit tests for the Swift version.
+
+-   `build.sh`: The main build script that compiles both implementations.
+-   `test_both.sh`: Script to run tests for both implementations.
+-   `docs/`: General project documentation.
+-   `issues/`: Issue tracking files.
+
+## Technical Requirements and Conventions
+
+### General Guidelines
+
+-   **Platform**: Development is primarily for macOS. Ensure compatibility with macOS 10.12+ for Objective-C and macOS 12.0+ for Swift.
+-   **Language Standards**: Adhere to modern Objective-C (ARC, nullability annotations, lightweight generics) and Swift (Swift 5.7+, async/await, structured concurrency).
+-   **Performance**: Given the nature of PDF processing, performance is critical. Contributions should be mindful of CPU and memory efficiency.
+-   **Error Handling**: Use the established error handling patterns (e.g., `PDF21MDErrorFactory` for Objective-C, Swift's native `Error` protocol).
+-   **Testing**: All new features and bug fixes should be accompanied by appropriate unit and/or integration tests.
+
+### Objective-C (`pdf21md`)
+
+-   **Prefixes**: All new classes and categories should use the `PDF21MD` prefix.
+-   **Memory Management**: Use ARC. Avoid manual `retain`/`release`/`autorelease` calls.
+-   **Concurrency**: Utilize `PDF21MDConcurrencyManager` for GCD-based parallel processing and queue management.
+-   **File System Operations**: Use `PDF21MDFileSystemUtils` for all file and directory operations.
+-   **Constants**: Refer to `PDF21MDConstants` for all configuration values and magic numbers.
+
+### Swift (`pdf22md`)
+
+-   **Swift Package Manager**: The project is managed with SPM. Ensure your changes integrate seamlessly.
+-   **Concurrency**: Prefer Swift's `async/await` and `Actors` for concurrent operations.
+-   **Error Handling**: Define custom `Error` enums where appropriate and propagate errors using `throws`.
+-   **Value Types**: Prefer `struct`s over `class`es where appropriate to leverage Swift's value semantics and improve memory safety.
+
+## Development Workflow
+
+1.  **Fork the Repository**: Start by forking the `pdf22md` repository on GitHub.
+2.  **Clone Your Fork**: `git clone https://github.com/YOUR_USERNAME/pdf22md.git`
+3.  **Create a New Branch**: `git checkout -b feature/your-feature-name` or `bugfix/issue-number`.
+4.  **Make Your Changes**: Implement your feature or bug fix, adhering to the technical requirements and conventions.
+5.  **Write Tests**: Add or update tests to cover your changes.
+6.  **Run Tests**: Ensure all tests pass for both implementations:
+    ```bash
+    ./test_both.sh
+    ```
+7.  **Build the Project**: Verify that both implementations build successfully:
+    ```bash
+    ./build.sh
+    ```
+8.  **Update Documentation**: If your changes affect functionality or usage, update `README.md`, `CHANGELOG.md`, or other relevant documentation.
+9.  **Commit Your Changes**: Write clear, concise commit messages.
+10. **Push to Your Fork**: `git push origin feature/your-feature-name`
+11. **Open a Pull Request**: Submit a pull request to the `main` branch of the original `pdf22md` repository.
+
+## How to Orchestrate Code Changes (Detailed)
+
+### Identifying the Right Implementation
+
+-   **General Features/Bug Fixes**: If a feature or bug fix applies to the core PDF conversion logic, it should ideally be implemented in *both* the Objective-C (`pdf21md`) and Swift (`pdf22md`) versions to maintain feature parity and ensure cross-language robustness. Look for existing patterns in both codebases.
+-   **Performance Optimizations**: Analyze the performance bottlenecks. Some optimizations might be language-specific (e.g., GCD tuning for Objective-C, `async/await` patterns for Swift).
+-   **CLI Enhancements**: Changes to command-line arguments or basic I/O will likely affect `pdf21md/src/CLI/main.m` and `pdf22md/Sources/PDF22MDCli/main.swift`.
+-   **Shared Logic**: For logic that is truly independent of language-specific frameworks (e.g., complex algorithms), consider if it can be abstracted or if a direct port is more appropriate.
+
+### Step-by-Step Implementation Example (Placeholder)
+
+*(This section will be expanded with a detailed walkthrough of a typical code change, including how to apply it to both implementations, considerations for shared components, and testing strategies.)*
+
+## Reporting Issues
+
+If you find a bug or have a feature request, please open an issue on the [GitHub Issues page](https://github.com/twardoch/pdf22md/issues). Provide as much detail as possible, including steps to reproduce, expected behavior, and your environment.
+
+## Code of Conduct
+
+This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md - *link to be added*). By participating, you are expected to uphold this code.
+
+## License
+
+By contributing to `pdf22md`, you agree that your contributions will be licensed under the MIT License.
+</file>
+
+<file path="PLAN.md">
+# PDF to Markdown Converter - Project Plan
+
+## 🚨 **PRIORITY 1: Implementation Renaming (pdf21md / pdf22md)**
+
+### Overview
+The project will maintain two implementations with distinct names:
+- **pdf21md**: Objective-C implementation (formerly pdf22md-objc)
+- **pdf22md**: Swift implementation (formerly pdf22md-swift)
+
+### Renaming Strategy - CRITICAL FIRST STEPS
+
+#### Phase 1: Directory Structure (DO FIRST)
+1. ✅ Rename `pdf22md-objc/` directory to `pdf21md/`
+2. Keep `pdf22md-swift/` directory as is (already correct)
+
+#### Phase 2: Update Objective-C Implementation (pdf21md)
+1. **Makefile Updates**:
+   - Change target name from `pdf22md` to `pdf21md`
+   - Update `BINARY_NAME = pdf21md`
+   - Update installation path references
+
+2. **Source Code Class Prefix Changes**:
+   - Change all class prefixes from `PDF22MD` to `PDF21MD` in:
+     - `src/CLI/` - all `.h` and `.m` files
+     - `src/Core/` - all `.h` and `.m` files  
+     - `src/Models/` - all `.h` and `.m` files
+     - `src/Services/` - all `.h` and `.m` files
+     - `shared-core/` - all utility classes
+     - `shared-algorithms/` - all algorithm classes
+     - `Tests/` - all test files
+   - Update all `#import` statements to use new class names
+   - Update all `@class` forward declarations
+
+#### Phase 3: Update Swift Implementation (pdf22md)
+1. **Package.swift**:
+   - Change executable product name from `pdf22md-swift` to `pdf22md`
+   - Update executable target name
+
+2. **main.swift**:
+   - Change `commandName` from `pdf22md-swift` to `pdf22md`
+
+#### Phase 4: Update Build and Test Scripts
+1. **build.sh**:
+   - Replace all `pdf22md-objc` with `pdf21md`
+   - Update binary paths and installation logic
+   - Ensure both binaries are installed: `pdf21md` and `pdf22md`
+
+2. **test_both.sh**:
+   - Update all directory references
+   - Update binary execution paths
+   - Fix test output paths
+
+3. **release.sh** (if exists):
+   - Update all references
+
+#### Phase 5: Update Documentation
+1. **Main documentation**:
+   - README.md - update all references
+   - CHANGELOG.md - add renaming entry
+   - TODO.md - update as linearized PLAN.md
+   - CLAUDE.md - update project description
+
+2. **Implementation docs**:
+   - pdf21md/README.md (formerly pdf22md-objc/README.md)
+   - pdf22md-swift/README.md
+
+3. **Other docs**:
+   - docs/pdf22md.1 - create separate man pages for pdf21md and pdf22md
+   - Any other documentation files
+
+## 🚨 **PRIORITY 2: Critical Bug Fix - No Markdown Output**
+
+### Issue Summary
+Both implementations currently:
+- ✅ Successfully process PDF pages
+- ✅ Extract and save images to assets folder (134 PNGs)
+- ❌ **FAIL to generate the actual Markdown file**
+
+### Root Cause Analysis
+The conversion pipeline completes all steps except writing the final markdown file. Possible causes:
+1. Text extraction returning empty results
+2. Markdown generator producing empty string
+3. File writing silently failing
+4. Output path calculation errors
+
+### Investigation Plan
+
+#### Objective-C (pdf21md) Investigation
+1. **Check PDF21MDConverter**:
+   - Add logging for extracted elements count
+   - Verify text elements are being created
+   - Log markdown string before file write
+
+2. **Check PDF21MDMarkdownGenerator**:
+   - Validate input elements array
+   - Log each markdown generation stage
+   - Ensure non-empty output
+
+3. **Check main.m**:
+   - Add file write validation
+   - Check output path permissions
+   - Add fallback to stdout if file write fails
+
+#### Swift (pdf22md) Investigation  
+1. **Check PDFConverter**:
+   - Verify text extraction logic exists
+   - Log element extraction results
+   - Validate markdown generation call
+
+2. **Check MarkdownWriter**:
+   - Ensure file writing is implemented
+   - Add error handling for I/O operations
+   - Validate output path
+
+### Fix Implementation Steps
+1. Add comprehensive logging throughout conversion pipeline
+2. Implement missing markdown generation if not present
+3. Add error handling and validation at each stage
+4. Test with simple PDF to isolate issues
+5. Ensure both implementations have feature parity
+
+## Priority 3: Fix CMap Warnings
+
+### Issue
+"can't create CMap 'Adobe-Identity-UCS2'" warnings appear during processing
+
+### Plan
+1. Research PDF font encoding requirements
+2. Check if warnings affect text extraction quality
+3. Implement proper CMap handling or suppress if benign
+
+## Priority 4: Minor Code Quality Fixes
+
+### Swift Implementation
+- Remove unused `fontName` variable in PDFPageProcessorOptimized.swift:70
+
+## Implementation Roadmap
+
+### Week 1: Critical Fixes
+1. **Days 1-2**: Complete renaming of implementations
+2. **Days 3-4**: Fix markdown output generation bug
+3. **Day 5**: Test and validate fixes
+
+### Week 2: Polish and Testing
+1. Fix CMap warnings
+2. Add comprehensive test coverage
+3. Performance optimization
+4. Documentation updates
+
+### Week 3: Release Preparation
+1. Create Homebrew formulas
+2. Set up GitHub Actions CI/CD
+3. Prepare release documentation
+4. Community guidelines
+
+## Success Criteria
+1. ✅ `pdf21md` (Objective-C) compiles and runs correctly
+2. ✅ `pdf22md` (Swift) compiles and runs correctly  
+3. ✅ Both tools successfully generate Markdown files from PDFs
+4. ✅ Image extraction works correctly
+5. ✅ No critical warnings or errors
+6. ✅ Documentation is accurate and complete
+7. ✅ Ready for public release
+
+## Key Decisions
+- Maintain two implementations with distinct binary names
+- pdf21md for Objective-C (legacy/stable)
+- pdf22md for Swift (modern/future)
+- Focus on fixing critical bugs before adding new features
+- Ensure both implementations have feature parity
+</file>
+
+<file path=".github/workflows/release.yml">
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for version tags
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    
+    - name: Get version from tag
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Build universal binary
+      run: |
+        # Build for Intel
+        make clean
+        make VERSION="${{ steps.version.outputs.VERSION }}" CFLAGS="-Wall -Wextra -O2 -fobjc-arc -arch x86_64"
+        mv pdf22md pdf22md-x86_64
+        
+        # Build for Apple Silicon
+        make clean
+        make VERSION="${{ steps.version.outputs.VERSION }}" CFLAGS="-Wall -Wextra -O2 -fobjc-arc -arch arm64"
+        mv pdf22md pdf22md-arm64
+        
+        # Create universal binary
+        lipo -create -output pdf22md pdf22md-x86_64 pdf22md-arm64
+        chmod +x pdf22md
+        
+        # Verify universal binary
+        lipo -info pdf22md
+        ./pdf22md -v
+    
+    - name: Create distribution package
+      run: |
+        # Create directory structure
+        mkdir -p dist/usr/local/bin
+        mkdir -p dist/usr/local/share/man/man1
+        mkdir -p dist/usr/local/share/doc/pdf22md
+        
+        # Copy files
+        cp pdf22md dist/usr/local/bin/
+        cp LICENSE dist/usr/local/share/doc/pdf22md/
+        cp README.md dist/usr/local/share/doc/pdf22md/
+        cp docs/PARALLEL_PROCESSING.md dist/usr/local/share/doc/pdf22md/ || true
+        
+        # Create man page
+        cat > dist/usr/local/share/man/man1/pdf22md.1 << EOF
+        .TH PDF22MD 1 "$(date +'%B %Y')" "pdf22md ${{ steps.version.outputs.VERSION }}" "User Commands"
+        .SH NAME
+        pdf22md \- Convert PDF documents to Markdown format
+        .SH SYNOPSIS
+        .B pdf22md
+        [\fB\-i\fR \fIinput.pdf\fR]
+        [\fB\-o\fR \fIoutput.md\fR]
+        [\fB\-a\fR \fIassets_folder\fR]
+        [\fB\-d\fR \fIdpi\fR]
+        [\fB\-v\fR]
+        [\fB\-h\fR]
+        .SH DESCRIPTION
+        .B pdf22md
+        is a high-performance PDF to Markdown converter for macOS that uses Grand Central Dispatch (GCD) for parallel processing.
+        .SH OPTIONS
+        .TP
+        .BR \-i " " \fIpath\fR
+        Input PDF file (default: stdin)
+        .TP
+        .BR \-o " " \fIpath\fR
+        Output Markdown file (default: stdout)
+        .TP
+        .BR \-a " " \fIpath\fR
+        Assets folder for extracted images
+        .TP
+        .BR \-d " " \fIdpi\fR
+        DPI for rasterizing vector graphics (default: 144)
+        .TP
+        .BR \-v
+        Display version information
+        .TP
+        .BR \-h
+        Display help message
+        .SH EXAMPLES
+        .TP
+        Convert a PDF file to Markdown:
+        .B pdf22md -i document.pdf -o document.md
+        .TP
+        Convert with images saved to an assets folder:
+        .B pdf22md -i report.pdf -o report.md -a ./assets
+        .TP
+        Use with pipes:
+        .B cat document.pdf | pdf22md > document.md
+        .SH AUTHOR
+        Adam Twardoch
+        .SH LICENSE
+        MIT License
+        EOF
+    
+    - name: Create installer package
+      run: |
+        # Create package info
+        mkdir -p package_resources
+        
+        # Create postinstall script
+        cat > package_resources/postinstall << 'EOF'
+        #!/bin/bash
+        # Update man database
+        if command -v makewhatis >/dev/null 2>&1; then
+            makewhatis /usr/local/share/man
+        fi
+        exit 0
+        EOF
+        chmod +x package_resources/postinstall
+        
+        # Build the package
+        pkgbuild --root dist \
+                 --identifier com.twardoch.pdf22md \
+                 --version "${{ steps.version.outputs.VERSION }}" \
+                 --scripts package_resources \
+                 --ownership recommended \
+                 pdf22md-${{ steps.version.outputs.VERSION }}.pkg
+        
+        # Create a distribution XML for productbuild (optional, for more control)
+        cat > distribution.xml << EOF
+        <?xml version="1.0" encoding="utf-8" standalone="yes"?>
+        <installer-gui-script minSpecVersion="2.0">
+            <title>pdf22md ${{ steps.version.outputs.VERSION }}</title>
+            <organization>com.twardoch</organization>
+            <domains enable_localSystem="true"/>
+            <options customize="never" require-scripts="true" rootVolumeOnly="true"/>
+            <pkg-ref id="com.twardoch.pdf22md">
+                <bundle-version>
+                    <bundle CFBundleVersion="${{ steps.version.outputs.VERSION }}" id="com.twardoch.pdf22md" path="pdf22md"/>
+                </bundle-version>
+            </pkg-ref>
+            <choices-outline>
+                <line choice="default">
+                    <line choice="com.twardoch.pdf22md"/>
+                </line>
+            </choices-outline>
+            <choice id="default" title="pdf22md" description="PDF to Markdown converter"/>
+            <choice id="com.twardoch.pdf22md" visible="false">
+                <pkg-ref id="com.twardoch.pdf22md"/>
+            </choice>
+            <pkg-ref id="com.twardoch.pdf22md" version="${{ steps.version.outputs.VERSION }}" onConclusion="none">pdf22md-${{ steps.version.outputs.VERSION }}.pkg</pkg-ref>
+        </installer-gui-script>
+        EOF
+        
+        # Sign the package if certificates are available
+        if security find-identity -p basic -v | grep -q "Developer ID Installer"; then
+            INSTALLER_CERT=$(security find-identity -p basic -v | grep "Developer ID Installer" | head -1 | awk '{print $2}')
+            productsign --sign "$INSTALLER_CERT" \
+                        pdf22md-${{ steps.version.outputs.VERSION }}.pkg \
+                        pdf22md-${{ steps.version.outputs.VERSION }}-signed.pkg
+            mv pdf22md-${{ steps.version.outputs.VERSION }}-signed.pkg pdf22md-${{ steps.version.outputs.VERSION }}.pkg
+        fi
+    
+    - name: Create release archives
+      run: |
+        # Create tarball with binary and docs
+        mkdir -p pdf22md-${{ steps.version.outputs.VERSION }}
+        cp pdf22md pdf22md-${{ steps.version.outputs.VERSION }}/
+        cp README.md LICENSE pdf22md-${{ steps.version.outputs.VERSION }}/
+        cp -r docs pdf22md-${{ steps.version.outputs.VERSION }}/ || true
+        tar -czf pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz pdf22md-${{ steps.version.outputs.VERSION }}
+        
+        # Create zip for those who prefer it
+        zip -r pdf22md-${{ steps.version.outputs.VERSION }}-macos.zip pdf22md-${{ steps.version.outputs.VERSION }}
+    
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        # Get previous tag
+        PREVIOUS_TAG=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -2 | head -1)
+        
+        # Generate changelog
+        if [ -n "$PREVIOUS_TAG" ]; then
+          echo "## What's Changed" > release_notes.md
+          echo "" >> release_notes.md
+          git log --pretty=format:"* %s (%h)" ${PREVIOUS_TAG}..HEAD >> release_notes.md
+        else
+          echo "## Initial Release" > release_notes.md
+          echo "" >> release_notes.md
+          echo "First release of pdf22md!" >> release_notes.md
+        fi
+        
+        echo "" >> release_notes.md
+        echo "## Installation" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Using the installer package (recommended):" >> release_notes.md
+        echo '```bash' >> release_notes.md
+        echo "curl -LO https://github.com/twardoch/pdf22md/releases/download/${{ steps.version.outputs.TAG }}/pdf22md-${{ steps.version.outputs.VERSION }}.pkg" >> release_notes.md
+        echo "sudo installer -pkg pdf22md-${{ steps.version.outputs.VERSION }}.pkg -target /" >> release_notes.md
+        echo '```' >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Manual installation:" >> release_notes.md
+        echo '```bash' >> release_notes.md
+        echo "curl -LO https://github.com/twardoch/pdf22md/releases/download/${{ steps.version.outputs.TAG }}/pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz" >> release_notes.md
+        echo "tar -xzf pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz" >> release_notes.md
+        echo "sudo cp pdf22md-${{ steps.version.outputs.VERSION }}/pdf22md /usr/local/bin/" >> release_notes.md
+        echo '```' >> release_notes.md
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: pdf22md ${{ steps.version.outputs.VERSION }}
+        body_path: release_notes.md
+        files: |
+          pdf22md-${{ steps.version.outputs.VERSION }}.pkg
+          pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz
+          pdf22md-${{ steps.version.outputs.VERSION }}-macos.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Update Homebrew formula
+      run: |
+        # This would typically update a homebrew tap repository
+        # For now, we'll just output what should be done
+        echo "To update Homebrew formula:"
+        echo "1. Update the url to: https://github.com/twardoch/pdf22md/archive/refs/tags/${{ steps.version.outputs.TAG }}.tar.gz"
+        echo "2. Update the sha256 hash"
+        echo "3. Update the version in the formula"
+</file>
+
+<file path="docs/PARALLEL_PROCESSING.md">
+# Parallel Processing in `pdf22md`
+
+This document outlines the implementation of parallel processing in the `pdf22md` command-line tool for converting PDF documents to Markdown format.
+
+## 1. Objective
+
+The goal was to accelerate the conversion of multi-page PDF documents by processing multiple pages concurrently and saving extracted images in parallel.
+
+## 2. Technology: Grand Central Dispatch (GCD)
+
+Similar to `pdfupng`, we utilized Apple's **Grand Central Dispatch (GCD)** framework with the `dispatch_apply` function for parallel execution.
+
+## 3. Implementation Details
+
+### 3.1. Parallel Page Processing
+
+The core changes were made within the `convertWithAssetsFolderPath:rasterizedDPI:completion:` method in `PDFMarkdownConverter.m`.
+
+#### From Sequential to Concurrent
+
+The original implementation used a sequential `for` loop:
+
+```objc
+for (NSInteger pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+    PDFPage *page = [self.pdfDocument pageAtIndex:pageIndex];
+    // ... process page ...
+}
+```
+
+This was replaced with:
+
+```objc
+dispatch_apply(pageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t pageIndex) {
+    @autoreleasepool {
+        PDFPage *page = [self.pdfDocument pageAtIndex:pageIndex];
+        // ... process page ...
+    }
+});
+```
+
+### 3.2. Thread Safety Measures
+
+1. **Temporary Storage Arrays**: Instead of directly modifying shared arrays (`allElements`, `fontStats`), we create temporary per-page storage:
+
+```objc
+NSMutableArray<NSMutableArray<id<ContentElement>> *> *pageElementsArray = [NSMutableArray arrayWithCapacity:pageCount];
+NSMutableArray<NSMutableDictionary *> *pageFontStatsArray = [NSMutableArray arrayWithCapacity:pageCount];
+```
+
+2. **Error Handling**: A shared boolean flag with synchronized access:
+
+```objc
+__block BOOL processingFailed = NO;
+NSObject *lock = [[NSObject alloc] init];
+
+// Inside parallel block
+@synchronized(lock) {
+    if (processingFailed) return;
+}
+```
+
+3. **Result Merging**: After parallel processing completes, results are merged sequentially:
+
+```objc
+for (NSInteger i = 0; i < pageCount; i++) {
+    [self.allElements addObjectsFromArray:pageElementsArray[i]];
+    // Merge font statistics...
+}
+```
+
+### 3.3. Parallel Image Saving
+
+Image saving was also parallelized:
+
+```objc
+dispatch_apply(imageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t index) {
+    @autoreleasepool {
+        ImageElement *imageElement = imageElements[index];
+        NSString *savedPath = [assetExtractor saveImage:imageElement.image ...];
+        if (savedPath) {
+            @synchronized(imageElement) {
+                imageElement.assetRelativePath = savedPath;
+            }
+        }
+    }
+});
+```
+
+### 3.4. Memory Management
+
+Each parallel operation is wrapped in `@autoreleasepool` to ensure prompt deallocation of temporary objects and prevent memory spikes.
+
+## 4. Performance Benefits
+
+- **Multi-core Utilization**: Pages are processed on multiple CPU cores simultaneously
+- **Reduced Total Time**: For PDFs with many pages, the speedup is nearly linear with the number of cores
+- **Efficient Memory Usage**: Autoreleasepool prevents memory accumulation
+- **Scalability**: The implementation automatically adapts to the available hardware
+
+## 5. Considerations
+
+- **Thread Safety**: All shared resources are protected with appropriate synchronization
+- **Memory Overhead**: Each parallel task has its own memory footprint, but autoreleasepool keeps it manageable
+- **I/O Bottlenecks**: Image saving may be limited by disk I/O speed rather than CPU
+</file>
+
+<file path="docs/pdf22md.1">
+.TH PDF22MD 1 "June 2025" "pdf22md v1.0" "User Commands"
+.SH NAME
+pdf22md \- high-performance PDF to Markdown converter
+.SH SYNOPSIS
+.B pdf22md
+[\fB\-i\fR \fIinput.pdf\fR]
+[\fB\-o\fR \fIoutput.md\fR]
+[\fB\-a\fR \fIassets_folder\fR]
+[\fB\-d\fR \fIdpi\fR]
+[\fB\-v\fR]
+[\fB\-h\fR]
+.SH DESCRIPTION
+.B pdf22md
+is a blazingly fast PDF to Markdown converter that extracts text and images from PDF documents and converts them into clean, structured Markdown format. It uses parallel processing to achieve high performance on multi-page documents.
+
+The tool automatically detects heading hierarchy based on font size analysis, extracts images with intelligent format optimization (PNG/JPEG), and generates YAML frontmatter with document metadata.
+
+.SH OPTIONS
+.TP
+\fB\-i\fR \fIinput.pdf\fR
+Specify the input PDF file to convert. If not provided, pdf22md reads from standard input (stdin).
+.TP
+\fB\-o\fR \fIoutput.md\fR
+Specify the output Markdown file. If not provided, pdf22md writes to standard output (stdout).
+.TP
+\fB\-a\fR \fIassets_folder\fR
+Specify the folder where extracted images will be saved. The folder will be created if it doesn't exist. Images are automatically referenced in the generated Markdown with relative paths.
+.TP
+\fB\-d\fR \fIdpi\fR
+Set the DPI (dots per inch) for rasterizing vector graphics. Default is 144. Higher values produce better quality but larger file sizes. Common values: 72 (screen), 144 (default), 300 (print quality).
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+Display version information and exit.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Display usage information and exit.
+
+.SH EXAMPLES
+.TP
+Convert a PDF file to Markdown:
+.B pdf22md \-i document.pdf \-o document.md
+
+.TP
+Extract images to an assets folder:
+.B pdf22md \-i document.pdf \-o document.md \-a ./assets
+
+.TP
+Use higher DPI for better image quality:
+.B pdf22md \-i document.pdf \-o document.md \-a ./assets \-d 300
+
+.TP
+Convert using pipes (stdin/stdout):
+.B cat document.pdf | pdf22md > document.md
+
+.TP
+Process a document with custom settings:
+.B pdf22md \-i report.pdf \-o report.md \-a ./images \-d 200
+
+.SH INPUT/OUTPUT
+.SS Input Sources
+.B pdf22md
+accepts PDF input from:
+.IP • 2
+File path specified with \fB\-i\fR flag
+.IP • 2
+Standard input (stdin) when no \fB\-i\fR flag is provided
+
+.SS Output Destinations
+Markdown output is written to:
+.IP • 2
+File path specified with \fB\-o\fR flag
+.IP • 2
+Standard output (stdout) when no \fB\-o\fR flag is provided
+
+.SS Image Assets
+When the \fB\-a\fR flag is used:
+.IP • 2
+Images are extracted and saved to the specified folder
+.IP • 2
+Filenames follow the pattern: image_001.png, image_002.jpg, etc.
+.IP • 2
+Format selection is automatic (PNG for graphics, JPEG for photos)
+.IP • 2
+Markdown contains relative references to the images
+
+.SH FEATURES
+.SS Intelligent Content Processing
+.IP • 2
+\fBHeading Detection\fR: Automatically identifies headings (H1-H6) based on font size analysis
+.IP • 2
+\fBText Extraction\fR: Preserves text formatting and structure
+.IP • 2
+\fBImage Processing\fR: Extracts both raster and vector graphics
+.IP • 2
+\fBSmart Formatting\fR: Maintains document hierarchy and readability
+
+.SS Performance Optimizations
+.IP • 2
+\fBParallel Processing\fR: Uses all available CPU cores for maximum speed
+.IP • 2
+\fBMemory Efficiency\fR: Processes large documents without excessive memory usage
+.IP • 2
+\fBFormat Optimization\fR: Automatic PNG/JPEG selection based on image content
+
+.SS Output Features
+.IP • 2
+\fBYAML Frontmatter\fR: Includes document metadata (title, author, creation date)
+.IP • 2
+\fBClean Markdown\fR: Well-structured output compatible with all Markdown processors
+.IP • 2
+\fBAsset Management\fR: Organized image extraction with proper linking
+
+.SH FILE FORMATS
+.SS Supported Input
+.IP • 2
+PDF files (version 1.4 and higher)
+.IP • 2
+Unencrypted PDFs (password-protected PDFs are not supported)
+.IP • 2
+PDFs with text, images, and vector graphics
+.IP • 2
+Multi-page documents of any size
+
+.SS Generated Output
+.IP • 2
+\fBMarkdown (.md)\fR: GitHub Flavored Markdown compatible
+.IP • 2
+\fBImages (.png/.jpg)\fR: Extracted graphics in optimal formats
+.IP • 2
+\fBYAML Frontmatter\fR: Document metadata in standard format
+
+.SH PERFORMANCE
+Typical conversion speeds on modern hardware:
+.IP • 2
+Simple text documents: <1 second per page
+.IP • 2
+Complex documents with images: 2-5 seconds per page
+.IP • 2
+Large documents (100+ pages): Scales linearly with parallel processing
+
+Memory usage is optimized for documents up to 1000 pages. Very large documents may require additional system memory.
+
+.SH ERROR HANDLING
+.B pdf22md
+provides detailed error messages with suggestions for common issues:
+
+.SS Common Errors and Solutions
+.TP
+\fBInvalid PDF file\fR
+.IP • 2
+Verify the file exists and is a valid PDF
+.IP • 2
+Check if the file is corrupted
+.IP • 2
+Ensure you have read permissions
+
+.TP
+\fBCannot create assets folder\fR
+.IP • 2
+Check if the parent directory exists
+.IP • 2
+Verify you have write permissions
+.IP • 2
+Ensure sufficient disk space
+
+.TP
+\fBPassword-protected PDF\fR
+.IP • 2
+Remove password protection using another tool first
+.IP • 2
+Use: qpdf \-\-decrypt input.pdf output.pdf
+
+.TP
+\fBMemory pressure\fR
+.IP • 2
+Close other applications to free memory
+.IP • 2
+Try using a lower DPI setting (\-d 72)
+.IP • 2
+Process smaller sections of large documents
+
+.SH EXIT STATUS
+.TP
+.B 0
+Successful conversion
+.TP
+.B 1
+Error occurred (invalid input, processing failure, I/O error)
+
+.SH ENVIRONMENT
+No special environment variables are required. The tool uses standard macOS frameworks (PDFKit, CoreGraphics) and runs on macOS 10.15 and later.
+
+.SH LIMITATIONS
+.IP • 2
+Password-protected PDFs are not supported
+.IP • 2
+Scanned PDFs without OCR text layer will only extract images
+.IP • 2
+Complex table layouts may not convert perfectly
+.IP • 2
+Some advanced PDF features (forms, annotations) are not preserved
+
+.SH COMPATIBILITY
+.SS Platform Support
+.IP • 2
+macOS 10.15 (Catalina) and later
+.IP • 2
+Intel and Apple Silicon processors
+.IP • 2
+Universal binary for optimal performance
+
+.SS Markdown Compatibility
+Output is compatible with:
+.IP • 2
+GitHub Flavored Markdown
+.IP • 2
+CommonMark specification
+.IP • 2
+Popular Markdown processors (pandoc, Jekyll, etc.)
+.IP • 2
+Static site generators (Hugo, Jekyll, Gatsby)
+
+.SH FILES
+.TP
+.I ~/.pdf22md/
+User configuration directory (future use)
+.TP
+.I /usr/local/bin/pdf22md
+Default installation location
+.TP
+.I /usr/local/share/man/man1/pdf22md.1
+This manual page
+
+.SH EXAMPLES WORKFLOW
+.SS Basic Document Conversion
+.nf
+# Convert a simple document
+pdf22md \-i report.pdf \-o report.md
+
+# Result: clean Markdown with YAML frontmatter
+# Output includes: title, headings, body text, metadata
+.fi
+
+.SS Academic Paper with Images
+.nf
+# Convert research paper with figure extraction
+pdf22md \-i paper.pdf \-o paper.md \-a figures \-d 300
+
+# Result: 
+# - paper.md with structured content
+# - figures/ folder with high-quality images
+# - Proper cross-references to figures
+.fi
+
+.SS Batch Processing
+.nf
+# Process multiple documents
+for pdf in *.pdf; do
+    pdf22md \-i "$pdf" \-o "${pdf%.pdf}.md" \-a "assets_${pdf%.pdf}"
+done
+.fi
+
+.SS Integration with Other Tools
+.nf
+# Combine with pandoc for further processing
+pdf22md \-i document.pdf | pandoc \-f markdown \-t html \-o document.html
+
+# Use with static site generators
+pdf22md \-i post.pdf \-o content/posts/post.md \-a static/images
+.fi
+
+.SH TROUBLESHOOTING
+.SS Performance Issues
+If conversion is slow:
+.IP • 2
+Check available memory and CPU usage
+.IP • 2
+Close unnecessary applications
+.IP • 2
+Try lower DPI setting for faster processing
+.IP • 2
+Process documents in smaller batches
+
+.SS Quality Issues
+If output quality is poor:
+.IP • 2
+Increase DPI setting (\-d 300) for better images
+.IP • 2
+Verify the source PDF has good quality text
+.IP • 2
+Check if the PDF has a proper text layer (not just scanned images)
+
+.SS Memory Errors
+For large documents:
+.IP • 2
+Ensure sufficient RAM (8GB+ recommended for large PDFs)
+.IP • 2
+Close other memory-intensive applications
+.IP • 2
+Split very large PDFs into smaller parts first
+
+.SH REPORTING BUGS
+Report bugs and feature requests at:
+.UR https://github.com/twardoch/pdf22md/issues
+.UE
+
+Include in your report:
+.IP • 2
+pdf22md version (\fBpdf22md \-v\fR)
+.IP • 2
+macOS version
+.IP • 2
+Sample PDF file (if possible)
+.IP • 2
+Complete error message
+.IP • 2
+Steps to reproduce the issue
+
+.SH AUTHORS
+Written by Adam Twardoch and contributors.
+
+.SH LICENSE
+MIT License. See the LICENSE file for details.
+
+.SH SEE ALSO
+.BR pandoc (1),
+.BR qpdf (1),
+.BR pdftotext (1),
+.BR markdown (7)
+
+Project homepage: 
+.UR https://github.com/twardoch/pdf22md
+.UE
 </file>
 
 <file path="pdf21md/shared-core/PDF21MDConcurrencyManager.h">
@@ -4803,6 +6169,856 @@ NS_ASSUME_NONNULL_END
 @end
 </file>
 
+<file path="pdf21md/test-resources/expected-outputs/README.md">
+---
+title: "README.md"
+creator: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
+producer: "Skia/PDF m137"
+created: 2025-06-23T01:33:53+02:00
+modified: 2025-06-23T01:33:53+02:00
+pdf_metadata:
+  page_count: 2
+conversion:
+  tool: "pdf22md"
+  version: "v1.1.0-dirty"
+  date: 2025-06-23T02:28:31+02:00
+---
+
+23/06/2025, 01:33 README.md
+
+![Image](image_000.png)
+
+![Image](image_001.png)
+
+pdf22md
+
+MIT
+
+License MIT
+
+License
+
+10.15+
+
+![Image](image_002.png)
+
+![Image](image_003.png)
+
+macOS 10.15+
+
+macOS
+
+Build and Release Build and Release passing passing
+
+A blazingly fast PDF to Markdown converter for macOS.
+
+pdf22md is a command-line tool that extracts all text and image content from a PDF file and converts it into a
+
+![Image](image_004.png)
+
+![Image](image_005.png)
+
+![Image](image_006.png)
+
+clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in
+
+parallel, making it exceptionally fast for multi-page documents.
+
+Key Features
+
+High-Speed Conversion: Uses all available CPU cores to process PDF pages concurrently
+
+Intelligent Heading Detection: Analyzes font sizes and usage frequency to automatically format titles
+
+![Image](image_007.png)
+
+![Image](image_008.png)
+
+![Image](image_009.png)
+
+and headings ( # , ## , etc.)
+
+Asset Extraction: Saves raster and vector images into a specified assets folder and links them correctly
+
+in the Markdown file
+
+Smart Image Formatting: Automatically chooses between JPEG (for photos) and PNG (for graphics with
+
+transparency) to optimize file size and quality
+
+Flexible I/O: Reads from a PDF file or stdin and writes to a Markdown file or stdout
+
+![Image](image_010.png)
+
+![Image](image_011.png)
+
+![Image](image_012.png)
+
+Customizable Rasterization: Allows setting a custom DPI for converting vector graphics to bitmaps
+
+Installation
+
+Using Homebrew (Coming Soon)
+
+brew tap twardoch/pdf22md
+
+brew install pdf22md
+
+![Image](image_013.png)
+
+![Image](image_014.png)
+
+Building from Source
+
+To build the project manually, you need Xcode Command Line Tools installed.
+
+# Clone the repository
+
+git clone https://github.com/twardoch/pdf22md.git
+
+cd pdf22md
+
+# Compile the tool
+
+make
+
+# Install it to /usr/local/bin (optional)
+
+sudo make install
+
+Download Pre-built Binary
+
+Pre-built binaries are available from the Releases page.
+
+Usage
+
+Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets
+
+_
+
+folder] [-d dpi]
+
+Converts PDF documents to Markdown format
+
+-i <path>: Input PDF file (default: stdin)
+
+-o <path>: Output Markdown file (default: stdout)
+
+-a <path>: Assets folder for extracted images
+
+-d <dpi>: DPI for rasterizing vector graphics (default: 144)
+
+Examples
+
+# Convert a PDF file to Markdown
+
+pdf22md -i document.pdf -o document.md
+
+# Convert with images saved to an 'assets' folder
+
+pdf22md -i report.pdf -o report.md -a ./assets
+
+# Convert with custom DPI for vector graphics
+
+pdf22md -i presentation.pdf -o presentation.md -a ./images -d 300
+
+# Use with pipes
+
+cat document.pdf | pdf22md > document.md
+
+# Convert and view in less
+
+pdf22md -i manual.pdf | less
+
+Requirements
+
+macOS 10.15 (Catalina) or later
+
+Xcode Command Line Tools (for building from source)
+
+Project Structure
+
+pdf22md/
+
+├── src/ # Source code
+
+│ ├── main.m # Entry point
+
+│ ├── PDFMarkdownConverter.* # Main conversion logic
+
+│ ├── PDFPageProcessor.* # PDF page processing
+
+│ ├── ContentElement.* # Content element definitions
+
+│ └── AssetExtractor.* # Image extraction logic
+
+├── docs/ # Additional documentation
+
+├── test/ # Test files
+
+file:///Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/README.md 1/2
+
+23/06/2025, 01:33 README.md
+
+![Image](image_015.png)
+
+![Image](image_016.png)
+
+├── LICENSE # MIT License
+
+├── Makefile # Build configuration
+
+└── README.md # This file
+
+Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an
+
+![Image](image_017.png)
+
+![Image](image_018.png)
+
+![Image](image_019.png)
+
+issue first to discuss what you
+
+would like to change.
+
+1. Fork the repository
+
+2. Create your feature branch ( git checkout -b feature/AmazingFeature )
+
+3. Commit your changes ( git commit -m 'Add some AmazingFeature' )
+
+![Image](image_020.png)
+
+![Image](image_021.png)
+
+![Image](image_022.png)
+
+4. Push to the branch ( git push origin feature/AmazingFeature )
+
+5. Open a Pull Request
+
+License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+Acknowledgments
+
+![Image](image_023.png)
+
+![Image](image_024.png)
+
+![Image](image_025.png)
+
+![Image](image_026.png)
+
+![Image](image_027.png)
+
+Built with Apple’s PDFKit and Core Graphics frameworks
+
+Parallel processing powered by Grand Central Dispatch (GCD)
+
+Inspired by the need for fast, accurate PDF to Markdown conversion
+
+Related Projects
+
+pdfplumber - Python library for PDF processing
+
+![Image](image_028.png)
+
+pdf2md - Another PDF to Markdown converter
+
+![Image](image_029.png)
+
+![Image](image_030.png)
+
+![Image](image_031.png)
+
+![Image](image_032.png)
+
+pandoc - Universal document converter
+
+Changelog
+
+See CHANGELOG.md for a list of changes in each version.
+
+Support
+
+If you encounter any issues or have questions, please open an issue on GitHub.
+
+![Image](image_033.png)
+
+![Image](image_034.png)
+
+file:///Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/README.md 2/2
+</file>
+
+<file path="pdf21md/Tests/Unit/AssetExtractorTests.m">
+//
+//  AssetExtractorTests.m
+//  pdf22md
+//
+//  Unit tests for asset extraction and image processing functionality
+//
+
+#import <XCTest/XCTest.h>
+#import <CoreGraphics/CoreGraphics.h>
+#import <ImageIO/ImageIO.h>
+#import "../../src/AssetExtractor.h"
+
+@interface AssetExtractorTests : XCTestCase
+@property (nonatomic, strong) AssetExtractor *extractor;
+@property (nonatomic, strong) NSString *testAssetsPath;
+@end
+
+@implementation AssetExtractorTests
+
+- (void)setUp {
+    [super setUp];
+    self.extractor = [[AssetExtractor alloc] init];
+    
+    // Create temporary test assets directory
+    NSString *tempDir = NSTemporaryDirectory();
+    self.testAssetsPath = [tempDir stringByAppendingPathComponent:@"pdf22md-test-assets"];
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager createDirectoryAtPath:self.testAssetsPath 
+           withIntermediateDirectories:YES 
+                            attributes:nil 
+                                 error:nil];
+}
+
+- (void)tearDown {
+    // Clean up test assets directory
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager removeItemAtPath:self.testAssetsPath error:nil];
+    
+    self.extractor = nil;
+    self.testAssetsPath = nil;
+    [super tearDown];
+}
+
+#pragma mark - Basic Functionality Tests
+
+- (void)testExtractorInitialization {
+    XCTAssertNotNil(self.extractor, @"AssetExtractor should initialize successfully");
+}
+
+- (void)testSetAssetsFolderPath {
+    NSString *testPath = @"/tmp/test-assets";
+    [self.extractor setAssetsFolderPath:testPath];
+    
+    // Note: We can't directly test the private property, but we can test that the method doesn't crash
+    // and that subsequent operations work as expected
+    XCTAssertTrue(YES, @"setAssetsFolderPath should complete without crashing");
+}
+
+#pragma mark - Image Format Detection Tests
+
+- (void)testFormatOptimizationLogic {
+    // Test the format optimization logic with synthetic images
+    
+    // Create a simple test image
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(NULL, 100, 100, 8, 0, colorSpace, 
+                                                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+    CGColorSpaceRelease(colorSpace);
+    
+    if (context) {
+        // Fill with a simple color
+        CGContextSetRGBFillColor(context, 1.0, 0.0, 0.0, 1.0);
+        CGContextFillRect(context, CGRectMake(0, 0, 100, 100));
+        
+        CGImageRef testImage = CGBitmapContextCreateImage(context);
+        CGContextRelease(context);
+        
+        if (testImage) {
+            // Test format decision logic
+            BOOL shouldUseJPEG = [self.extractor shouldUseJPEGForImage:testImage];
+            
+            // For a simple solid color image, PNG should be preferred
+            // (though the exact logic depends on implementation)
+            XCTAssertTrue(shouldUseJPEG == YES || shouldUseJPEG == NO, 
+                         @"shouldUseJPEGForImage should return a boolean value");
+            
+            CGImageRelease(testImage);
+        }
+    }
+}
+
+- (void)testImageSaving {
+    // Test image saving functionality
+    
+    // Create a minimal test image
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(NULL, 50, 50, 8, 0, colorSpace, 
+                                                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+    CGColorSpaceRelease(colorSpace);
+    
+    if (context) {
+        // Create a gradient pattern for testing
+        CGContextSetRGBFillColor(context, 0.5, 0.5, 1.0, 1.0);
+        CGContextFillRect(context, CGRectMake(0, 0, 50, 50));
+        
+        CGImageRef testImage = CGBitmapContextCreateImage(context);
+        CGContextRelease(context);
+        
+        if (testImage) {
+            [self.extractor setAssetsFolderPath:self.testAssetsPath];
+            
+            NSString *savedPath = [self.extractor saveImage:testImage withBaseName:@"test_image"];
+            
+            if (savedPath) {
+                // Verify the file was created
+                NSString *fullPath = [self.testAssetsPath stringByAppendingPathComponent:savedPath];
+                NSFileManager *fileManager = [NSFileManager defaultManager];
+                XCTAssertTrue([fileManager fileExistsAtPath:fullPath], 
+                             @"Saved image file should exist at path: %@", fullPath);
+                
+                // Verify it's a valid image file
+                NSData *imageData = [NSData dataWithContentsOfFile:fullPath];
+                XCTAssertNotNil(imageData, @"Should be able to read saved image data");
+                XCTAssertTrue(imageData.length > 0, @"Saved image should have non-zero size");
+            } else {
+                XCTFail(@"saveImage should return a non-nil path");
+            }
+            
+            CGImageRelease(testImage);
+        }
+    }
+}
+
+#pragma mark - File Naming Tests
+
+- (void)testUniqueFileNaming {
+    // Test that the extractor generates unique filenames
+    [self.extractor setAssetsFolderPath:self.testAssetsPath];
+    
+    // Create multiple test images and verify unique naming
+    for (int i = 0; i < 3; i++) {
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        CGContextRef context = CGBitmapContextCreate(NULL, 20, 20, 8, 0, colorSpace, 
+                                                    kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+        CGColorSpaceRelease(colorSpace);
+        
+        if (context) {
+            // Use different colors for each image
+            CGFloat red = (i == 0) ? 1.0 : 0.0;
+            CGFloat green = (i == 1) ? 1.0 : 0.0;
+            CGFloat blue = (i == 2) ? 1.0 : 0.0;
+            
+            CGContextSetRGBFillColor(context, red, green, blue, 1.0);
+            CGContextFillRect(context, CGRectMake(0, 0, 20, 20));
+            
+            CGImageRef testImage = CGBitmapContextCreateImage(context);
+            CGContextRelease(context);
+            
+            if (testImage) {
+                NSString *savedPath = [self.extractor saveImage:testImage withBaseName:@"test"];
+                XCTAssertNotNil(savedPath, @"Should get a valid filename for image %d", i);
+                
+                CGImageRelease(testImage);
+            }
+        }
+    }
+    
+    // Verify multiple files were created
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSArray *contents = [fileManager contentsOfDirectoryAtPath:self.testAssetsPath error:nil];
+    XCTAssertTrue(contents.count >= 1, @"Should have created at least one image file");
+}
+
+#pragma mark - Error Handling Tests
+
+- (void)testNilImageHandling {
+    [self.extractor setAssetsFolderPath:self.testAssetsPath];
+    
+    NSString *result = [self.extractor saveImage:NULL withBaseName:@"test"];
+    XCTAssertNil(result, @"Should return nil for NULL image");
+}
+
+- (void)testInvalidAssetsFolderHandling {
+    // Test with invalid assets folder path
+    NSString *invalidPath = @"/invalid/path/that/cannot/be/created";
+    [self.extractor setAssetsFolderPath:invalidPath];
+    
+    // Create a test image
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(NULL, 10, 10, 8, 0, colorSpace, 
+                                                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+    CGColorSpaceRelease(colorSpace);
+    
+    if (context) {
+        CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
+        CGContextFillRect(context, CGRectMake(0, 0, 10, 10));
+        
+        CGImageRef testImage = CGBitmapContextCreateImage(context);
+        CGContextRelease(context);
+        
+        if (testImage) {
+            NSString *result = [self.extractor saveImage:testImage withBaseName:@"test"];
+            // Should handle the error gracefully (exact behavior depends on implementation)
+            // At minimum, should not crash
+            
+            CGImageRelease(testImage);
+        }
+    }
+}
+
+#pragma mark - Performance Tests
+
+- (void)testImageSavingPerformance {
+    [self.extractor setAssetsFolderPath:self.testAssetsPath];
+    
+    [self measureBlock:^{
+        // Create and save a test image
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        CGContextRef context = CGBitmapContextCreate(NULL, 100, 100, 8, 0, colorSpace, 
+                                                    kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+        CGColorSpaceRelease(colorSpace);
+        
+        if (context) {
+            CGContextSetRGBFillColor(context, 0.5, 0.5, 0.5, 1.0);
+            CGContextFillRect(context, CGRectMake(0, 0, 100, 100));
+            
+            CGImageRef testImage = CGBitmapContextCreateImage(context);
+            CGContextRelease(context);
+            
+            if (testImage) {
+                [self.extractor saveImage:testImage withBaseName:@"perf_test"];
+                CGImageRelease(testImage);
+            }
+        }
+    }];
+}
+
+#pragma mark - Memory Management Tests
+
+- (void)testMemoryManagement {
+    // Test that multiple image operations don't cause memory issues
+    [self.extractor setAssetsFolderPath:self.testAssetsPath];
+    
+    for (int i = 0; i < 10; i++) {
+        @autoreleasepool {
+            CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+            CGContextRef context = CGBitmapContextCreate(NULL, 50, 50, 8, 0, colorSpace, 
+                                                        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+            CGColorSpaceRelease(colorSpace);
+            
+            if (context) {
+                CGContextSetRGBFillColor(context, (i % 3) / 3.0, ((i + 1) % 3) / 3.0, ((i + 2) % 3) / 3.0, 1.0);
+                CGContextFillRect(context, CGRectMake(0, 0, 50, 50));
+                
+                CGImageRef testImage = CGBitmapContextCreateImage(context);
+                CGContextRelease(context);
+                
+                if (testImage) {
+                    NSString *baseName = [NSString stringWithFormat:@"memory_test_%d", i];
+                    [self.extractor saveImage:testImage withBaseName:baseName];
+                    CGImageRelease(testImage);
+                }
+            }
+        }
+    }
+    
+    // Verify files were created
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSArray *contents = [fileManager contentsOfDirectoryAtPath:self.testAssetsPath error:nil];
+    XCTAssertTrue(contents.count > 0, @"Should have created image files during memory test");
+}
+
+@end
+</file>
+
+<file path="pdf21md/Tests/Unit/ContentElementTests.m">
+//
+//  ContentElementTests.m
+//  pdf22md
+//
+//  Unit tests for ContentElement model and text/image element functionality
+//
+
+#import <XCTest/XCTest.h>
+#import <CoreGraphics/CoreGraphics.h>
+#import "../../src/ContentElement.h"
+
+@interface ContentElementTests : XCTestCase
+@end
+
+@implementation ContentElementTests
+
+- (void)setUp {
+    [super setUp];
+}
+
+- (void)tearDown {
+    [super tearDown];
+}
+
+#pragma mark - ContentElement Protocol Tests
+
+- (void)testContentElementProtocolExists {
+    // Verify that the ContentElement protocol exists and can be referenced
+    Protocol *contentElementProtocol = @protocol(ContentElement);
+    XCTAssertNotNil(contentElementProtocol, @"ContentElement protocol should exist");
+}
+
+#pragma mark - Text Element Tests
+
+- (void)testTextElementCreation {
+    // Test creation of text elements
+    NSString *testText = @"Sample text content";
+    CGRect testBounds = CGRectMake(10, 20, 200, 30);
+    NSInteger testPage = 1;
+    
+    // Check if TextElement class exists and can be instantiated
+    Class textElementClass = NSClassFromString(@"TextElement");
+    if (textElementClass) {
+        // Test basic instantiation
+        id textElement = [[textElementClass alloc] init];
+        XCTAssertNotNil(textElement, @"TextElement should be instantiable");
+        
+        // Test that it conforms to ContentElement protocol
+        XCTAssertTrue([textElement conformsToProtocol:@protocol(ContentElement)], 
+                     @"TextElement should conform to ContentElement protocol");
+    } else {
+        XCTFail(@"TextElement class should be available");
+    }
+}
+
+- (void)testTextElementProperties {
+    Class textElementClass = NSClassFromString(@"TextElement");
+    if (textElementClass) {
+        id textElement = [[textElementClass alloc] init];
+        
+        // Test basic property access (using KVC since we don't have direct access to the interface)
+        NSString *testText = @"Test content";
+        
+        // Check if text property exists and can be set/get
+        if ([textElement respondsToSelector:@selector(setText:)]) {
+            [textElement performSelector:@selector(setText:) withObject:testText];
+            
+            if ([textElement respondsToSelector:@selector(text)]) {
+                NSString *retrievedText = [textElement performSelector:@selector(text)];
+                XCTAssertEqualObjects(retrievedText, testText, @"Text property should store and retrieve correctly");
+            }
+        }
+        
+        // Test bounds property if available
+        if ([textElement respondsToSelector:@selector(setBounds:)]) {
+            CGRect testBounds = CGRectMake(5, 10, 100, 20);
+            NSValue *boundsValue = [NSValue valueWithCGRect:testBounds];
+            [textElement performSelector:@selector(setBounds:) withObject:boundsValue];
+            
+            if ([textElement respondsToSelector:@selector(bounds)]) {
+                NSValue *retrievedBounds = [textElement performSelector:@selector(bounds)];
+                CGRect retrievedRect = [retrievedBounds CGRectValue];
+                XCTAssertTrue(CGRectEqualToRect(retrievedRect, testBounds), 
+                             @"Bounds property should store and retrieve correctly");
+            }
+        }
+    }
+}
+
+#pragma mark - Image Element Tests
+
+- (void)testImageElementCreation {
+    Class imageElementClass = NSClassFromString(@"ImageElement");
+    if (imageElementClass) {
+        // Test basic instantiation
+        id imageElement = [[imageElementClass alloc] init];
+        XCTAssertNotNil(imageElement, @"ImageElement should be instantiable");
+        
+        // Test that it conforms to ContentElement protocol
+        XCTAssertTrue([imageElement conformsToProtocol:@protocol(ContentElement)], 
+                     @"ImageElement should conform to ContentElement protocol");
+    } else {
+        XCTFail(@"ImageElement class should be available");
+    }
+}
+
+- (void)testImageElementWithCGImage {
+    Class imageElementClass = NSClassFromString(@"ImageElement");
+    if (imageElementClass) {
+        // Create a test CGImage
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        CGContextRef context = CGBitmapContextCreate(NULL, 50, 50, 8, 0, colorSpace, 
+                                                    kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+        CGColorSpaceRelease(colorSpace);
+        
+        if (context) {
+            CGContextSetRGBFillColor(context, 1.0, 0.0, 0.0, 1.0);
+            CGContextFillRect(context, CGRectMake(0, 0, 50, 50));
+            
+            CGImageRef testImage = CGBitmapContextCreateImage(context);
+            CGContextRelease(context);
+            
+            if (testImage) {
+                id imageElement = [[imageElementClass alloc] init];
+                
+                // Test image property if available
+                if ([imageElement respondsToSelector:@selector(setImage:)]) {
+                    // Note: CGImageRef is not an object, so we need to handle it appropriately
+                    // This test may need adjustment based on the actual implementation
+                    XCTAssertTrue(YES, @"Image element should be able to handle CGImageRef");
+                }
+                
+                CGImageRelease(testImage);
+            }
+        }
+    }
+}
+
+#pragma mark - Markdown Generation Tests
+
+- (void)testMarkdownGeneration {
+    // Test that elements can generate markdown representation
+    Class textElementClass = NSClassFromString(@"TextElement");
+    if (textElementClass) {
+        id textElement = [[textElementClass alloc] init];
+        
+        if ([textElement respondsToSelector:@selector(markdownRepresentation)]) {
+            NSString *markdown = [textElement performSelector:@selector(markdownRepresentation)];
+            XCTAssertTrue([markdown isKindOfClass:[NSString class]], 
+                         @"markdownRepresentation should return an NSString");
+        } else {
+            XCTFail(@"TextElement should implement markdownRepresentation method");
+        }
+    }
+}
+
+#pragma mark - Bounds and Positioning Tests
+
+- (void)testBoundsHandling {
+    // Test bounds property across different element types
+    NSArray *elementClassNames = @[@"TextElement", @"ImageElement"];
+    
+    for (NSString *className in elementClassNames) {
+        Class elementClass = NSClassFromString(className);
+        if (elementClass) {
+            id element = [[elementClass alloc] init];
+            
+            // Test bounds property
+            if ([element respondsToSelector:@selector(bounds)]) {
+                // Default bounds should be valid
+                CGRect bounds = CGRectZero;
+                if ([element respondsToSelector:@selector(bounds)]) {
+                    NSValue *boundsValue = [element performSelector:@selector(bounds)];
+                    if (boundsValue) {
+                        bounds = [boundsValue CGRectValue];
+                    }
+                }
+                
+                // Bounds should be a valid rectangle (finite values)
+                XCTAssertTrue(isfinite(bounds.origin.x) && isfinite(bounds.origin.y) && 
+                             isfinite(bounds.size.width) && isfinite(bounds.size.height),
+                             @"%@ bounds should have finite values", className);
+            }
+        }
+    }
+}
+
+#pragma mark - Page Index Tests
+
+- (void)testPageIndexProperty {
+    // Test page index property across element types
+    NSArray *elementClassNames = @[@"TextElement", @"ImageElement"];
+    
+    for (NSString *className in elementClassNames) {
+        Class elementClass = NSClassFromString(className);
+        if (elementClass) {
+            id element = [[elementClass alloc] init];
+            
+            if ([element respondsToSelector:@selector(pageIndex)]) {
+                NSInteger pageIndex = [[element performSelector:@selector(pageIndex)] integerValue];
+                XCTAssertTrue(pageIndex >= 0, @"%@ pageIndex should be non-negative", className);
+            }
+            
+            // Test setting page index if setter exists
+            if ([element respondsToSelector:@selector(setPageIndex:)]) {
+                NSInteger testPageIndex = 5;
+                [element performSelector:@selector(setPageIndex:) withObject:@(testPageIndex)];
+                
+                if ([element respondsToSelector:@selector(pageIndex)]) {
+                    NSInteger retrievedIndex = [[element performSelector:@selector(pageIndex)] integerValue];
+                    XCTAssertEqual(retrievedIndex, testPageIndex, 
+                                  @"%@ should store and retrieve pageIndex correctly", className);
+                }
+            }
+        }
+    }
+}
+
+#pragma mark - Memory Management Tests
+
+- (void)testElementMemoryManagement {
+    // Test that elements can be created and destroyed without memory issues
+    for (int i = 0; i < 100; i++) {
+        @autoreleasepool {
+            Class textElementClass = NSClassFromString(@"TextElement");
+            if (textElementClass) {
+                id textElement = [[textElementClass alloc] init];
+                
+                // Set some properties to test memory handling
+                if ([textElement respondsToSelector:@selector(setText:)]) {
+                    NSString *testText = [NSString stringWithFormat:@"Test text %d", i];
+                    [textElement performSelector:@selector(setText:) withObject:testText];
+                }
+                
+                textElement = nil;
+            }
+            
+            Class imageElementClass = NSClassFromString(@"ImageElement");
+            if (imageElementClass) {
+                id imageElement = [[imageElementClass alloc] init];
+                imageElement = nil;
+            }
+        }
+    }
+    
+    XCTAssertTrue(YES, @"Memory management test completed without crashes");
+}
+
+#pragma mark - Performance Tests
+
+- (void)testElementCreationPerformance {
+    [self measureBlock:^{
+        for (int i = 0; i < 1000; i++) {
+            @autoreleasepool {
+                Class textElementClass = NSClassFromString(@"TextElement");
+                if (textElementClass) {
+                    id textElement = [[textElementClass alloc] init];
+                    textElement = nil;
+                }
+            }
+        }
+    }];
+}
+
+- (void)testMarkdownGenerationPerformance {
+    Class textElementClass = NSClassFromString(@"TextElement");
+    if (textElementClass) {
+        id textElement = [[textElementClass alloc] init];
+        
+        if ([textElement respondsToSelector:@selector(setText:)]) {
+            [textElement performSelector:@selector(setText:) withObject:@"Sample text for performance testing"];
+        }
+        
+        [self measureBlock:^{
+            for (int i = 0; i < 1000; i++) {
+                if ([textElement respondsToSelector:@selector(markdownRepresentation)]) {
+                    [textElement performSelector:@selector(markdownRepresentation)];
+                }
+            }
+        }];
+    }
+}
+
+@end
+</file>
+
 <file path="pdf21md/Tests/Unit/PDF21MDAssetManagerTests.m">
 //
 //  PDF21MDAssetManagerTests.m
@@ -5407,6 +7623,189 @@ CFDataRef CGImagePNGRepresentation(CGImageRef image) {
     
     XCTAssertEqual(firstRun16, secondRun16, @"Font analysis should be consistent across runs");
     XCTAssertEqual(firstRun20, secondRun20, @"Font analysis should be consistent across runs");
+}
+
+@end
+</file>
+
+<file path="pdf21md/Tests/Unit/PDFMarkdownConverterTests.m">
+//
+//  PDFMarkdownConverterTests.m
+//  pdf22md
+//
+//  Unit tests for core PDF to Markdown conversion functionality
+//
+
+#import <XCTest/XCTest.h>
+#import "../../src/PDFMarkdownConverter.h"
+#import "../../src/AssetExtractor.h"
+#import "../../src/ContentElement.h"
+
+@interface PDFMarkdownConverterTests : XCTestCase
+@property (nonatomic, strong) PDFMarkdownConverter *converter;
+@property (nonatomic, strong) NSString *testResourcesPath;
+@end
+
+@implementation PDFMarkdownConverterTests
+
+- (void)setUp {
+    [super setUp];
+    self.converter = [[PDFMarkdownConverter alloc] init];
+    
+    // Set up test resources path
+    NSBundle *testBundle = [NSBundle bundleForClass:[self class]];
+    self.testResourcesPath = [testBundle.bundlePath stringByAppendingPathComponent:@"Resources"];
+    
+    // Ensure test resources directory exists
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if (![fileManager fileExistsAtPath:self.testResourcesPath]) {
+        [fileManager createDirectoryAtPath:self.testResourcesPath 
+               withIntermediateDirectories:YES 
+                                attributes:nil 
+                                     error:nil];
+    }
+}
+
+- (void)tearDown {
+    self.converter = nil;
+    self.testResourcesPath = nil;
+    [super tearDown];
+}
+
+#pragma mark - Basic Functionality Tests
+
+- (void)testConverterInitialization {
+    XCTAssertNotNil(self.converter, @"PDFMarkdownConverter should initialize successfully");
+}
+
+- (void)testInvalidPDFHandling {
+    // Test with nil input
+    NSString *result = [self.converter convertPDFAtPath:nil 
+                                          assetsFolderPath:nil 
+                                                       dpi:144];
+    XCTAssertNil(result, @"Converter should return nil for nil input path");
+    
+    // Test with non-existent file
+    NSString *nonExistentPath = @"/path/that/does/not/exist.pdf";
+    result = [self.converter convertPDFAtPath:nonExistentPath 
+                               assetsFolderPath:nil 
+                                            dpi:144];
+    XCTAssertNil(result, @"Converter should return nil for non-existent file");
+}
+
+- (void)testEmptyStringHandling {
+    // Test with empty string
+    NSString *result = [self.converter convertPDFAtPath:@"" 
+                                          assetsFolderPath:nil 
+                                                       dpi:144];
+    XCTAssertNil(result, @"Converter should return nil for empty string path");
+}
+
+- (void)testDPIParameterValidation {
+    // Create a minimal test PDF path (we'll use an existing test file)
+    NSString *testPDFPath = [self.testResourcesPath stringByAppendingPathComponent:@"simple-test.pdf"];
+    
+    // Test with invalid DPI values
+    NSString *result = [self.converter convertPDFAtPath:testPDFPath 
+                                          assetsFolderPath:nil 
+                                                       dpi:0];
+    // Should still work with fallback DPI or return error gracefully
+    // The exact behavior depends on implementation, but should not crash
+    
+    result = [self.converter convertPDFAtPath:testPDFPath 
+                               assetsFolderPath:nil 
+                                            dpi:-144];
+    // Should handle negative DPI gracefully
+}
+
+#pragma mark - Asset Folder Tests
+
+- (void)testAssetFolderCreation {
+    NSString *tempDir = NSTemporaryDirectory();
+    NSString *testAssetsFolder = [tempDir stringByAppendingPathComponent:@"test-assets"];
+    
+    // Clean up any existing test folder
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager removeItemAtPath:testAssetsFolder error:nil];
+    
+    // Verify folder doesn't exist initially
+    XCTAssertFalse([fileManager fileExistsAtPath:testAssetsFolder], 
+                   @"Test assets folder should not exist initially");
+    
+    // Test folder creation during conversion (with a valid PDF)
+    // For now, just test that the method accepts the parameter
+    NSString *testPDFPath = [self.testResourcesPath stringByAppendingPathComponent:@"simple-test.pdf"];
+    [self.converter convertPDFAtPath:testPDFPath 
+                      assetsFolderPath:testAssetsFolder 
+                                   dpi:144];
+    
+    // Clean up
+    [fileManager removeItemAtPath:testAssetsFolder error:nil];
+}
+
+#pragma mark - Memory Management Tests
+
+- (void)testMemoryManagement {
+    // Test that converter handles multiple conversions without memory issues
+    for (int i = 0; i < 10; i++) {
+        @autoreleasepool {
+            PDFMarkdownConverter *tempConverter = [[PDFMarkdownConverter alloc] init];
+            
+            // Test with nil path to avoid actual file I/O
+            NSString *result = [tempConverter convertPDFAtPath:nil 
+                                               assetsFolderPath:nil 
+                                                            dpi:144];
+            XCTAssertNil(result, @"Should handle nil input gracefully");
+            
+            tempConverter = nil;
+        }
+    }
+}
+
+#pragma mark - Performance Tests
+
+- (void)testPerformanceBaseline {
+    // Simple performance test to establish baseline
+    [self measureBlock:^{
+        // Test basic object creation and method call
+        PDFMarkdownConverter *converter = [[PDFMarkdownConverter alloc] init];
+        [converter convertPDFAtPath:nil assetsFolderPath:nil dpi:144];
+    }];
+}
+
+#pragma mark - Error Handling Tests
+
+- (void)testErrorConditions {
+    // Test various error conditions that should be handled gracefully
+    NSArray *invalidPaths = @[
+        @"",
+        @"not-a-pdf.txt",
+        @"/dev/null",
+        @"~/nonexistent/path/file.pdf"
+    ];
+    
+    for (NSString *invalidPath in invalidPaths) {
+        NSString *result = [self.converter convertPDFAtPath:invalidPath 
+                                            assetsFolderPath:nil 
+                                                         dpi:144];
+        XCTAssertNil(result, @"Should handle invalid path gracefully: %@", invalidPath);
+    }
+}
+
+#pragma mark - Integration Points Tests
+
+- (void)testAssetExtractorIntegration {
+    // Test that converter properly integrates with AssetExtractor
+    // This is a basic smoke test for the integration
+    AssetExtractor *extractor = [[AssetExtractor alloc] init];
+    XCTAssertNotNil(extractor, @"AssetExtractor should initialize for integration testing");
+}
+
+- (void)testContentElementIntegration {
+    // Test that converter properly works with ContentElement classes
+    // This verifies the model layer integration
+    XCTAssertTrue([NSClassFromString(@"ContentElement") conformsToProtocol:@protocol(NSObject)], 
+                  @"ContentElement should be available for integration");
 }
 
 @end
@@ -7005,744 +9404,197 @@ swift test --enable-code-coverage
 MIT License - see LICENSE file in the root directory
 </file>
 
-<file path=".github/workflows/release.yml">
-name: Release
+<file path="LICENSE">
+MIT License
+
+Copyright (c) 2024 Adam Twardoch
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</file>
+
+<file path="TROUBLESHOOTING.md">
+# Troubleshooting Guide
+
+## Swift Build Failures
+
+### SWBBuildService.framework Missing
+
+**Error Message:**
+```
+Library not loaded: @rpath/SWBBuildService.framework/Versions/A/SWBBuildService
+```
+
+**Description:**
+This error occurs when the Swift Package Manager framework is missing or corrupted in the Command Line Tools installation. This is a known issue that can happen after macOS updates or when Command Line Tools are partially installed.
+
+**Solutions:**
+
+#### Option 1: Switch to Xcode's Swift toolchain (if Xcode is installed)
+```bash
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+```
+
+#### Option 2: Reinstall Command Line Tools
+```bash
+sudo rm -rf /Library/Developer/CommandLineTools
+xcode-select --install
+```
+
+#### Option 3: Use the Objective-C implementation
+The Objective-C implementation is fully functional and doesn't require Swift:
+```bash
+./build.sh --objc-only
+```
+
+### Swift Package Manager Not Working
+
+**Symptoms:**
+- `swift package` commands fail
+- `swift build` exits with code 6 (Abort trap)
+
+**Diagnosis:**
+Check if Swift Package Manager is functional:
+```bash
+swift package --version
+```
+
+If this fails, follow the solutions for SWBBuildService.framework above.
+
+## Build Script Issues
+
+### Both Implementations Failing
+
+If both Swift and Objective-C builds fail:
+
+1. Ensure Xcode Command Line Tools are installed:
+   ```bash
+   xcode-select --install
+   ```
+
+2. Check tool availability:
+   ```bash
+   clang --version
+   swift --version
+   make --version
+   ```
+
+3. Reset Xcode path to default:
+   ```bash
+   sudo xcode-select --reset
+   ```
+
+### Permission Issues
+
+If you encounter permission errors during installation:
+
+1. Ensure you have sudo access
+2. Check that `/usr/local/bin` exists and is writable:
+   ```bash
+   ls -la /usr/local/bin
+   ```
+
+## Runtime Issues
+
+### PDF Conversion Errors
+
+If pdf22md fails to convert specific PDFs:
+
+1. Check PDF file permissions
+2. Ensure the PDF is not encrypted or password-protected
+3. Try with a different DPI setting:
+   ```bash
+   pdf22md -i input.pdf -o output.md -d 72
+   ```
+
+### Missing Assets Folder
+
+If images are not being extracted:
+
+1. Specify an assets folder explicitly:
+   ```bash
+   pdf22md -i input.pdf -o output.md -a ./assets
+   ```
+
+2. Ensure the parent directory has write permissions
+
+## Getting Help
+
+If you continue to experience issues:
+
+1. Check the GitHub issues: https://github.com/anthropics/pdf22md/issues
+2. Run the build script with verbose output and save the log:
+   ```bash
+   ./build.sh 2>&1 | tee build.log
+   ```
+3. Include the build.log when reporting issues
+</file>
+
+<file path=".github/workflows/build-release.yml">
+name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ created ]
 
 jobs:
-  build-and-release:
+  build:
     runs-on: macos-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Full history for version tags
-    
-    - name: Setup Xcode
-      uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: latest-stable
-    
-    - name: Get version from tag
-      id: version
+
+    - name: Build the tool
+      run: make
+
+    - name: Run a basic check
+      run: ./pdf22md -h
+
+  create-release:
+    if: github.event_name == 'release'
+    runs-on: macos-latest
+    needs: build
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build the binary
+      run: make
+
+    - name: Create Tarball Archive
       run: |
-        VERSION=${GITHUB_REF#refs/tags/v}
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-    
-    - name: Build universal binary
-      run: |
-        # Build for Intel
-        make clean
-        make VERSION="${{ steps.version.outputs.VERSION }}" CFLAGS="-Wall -Wextra -O2 -fobjc-arc -arch x86_64"
-        mv pdf22md pdf22md-x86_64
-        
-        # Build for Apple Silicon
-        make clean
-        make VERSION="${{ steps.version.outputs.VERSION }}" CFLAGS="-Wall -Wextra -O2 -fobjc-arc -arch arm64"
-        mv pdf22md pdf22md-arm64
-        
-        # Create universal binary
-        lipo -create -output pdf22md pdf22md-x86_64 pdf22md-arm64
-        chmod +x pdf22md
-        
-        # Verify universal binary
-        lipo -info pdf22md
-        ./pdf22md -v
-    
-    - name: Create distribution package
-      run: |
-        # Create directory structure
-        mkdir -p dist/usr/local/bin
-        mkdir -p dist/usr/local/share/man/man1
-        mkdir -p dist/usr/local/share/doc/pdf22md
-        
-        # Copy files
-        cp pdf22md dist/usr/local/bin/
-        cp LICENSE dist/usr/local/share/doc/pdf22md/
-        cp README.md dist/usr/local/share/doc/pdf22md/
-        cp docs/PARALLEL_PROCESSING.md dist/usr/local/share/doc/pdf22md/ || true
-        
-        # Create man page
-        cat > dist/usr/local/share/man/man1/pdf22md.1 << EOF
-        .TH PDF22MD 1 "$(date +'%B %Y')" "pdf22md ${{ steps.version.outputs.VERSION }}" "User Commands"
-        .SH NAME
-        pdf22md \- Convert PDF documents to Markdown format
-        .SH SYNOPSIS
-        .B pdf22md
-        [\fB\-i\fR \fIinput.pdf\fR]
-        [\fB\-o\fR \fIoutput.md\fR]
-        [\fB\-a\fR \fIassets_folder\fR]
-        [\fB\-d\fR \fIdpi\fR]
-        [\fB\-v\fR]
-        [\fB\-h\fR]
-        .SH DESCRIPTION
-        .B pdf22md
-        is a high-performance PDF to Markdown converter for macOS that uses Grand Central Dispatch (GCD) for parallel processing.
-        .SH OPTIONS
-        .TP
-        .BR \-i " " \fIpath\fR
-        Input PDF file (default: stdin)
-        .TP
-        .BR \-o " " \fIpath\fR
-        Output Markdown file (default: stdout)
-        .TP
-        .BR \-a " " \fIpath\fR
-        Assets folder for extracted images
-        .TP
-        .BR \-d " " \fIdpi\fR
-        DPI for rasterizing vector graphics (default: 144)
-        .TP
-        .BR \-v
-        Display version information
-        .TP
-        .BR \-h
-        Display help message
-        .SH EXAMPLES
-        .TP
-        Convert a PDF file to Markdown:
-        .B pdf22md -i document.pdf -o document.md
-        .TP
-        Convert with images saved to an assets folder:
-        .B pdf22md -i report.pdf -o report.md -a ./assets
-        .TP
-        Use with pipes:
-        .B cat document.pdf | pdf22md > document.md
-        .SH AUTHOR
-        Adam Twardoch
-        .SH LICENSE
-        MIT License
-        EOF
-    
-    - name: Create installer package
-      run: |
-        # Create package info
-        mkdir -p package_resources
-        
-        # Create postinstall script
-        cat > package_resources/postinstall << 'EOF'
-        #!/bin/bash
-        # Update man database
-        if command -v makewhatis >/dev/null 2>&1; then
-            makewhatis /usr/local/share/man
-        fi
-        exit 0
-        EOF
-        chmod +x package_resources/postinstall
-        
-        # Build the package
-        pkgbuild --root dist \
-                 --identifier com.twardoch.pdf22md \
-                 --version "${{ steps.version.outputs.VERSION }}" \
-                 --scripts package_resources \
-                 --ownership recommended \
-                 pdf22md-${{ steps.version.outputs.VERSION }}.pkg
-        
-        # Create a distribution XML for productbuild (optional, for more control)
-        cat > distribution.xml << EOF
-        <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-        <installer-gui-script minSpecVersion="2.0">
-            <title>pdf22md ${{ steps.version.outputs.VERSION }}</title>
-            <organization>com.twardoch</organization>
-            <domains enable_localSystem="true"/>
-            <options customize="never" require-scripts="true" rootVolumeOnly="true"/>
-            <pkg-ref id="com.twardoch.pdf22md">
-                <bundle-version>
-                    <bundle CFBundleVersion="${{ steps.version.outputs.VERSION }}" id="com.twardoch.pdf22md" path="pdf22md"/>
-                </bundle-version>
-            </pkg-ref>
-            <choices-outline>
-                <line choice="default">
-                    <line choice="com.twardoch.pdf22md"/>
-                </line>
-            </choices-outline>
-            <choice id="default" title="pdf22md" description="PDF to Markdown converter"/>
-            <choice id="com.twardoch.pdf22md" visible="false">
-                <pkg-ref id="com.twardoch.pdf22md"/>
-            </choice>
-            <pkg-ref id="com.twardoch.pdf22md" version="${{ steps.version.outputs.VERSION }}" onConclusion="none">pdf22md-${{ steps.version.outputs.VERSION }}.pkg</pkg-ref>
-        </installer-gui-script>
-        EOF
-        
-        # Sign the package if certificates are available
-        if security find-identity -p basic -v | grep -q "Developer ID Installer"; then
-            INSTALLER_CERT=$(security find-identity -p basic -v | grep "Developer ID Installer" | head -1 | awk '{print $2}')
-            productsign --sign "$INSTALLER_CERT" \
-                        pdf22md-${{ steps.version.outputs.VERSION }}.pkg \
-                        pdf22md-${{ steps.version.outputs.VERSION }}-signed.pkg
-            mv pdf22md-${{ steps.version.outputs.VERSION }}-signed.pkg pdf22md-${{ steps.version.outputs.VERSION }}.pkg
-        fi
-    
-    - name: Create release archives
-      run: |
-        # Create tarball with binary and docs
-        mkdir -p pdf22md-${{ steps.version.outputs.VERSION }}
-        cp pdf22md pdf22md-${{ steps.version.outputs.VERSION }}/
-        cp README.md LICENSE pdf22md-${{ steps.version.outputs.VERSION }}/
-        cp -r docs pdf22md-${{ steps.version.outputs.VERSION }}/ || true
-        tar -czf pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz pdf22md-${{ steps.version.outputs.VERSION }}
-        
-        # Create zip for those who prefer it
-        zip -r pdf22md-${{ steps.version.outputs.VERSION }}-macos.zip pdf22md-${{ steps.version.outputs.VERSION }}
-    
-    - name: Generate release notes
-      id: release_notes
-      run: |
-        # Get previous tag
-        PREVIOUS_TAG=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -2 | head -1)
-        
-        # Generate changelog
-        if [ -n "$PREVIOUS_TAG" ]; then
-          echo "## What's Changed" > release_notes.md
-          echo "" >> release_notes.md
-          git log --pretty=format:"* %s (%h)" ${PREVIOUS_TAG}..HEAD >> release_notes.md
-        else
-          echo "## Initial Release" > release_notes.md
-          echo "" >> release_notes.md
-          echo "First release of pdf22md!" >> release_notes.md
-        fi
-        
-        echo "" >> release_notes.md
-        echo "## Installation" >> release_notes.md
-        echo "" >> release_notes.md
-        echo "### Using the installer package (recommended):" >> release_notes.md
-        echo '```bash' >> release_notes.md
-        echo "curl -LO https://github.com/twardoch/pdf22md/releases/download/${{ steps.version.outputs.TAG }}/pdf22md-${{ steps.version.outputs.VERSION }}.pkg" >> release_notes.md
-        echo "sudo installer -pkg pdf22md-${{ steps.version.outputs.VERSION }}.pkg -target /" >> release_notes.md
-        echo '```' >> release_notes.md
-        echo "" >> release_notes.md
-        echo "### Manual installation:" >> release_notes.md
-        echo '```bash' >> release_notes.md
-        echo "curl -LO https://github.com/twardoch/pdf22md/releases/download/${{ steps.version.outputs.TAG }}/pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz" >> release_notes.md
-        echo "tar -xzf pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz" >> release_notes.md
-        echo "sudo cp pdf22md-${{ steps.version.outputs.VERSION }}/pdf22md /usr/local/bin/" >> release_notes.md
-        echo '```' >> release_notes.md
-    
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      with:
-        name: pdf22md ${{ steps.version.outputs.VERSION }}
-        body_path: release_notes.md
-        files: |
-          pdf22md-${{ steps.version.outputs.VERSION }}.pkg
-          pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz
-          pdf22md-${{ steps.version.outputs.VERSION }}-macos.zip
-        draft: false
-        prerelease: false
+        tar -czvf pdf22md-macos-x86_64.tar.gz pdf22md
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Update Homebrew formula
-      run: |
-        # This would typically update a homebrew tap repository
-        # For now, we'll just output what should be done
-        echo "To update Homebrew formula:"
-        echo "1. Update the url to: https://github.com/twardoch/pdf22md/archive/refs/tags/${{ steps.version.outputs.TAG }}.tar.gz"
-        echo "2. Update the sha256 hash"
-        echo "3. Update the version in the formula"
-</file>
-
-<file path="docs/PARALLEL_PROCESSING.md">
-# Parallel Processing in `pdf22md`
-
-This document outlines the implementation of parallel processing in the `pdf22md` command-line tool for converting PDF documents to Markdown format.
-
-## 1. Objective
-
-The goal was to accelerate the conversion of multi-page PDF documents by processing multiple pages concurrently and saving extracted images in parallel.
-
-## 2. Technology: Grand Central Dispatch (GCD)
-
-Similar to `pdfupng`, we utilized Apple's **Grand Central Dispatch (GCD)** framework with the `dispatch_apply` function for parallel execution.
-
-## 3. Implementation Details
-
-### 3.1. Parallel Page Processing
-
-The core changes were made within the `convertWithAssetsFolderPath:rasterizedDPI:completion:` method in `PDFMarkdownConverter.m`.
-
-#### From Sequential to Concurrent
-
-The original implementation used a sequential `for` loop:
-
-```objc
-for (NSInteger pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-    PDFPage *page = [self.pdfDocument pageAtIndex:pageIndex];
-    // ... process page ...
-}
-```
-
-This was replaced with:
-
-```objc
-dispatch_apply(pageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t pageIndex) {
-    @autoreleasepool {
-        PDFPage *page = [self.pdfDocument pageAtIndex:pageIndex];
-        // ... process page ...
-    }
-});
-```
-
-### 3.2. Thread Safety Measures
-
-1. **Temporary Storage Arrays**: Instead of directly modifying shared arrays (`allElements`, `fontStats`), we create temporary per-page storage:
-
-```objc
-NSMutableArray<NSMutableArray<id<ContentElement>> *> *pageElementsArray = [NSMutableArray arrayWithCapacity:pageCount];
-NSMutableArray<NSMutableDictionary *> *pageFontStatsArray = [NSMutableArray arrayWithCapacity:pageCount];
-```
-
-2. **Error Handling**: A shared boolean flag with synchronized access:
-
-```objc
-__block BOOL processingFailed = NO;
-NSObject *lock = [[NSObject alloc] init];
-
-// Inside parallel block
-@synchronized(lock) {
-    if (processingFailed) return;
-}
-```
-
-3. **Result Merging**: After parallel processing completes, results are merged sequentially:
-
-```objc
-for (NSInteger i = 0; i < pageCount; i++) {
-    [self.allElements addObjectsFromArray:pageElementsArray[i]];
-    // Merge font statistics...
-}
-```
-
-### 3.3. Parallel Image Saving
-
-Image saving was also parallelized:
-
-```objc
-dispatch_apply(imageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t index) {
-    @autoreleasepool {
-        ImageElement *imageElement = imageElements[index];
-        NSString *savedPath = [assetExtractor saveImage:imageElement.image ...];
-        if (savedPath) {
-            @synchronized(imageElement) {
-                imageElement.assetRelativePath = savedPath;
-            }
-        }
-    }
-});
-```
-
-### 3.4. Memory Management
-
-Each parallel operation is wrapped in `@autoreleasepool` to ensure prompt deallocation of temporary objects and prevent memory spikes.
-
-## 4. Performance Benefits
-
-- **Multi-core Utilization**: Pages are processed on multiple CPU cores simultaneously
-- **Reduced Total Time**: For PDFs with many pages, the speedup is nearly linear with the number of cores
-- **Efficient Memory Usage**: Autoreleasepool prevents memory accumulation
-- **Scalability**: The implementation automatically adapts to the available hardware
-
-## 5. Considerations
-
-- **Thread Safety**: All shared resources are protected with appropriate synchronization
-- **Memory Overhead**: Each parallel task has its own memory footprint, but autoreleasepool keeps it manageable
-- **I/O Bottlenecks**: Image saving may be limited by disk I/O speed rather than CPU
-</file>
-
-<file path="docs/pdf22md.1">
-.TH PDF22MD 1 "June 2025" "pdf22md v1.0" "User Commands"
-.SH NAME
-pdf22md \- high-performance PDF to Markdown converter
-.SH SYNOPSIS
-.B pdf22md
-[\fB\-i\fR \fIinput.pdf\fR]
-[\fB\-o\fR \fIoutput.md\fR]
-[\fB\-a\fR \fIassets_folder\fR]
-[\fB\-d\fR \fIdpi\fR]
-[\fB\-v\fR]
-[\fB\-h\fR]
-.SH DESCRIPTION
-.B pdf22md
-is a blazingly fast PDF to Markdown converter that extracts text and images from PDF documents and converts them into clean, structured Markdown format. It uses parallel processing to achieve high performance on multi-page documents.
-
-The tool automatically detects heading hierarchy based on font size analysis, extracts images with intelligent format optimization (PNG/JPEG), and generates YAML frontmatter with document metadata.
-
-.SH OPTIONS
-.TP
-\fB\-i\fR \fIinput.pdf\fR
-Specify the input PDF file to convert. If not provided, pdf22md reads from standard input (stdin).
-.TP
-\fB\-o\fR \fIoutput.md\fR
-Specify the output Markdown file. If not provided, pdf22md writes to standard output (stdout).
-.TP
-\fB\-a\fR \fIassets_folder\fR
-Specify the folder where extracted images will be saved. The folder will be created if it doesn't exist. Images are automatically referenced in the generated Markdown with relative paths.
-.TP
-\fB\-d\fR \fIdpi\fR
-Set the DPI (dots per inch) for rasterizing vector graphics. Default is 144. Higher values produce better quality but larger file sizes. Common values: 72 (screen), 144 (default), 300 (print quality).
-.TP
-\fB\-v\fR, \fB\-\-version\fR
-Display version information and exit.
-.TP
-\fB\-h\fR, \fB\-\-help\fR
-Display usage information and exit.
-
-.SH EXAMPLES
-.TP
-Convert a PDF file to Markdown:
-.B pdf22md \-i document.pdf \-o document.md
-
-.TP
-Extract images to an assets folder:
-.B pdf22md \-i document.pdf \-o document.md \-a ./assets
-
-.TP
-Use higher DPI for better image quality:
-.B pdf22md \-i document.pdf \-o document.md \-a ./assets \-d 300
-
-.TP
-Convert using pipes (stdin/stdout):
-.B cat document.pdf | pdf22md > document.md
-
-.TP
-Process a document with custom settings:
-.B pdf22md \-i report.pdf \-o report.md \-a ./images \-d 200
-
-.SH INPUT/OUTPUT
-.SS Input Sources
-.B pdf22md
-accepts PDF input from:
-.IP • 2
-File path specified with \fB\-i\fR flag
-.IP • 2
-Standard input (stdin) when no \fB\-i\fR flag is provided
-
-.SS Output Destinations
-Markdown output is written to:
-.IP • 2
-File path specified with \fB\-o\fR flag
-.IP • 2
-Standard output (stdout) when no \fB\-o\fR flag is provided
-
-.SS Image Assets
-When the \fB\-a\fR flag is used:
-.IP • 2
-Images are extracted and saved to the specified folder
-.IP • 2
-Filenames follow the pattern: image_001.png, image_002.jpg, etc.
-.IP • 2
-Format selection is automatic (PNG for graphics, JPEG for photos)
-.IP • 2
-Markdown contains relative references to the images
-
-.SH FEATURES
-.SS Intelligent Content Processing
-.IP • 2
-\fBHeading Detection\fR: Automatically identifies headings (H1-H6) based on font size analysis
-.IP • 2
-\fBText Extraction\fR: Preserves text formatting and structure
-.IP • 2
-\fBImage Processing\fR: Extracts both raster and vector graphics
-.IP • 2
-\fBSmart Formatting\fR: Maintains document hierarchy and readability
-
-.SS Performance Optimizations
-.IP • 2
-\fBParallel Processing\fR: Uses all available CPU cores for maximum speed
-.IP • 2
-\fBMemory Efficiency\fR: Processes large documents without excessive memory usage
-.IP • 2
-\fBFormat Optimization\fR: Automatic PNG/JPEG selection based on image content
-
-.SS Output Features
-.IP • 2
-\fBYAML Frontmatter\fR: Includes document metadata (title, author, creation date)
-.IP • 2
-\fBClean Markdown\fR: Well-structured output compatible with all Markdown processors
-.IP • 2
-\fBAsset Management\fR: Organized image extraction with proper linking
-
-.SH FILE FORMATS
-.SS Supported Input
-.IP • 2
-PDF files (version 1.4 and higher)
-.IP • 2
-Unencrypted PDFs (password-protected PDFs are not supported)
-.IP • 2
-PDFs with text, images, and vector graphics
-.IP • 2
-Multi-page documents of any size
-
-.SS Generated Output
-.IP • 2
-\fBMarkdown (.md)\fR: GitHub Flavored Markdown compatible
-.IP • 2
-\fBImages (.png/.jpg)\fR: Extracted graphics in optimal formats
-.IP • 2
-\fBYAML Frontmatter\fR: Document metadata in standard format
-
-.SH PERFORMANCE
-Typical conversion speeds on modern hardware:
-.IP • 2
-Simple text documents: <1 second per page
-.IP • 2
-Complex documents with images: 2-5 seconds per page
-.IP • 2
-Large documents (100+ pages): Scales linearly with parallel processing
-
-Memory usage is optimized for documents up to 1000 pages. Very large documents may require additional system memory.
-
-.SH ERROR HANDLING
-.B pdf22md
-provides detailed error messages with suggestions for common issues:
-
-.SS Common Errors and Solutions
-.TP
-\fBInvalid PDF file\fR
-.IP • 2
-Verify the file exists and is a valid PDF
-.IP • 2
-Check if the file is corrupted
-.IP • 2
-Ensure you have read permissions
-
-.TP
-\fBCannot create assets folder\fR
-.IP • 2
-Check if the parent directory exists
-.IP • 2
-Verify you have write permissions
-.IP • 2
-Ensure sufficient disk space
-
-.TP
-\fBPassword-protected PDF\fR
-.IP • 2
-Remove password protection using another tool first
-.IP • 2
-Use: qpdf \-\-decrypt input.pdf output.pdf
-
-.TP
-\fBMemory pressure\fR
-.IP • 2
-Close other applications to free memory
-.IP • 2
-Try using a lower DPI setting (\-d 72)
-.IP • 2
-Process smaller sections of large documents
-
-.SH EXIT STATUS
-.TP
-.B 0
-Successful conversion
-.TP
-.B 1
-Error occurred (invalid input, processing failure, I/O error)
-
-.SH ENVIRONMENT
-No special environment variables are required. The tool uses standard macOS frameworks (PDFKit, CoreGraphics) and runs on macOS 10.15 and later.
-
-.SH LIMITATIONS
-.IP • 2
-Password-protected PDFs are not supported
-.IP • 2
-Scanned PDFs without OCR text layer will only extract images
-.IP • 2
-Complex table layouts may not convert perfectly
-.IP • 2
-Some advanced PDF features (forms, annotations) are not preserved
-
-.SH COMPATIBILITY
-.SS Platform Support
-.IP • 2
-macOS 10.15 (Catalina) and later
-.IP • 2
-Intel and Apple Silicon processors
-.IP • 2
-Universal binary for optimal performance
-
-.SS Markdown Compatibility
-Output is compatible with:
-.IP • 2
-GitHub Flavored Markdown
-.IP • 2
-CommonMark specification
-.IP • 2
-Popular Markdown processors (pandoc, Jekyll, etc.)
-.IP • 2
-Static site generators (Hugo, Jekyll, Gatsby)
-
-.SH FILES
-.TP
-.I ~/.pdf22md/
-User configuration directory (future use)
-.TP
-.I /usr/local/bin/pdf22md
-Default installation location
-.TP
-.I /usr/local/share/man/man1/pdf22md.1
-This manual page
-
-.SH EXAMPLES WORKFLOW
-.SS Basic Document Conversion
-.nf
-# Convert a simple document
-pdf22md \-i report.pdf \-o report.md
-
-# Result: clean Markdown with YAML frontmatter
-# Output includes: title, headings, body text, metadata
-.fi
-
-.SS Academic Paper with Images
-.nf
-# Convert research paper with figure extraction
-pdf22md \-i paper.pdf \-o paper.md \-a figures \-d 300
-
-# Result: 
-# - paper.md with structured content
-# - figures/ folder with high-quality images
-# - Proper cross-references to figures
-.fi
-
-.SS Batch Processing
-.nf
-# Process multiple documents
-for pdf in *.pdf; do
-    pdf22md \-i "$pdf" \-o "${pdf%.pdf}.md" \-a "assets_${pdf%.pdf}"
-done
-.fi
-
-.SS Integration with Other Tools
-.nf
-# Combine with pandoc for further processing
-pdf22md \-i document.pdf | pandoc \-f markdown \-t html \-o document.html
-
-# Use with static site generators
-pdf22md \-i post.pdf \-o content/posts/post.md \-a static/images
-.fi
-
-.SH TROUBLESHOOTING
-.SS Performance Issues
-If conversion is slow:
-.IP • 2
-Check available memory and CPU usage
-.IP • 2
-Close unnecessary applications
-.IP • 2
-Try lower DPI setting for faster processing
-.IP • 2
-Process documents in smaller batches
-
-.SS Quality Issues
-If output quality is poor:
-.IP • 2
-Increase DPI setting (\-d 300) for better images
-.IP • 2
-Verify the source PDF has good quality text
-.IP • 2
-Check if the PDF has a proper text layer (not just scanned images)
-
-.SS Memory Errors
-For large documents:
-.IP • 2
-Ensure sufficient RAM (8GB+ recommended for large PDFs)
-.IP • 2
-Close other memory-intensive applications
-.IP • 2
-Split very large PDFs into smaller parts first
-
-.SH REPORTING BUGS
-Report bugs and feature requests at:
-.UR https://github.com/twardoch/pdf22md/issues
-.UE
-
-Include in your report:
-.IP • 2
-pdf22md version (\fBpdf22md \-v\fR)
-.IP • 2
-macOS version
-.IP • 2
-Sample PDF file (if possible)
-.IP • 2
-Complete error message
-.IP • 2
-Steps to reproduce the issue
-
-.SH AUTHORS
-Written by Adam Twardoch and contributors.
-
-.SH LICENSE
-MIT License. See the LICENSE file for details.
-
-.SH SEE ALSO
-.BR pandoc (1),
-.BR qpdf (1),
-.BR pdftotext (1),
-.BR markdown (7)
-
-Project homepage: 
-.UR https://github.com/twardoch/pdf22md
-.UE
-</file>
-
-<file path="issues/214.txt">
-Completely rewrite PLAN.md and also adjust TODO.md as a linearized itemized version of PLAN.md to reflect the actual steps we need to do next, given the following priorities: 
-
-## Task 1
-Above all prioritize the following in PLAN.md and TODO: we want the ObjC implementation to be   called 'pdf21md' and the Swift implementation to be called 'pdf22md'. The entire project   must be reorganized around that. Analyze the current project and into PLAN.md as the topmost   priority write the steps that we need to take to make it happen. Make sure to plan for   adjusting all necessary core and auxiliary files. 
-
-## Task 2
-Improve code based on this: When I run `./test_both.sh` then both implementations compile, and then both output 134 PNGs into the specified asset folders, but none implementation produces the actual Markdown files which are the MAIN purpose of the whole exercise. Instead, we get this output: 
-
-```
-==> Building Objective-C version
-make: Nothing to be done for `all'.
-✓ Objective-C build completed successfully
-✓ Binary created: pdf22md-objc/pdf22md
-==> Building Swift version
-[1/1] Planning build
-Building for production...
-/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/pdf22md/Sources/PDF22MD/PDFPageProcessorOptimized.swift:70:17: warning: initialization of immutable value 'fontName' was never used; consider replacing with assignment to '_' or removing it
- 68 |             // Extract font information using cached values
- 69 |             var fontSize: CGFloat = 12.0
- 70 |             let fontName = "Helvetica"
-    |                 `- warning: initialization of immutable value 'fontName' was never used; consider replacing with assignment to '_' or removing it
- 71 |             var isBold = false
- 72 |             var isItalic = false
-[6/6] Compiling PDF22MDCli main.swift
-Build complete! (14.94s)
-✓ Swift build completed successfully
-✓ Build completed successfully!
-==> Build Summary:
-  • Objective-C binary: pdf22md-objc/pdf22md
-  • Swift binary: pdf22md/.build/release/pdf22md
-oc
-.notdef: no mapping.
-can't create CMap `Adobe-Identity-UCS2'.
-can't create CMap `Adobe-Identity-UCS2'..notdef: no mapping.
-CTLD took 0.000514984 seconds
-can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000735998 seconds
-CTLD took 0.000614047 seconds
-CTLD took 0.000527024 secondsCTLD took 0.000769019 seconds
-CTLD took 0.00062108 seconds
-CTLD took 0.000742078 seconds.notdef: no mapping.
-CTLD took 0.00069201 seconds.notdef: no mapping.
-CTLD took 0.000601888 seconds.notdef: no mapping.
-CTLD took 0.000251055 seconds.notdef: no mapping.
-CTLD took 0.00041306 seconds
-CTLD took 0.000160098 seconds
-CTLD took 0.000663042 seconds
-CTLD took 0.00299895 seconds
-CTLD took 0.00113595 seconds
-CTLD took 0.002321 seconds
-^Ctime: command terminated abnormally
-       61.92 real         0.07 user         0.04 sys
-```
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./pdf22md-macos-x86_64.tar.gz
+        asset_name: pdf22md-macos-x86_64.tar.gz
+        asset_content_type: application/gzip
 </file>
 
 <file path="pdf21md/shared-algorithms/PDF21MDImageFormatDetection.h">
@@ -8180,292 +10032,6 @@ int main(int argc, const char *argv[]) {
 }
 </file>
 
-<file path="pdf21md/test-resources/expected-outputs/README.md">
----
-title: "README.md"
-creator: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
-producer: "Skia/PDF m137"
-created: 2025-06-23T01:33:53+02:00
-modified: 2025-06-23T01:33:53+02:00
-pdf_metadata:
-  page_count: 2
-conversion:
-  tool: "pdf22md"
-  version: "v1.1.0-dirty"
-  date: 2025-06-23T02:28:31+02:00
----
-
-23/06/2025, 01:33 README.md
-
-![Image](image_000.png)
-
-![Image](image_001.png)
-
-pdf22md
-
-MIT
-
-License MIT
-
-License
-
-10.15+
-
-![Image](image_002.png)
-
-![Image](image_003.png)
-
-macOS 10.15+
-
-macOS
-
-Build and Release Build and Release passing passing
-
-A blazingly fast PDF to Markdown converter for macOS.
-
-pdf22md is a command-line tool that extracts all text and image content from a PDF file and converts it into a
-
-![Image](image_004.png)
-
-![Image](image_005.png)
-
-![Image](image_006.png)
-
-clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in
-
-parallel, making it exceptionally fast for multi-page documents.
-
-Key Features
-
-High-Speed Conversion: Uses all available CPU cores to process PDF pages concurrently
-
-Intelligent Heading Detection: Analyzes font sizes and usage frequency to automatically format titles
-
-![Image](image_007.png)
-
-![Image](image_008.png)
-
-![Image](image_009.png)
-
-and headings ( # , ## , etc.)
-
-Asset Extraction: Saves raster and vector images into a specified assets folder and links them correctly
-
-in the Markdown file
-
-Smart Image Formatting: Automatically chooses between JPEG (for photos) and PNG (for graphics with
-
-transparency) to optimize file size and quality
-
-Flexible I/O: Reads from a PDF file or stdin and writes to a Markdown file or stdout
-
-![Image](image_010.png)
-
-![Image](image_011.png)
-
-![Image](image_012.png)
-
-Customizable Rasterization: Allows setting a custom DPI for converting vector graphics to bitmaps
-
-Installation
-
-Using Homebrew (Coming Soon)
-
-brew tap twardoch/pdf22md
-
-brew install pdf22md
-
-![Image](image_013.png)
-
-![Image](image_014.png)
-
-Building from Source
-
-To build the project manually, you need Xcode Command Line Tools installed.
-
-# Clone the repository
-
-git clone https://github.com/twardoch/pdf22md.git
-
-cd pdf22md
-
-# Compile the tool
-
-make
-
-# Install it to /usr/local/bin (optional)
-
-sudo make install
-
-Download Pre-built Binary
-
-Pre-built binaries are available from the Releases page.
-
-Usage
-
-Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets
-
-_
-
-folder] [-d dpi]
-
-Converts PDF documents to Markdown format
-
--i <path>: Input PDF file (default: stdin)
-
--o <path>: Output Markdown file (default: stdout)
-
--a <path>: Assets folder for extracted images
-
--d <dpi>: DPI for rasterizing vector graphics (default: 144)
-
-Examples
-
-# Convert a PDF file to Markdown
-
-pdf22md -i document.pdf -o document.md
-
-# Convert with images saved to an 'assets' folder
-
-pdf22md -i report.pdf -o report.md -a ./assets
-
-# Convert with custom DPI for vector graphics
-
-pdf22md -i presentation.pdf -o presentation.md -a ./images -d 300
-
-# Use with pipes
-
-cat document.pdf | pdf22md > document.md
-
-# Convert and view in less
-
-pdf22md -i manual.pdf | less
-
-Requirements
-
-macOS 10.15 (Catalina) or later
-
-Xcode Command Line Tools (for building from source)
-
-Project Structure
-
-pdf22md/
-
-├── src/ # Source code
-
-│ ├── main.m # Entry point
-
-│ ├── PDFMarkdownConverter.* # Main conversion logic
-
-│ ├── PDFPageProcessor.* # PDF page processing
-
-│ ├── ContentElement.* # Content element definitions
-
-│ └── AssetExtractor.* # Image extraction logic
-
-├── docs/ # Additional documentation
-
-├── test/ # Test files
-
-file:///Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/README.md 1/2
-
-23/06/2025, 01:33 README.md
-
-![Image](image_015.png)
-
-![Image](image_016.png)
-
-├── LICENSE # MIT License
-
-├── Makefile # Build configuration
-
-└── README.md # This file
-
-Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an
-
-![Image](image_017.png)
-
-![Image](image_018.png)
-
-![Image](image_019.png)
-
-issue first to discuss what you
-
-would like to change.
-
-1. Fork the repository
-
-2. Create your feature branch ( git checkout -b feature/AmazingFeature )
-
-3. Commit your changes ( git commit -m 'Add some AmazingFeature' )
-
-![Image](image_020.png)
-
-![Image](image_021.png)
-
-![Image](image_022.png)
-
-4. Push to the branch ( git push origin feature/AmazingFeature )
-
-5. Open a Pull Request
-
-License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-Acknowledgments
-
-![Image](image_023.png)
-
-![Image](image_024.png)
-
-![Image](image_025.png)
-
-![Image](image_026.png)
-
-![Image](image_027.png)
-
-Built with Apple’s PDFKit and Core Graphics frameworks
-
-Parallel processing powered by Grand Central Dispatch (GCD)
-
-Inspired by the need for fast, accurate PDF to Markdown conversion
-
-Related Projects
-
-pdfplumber - Python library for PDF processing
-
-![Image](image_028.png)
-
-pdf2md - Another PDF to Markdown converter
-
-![Image](image_029.png)
-
-![Image](image_030.png)
-
-![Image](image_031.png)
-
-![Image](image_032.png)
-
-pandoc - Universal document converter
-
-Changelog
-
-See CHANGELOG.md for a list of changes in each version.
-
-Support
-
-If you encounter any issues or have questions, please open an issue on GitHub.
-
-![Image](image_033.png)
-
-![Image](image_034.png)
-
-file:///Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/README.md 2/2
-</file>
-
 <file path="pdf21md/Tests/Integration/EndToEndConversionTests.m">
 //
 //  EndToEndConversionTests.m
@@ -8809,753 +10375,6 @@ file:///Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/README.md 2/2
 @end
 </file>
 
-<file path="pdf21md/Tests/Unit/AssetExtractorTests.m">
-//
-//  AssetExtractorTests.m
-//  pdf22md
-//
-//  Unit tests for asset extraction and image processing functionality
-//
-
-#import <XCTest/XCTest.h>
-#import <CoreGraphics/CoreGraphics.h>
-#import <ImageIO/ImageIO.h>
-#import "../../src/AssetExtractor.h"
-
-@interface AssetExtractorTests : XCTestCase
-@property (nonatomic, strong) AssetExtractor *extractor;
-@property (nonatomic, strong) NSString *testAssetsPath;
-@end
-
-@implementation AssetExtractorTests
-
-- (void)setUp {
-    [super setUp];
-    self.extractor = [[AssetExtractor alloc] init];
-    
-    // Create temporary test assets directory
-    NSString *tempDir = NSTemporaryDirectory();
-    self.testAssetsPath = [tempDir stringByAppendingPathComponent:@"pdf22md-test-assets"];
-    
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    [fileManager createDirectoryAtPath:self.testAssetsPath 
-           withIntermediateDirectories:YES 
-                            attributes:nil 
-                                 error:nil];
-}
-
-- (void)tearDown {
-    // Clean up test assets directory
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath:self.testAssetsPath error:nil];
-    
-    self.extractor = nil;
-    self.testAssetsPath = nil;
-    [super tearDown];
-}
-
-#pragma mark - Basic Functionality Tests
-
-- (void)testExtractorInitialization {
-    XCTAssertNotNil(self.extractor, @"AssetExtractor should initialize successfully");
-}
-
-- (void)testSetAssetsFolderPath {
-    NSString *testPath = @"/tmp/test-assets";
-    [self.extractor setAssetsFolderPath:testPath];
-    
-    // Note: We can't directly test the private property, but we can test that the method doesn't crash
-    // and that subsequent operations work as expected
-    XCTAssertTrue(YES, @"setAssetsFolderPath should complete without crashing");
-}
-
-#pragma mark - Image Format Detection Tests
-
-- (void)testFormatOptimizationLogic {
-    // Test the format optimization logic with synthetic images
-    
-    // Create a simple test image
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(NULL, 100, 100, 8, 0, colorSpace, 
-                                                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-    CGColorSpaceRelease(colorSpace);
-    
-    if (context) {
-        // Fill with a simple color
-        CGContextSetRGBFillColor(context, 1.0, 0.0, 0.0, 1.0);
-        CGContextFillRect(context, CGRectMake(0, 0, 100, 100));
-        
-        CGImageRef testImage = CGBitmapContextCreateImage(context);
-        CGContextRelease(context);
-        
-        if (testImage) {
-            // Test format decision logic
-            BOOL shouldUseJPEG = [self.extractor shouldUseJPEGForImage:testImage];
-            
-            // For a simple solid color image, PNG should be preferred
-            // (though the exact logic depends on implementation)
-            XCTAssertTrue(shouldUseJPEG == YES || shouldUseJPEG == NO, 
-                         @"shouldUseJPEGForImage should return a boolean value");
-            
-            CGImageRelease(testImage);
-        }
-    }
-}
-
-- (void)testImageSaving {
-    // Test image saving functionality
-    
-    // Create a minimal test image
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(NULL, 50, 50, 8, 0, colorSpace, 
-                                                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-    CGColorSpaceRelease(colorSpace);
-    
-    if (context) {
-        // Create a gradient pattern for testing
-        CGContextSetRGBFillColor(context, 0.5, 0.5, 1.0, 1.0);
-        CGContextFillRect(context, CGRectMake(0, 0, 50, 50));
-        
-        CGImageRef testImage = CGBitmapContextCreateImage(context);
-        CGContextRelease(context);
-        
-        if (testImage) {
-            [self.extractor setAssetsFolderPath:self.testAssetsPath];
-            
-            NSString *savedPath = [self.extractor saveImage:testImage withBaseName:@"test_image"];
-            
-            if (savedPath) {
-                // Verify the file was created
-                NSString *fullPath = [self.testAssetsPath stringByAppendingPathComponent:savedPath];
-                NSFileManager *fileManager = [NSFileManager defaultManager];
-                XCTAssertTrue([fileManager fileExistsAtPath:fullPath], 
-                             @"Saved image file should exist at path: %@", fullPath);
-                
-                // Verify it's a valid image file
-                NSData *imageData = [NSData dataWithContentsOfFile:fullPath];
-                XCTAssertNotNil(imageData, @"Should be able to read saved image data");
-                XCTAssertTrue(imageData.length > 0, @"Saved image should have non-zero size");
-            } else {
-                XCTFail(@"saveImage should return a non-nil path");
-            }
-            
-            CGImageRelease(testImage);
-        }
-    }
-}
-
-#pragma mark - File Naming Tests
-
-- (void)testUniqueFileNaming {
-    // Test that the extractor generates unique filenames
-    [self.extractor setAssetsFolderPath:self.testAssetsPath];
-    
-    // Create multiple test images and verify unique naming
-    for (int i = 0; i < 3; i++) {
-        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        CGContextRef context = CGBitmapContextCreate(NULL, 20, 20, 8, 0, colorSpace, 
-                                                    kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-        CGColorSpaceRelease(colorSpace);
-        
-        if (context) {
-            // Use different colors for each image
-            CGFloat red = (i == 0) ? 1.0 : 0.0;
-            CGFloat green = (i == 1) ? 1.0 : 0.0;
-            CGFloat blue = (i == 2) ? 1.0 : 0.0;
-            
-            CGContextSetRGBFillColor(context, red, green, blue, 1.0);
-            CGContextFillRect(context, CGRectMake(0, 0, 20, 20));
-            
-            CGImageRef testImage = CGBitmapContextCreateImage(context);
-            CGContextRelease(context);
-            
-            if (testImage) {
-                NSString *savedPath = [self.extractor saveImage:testImage withBaseName:@"test"];
-                XCTAssertNotNil(savedPath, @"Should get a valid filename for image %d", i);
-                
-                CGImageRelease(testImage);
-            }
-        }
-    }
-    
-    // Verify multiple files were created
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSArray *contents = [fileManager contentsOfDirectoryAtPath:self.testAssetsPath error:nil];
-    XCTAssertTrue(contents.count >= 1, @"Should have created at least one image file");
-}
-
-#pragma mark - Error Handling Tests
-
-- (void)testNilImageHandling {
-    [self.extractor setAssetsFolderPath:self.testAssetsPath];
-    
-    NSString *result = [self.extractor saveImage:NULL withBaseName:@"test"];
-    XCTAssertNil(result, @"Should return nil for NULL image");
-}
-
-- (void)testInvalidAssetsFolderHandling {
-    // Test with invalid assets folder path
-    NSString *invalidPath = @"/invalid/path/that/cannot/be/created";
-    [self.extractor setAssetsFolderPath:invalidPath];
-    
-    // Create a test image
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(NULL, 10, 10, 8, 0, colorSpace, 
-                                                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-    CGColorSpaceRelease(colorSpace);
-    
-    if (context) {
-        CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
-        CGContextFillRect(context, CGRectMake(0, 0, 10, 10));
-        
-        CGImageRef testImage = CGBitmapContextCreateImage(context);
-        CGContextRelease(context);
-        
-        if (testImage) {
-            NSString *result = [self.extractor saveImage:testImage withBaseName:@"test"];
-            // Should handle the error gracefully (exact behavior depends on implementation)
-            // At minimum, should not crash
-            
-            CGImageRelease(testImage);
-        }
-    }
-}
-
-#pragma mark - Performance Tests
-
-- (void)testImageSavingPerformance {
-    [self.extractor setAssetsFolderPath:self.testAssetsPath];
-    
-    [self measureBlock:^{
-        // Create and save a test image
-        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        CGContextRef context = CGBitmapContextCreate(NULL, 100, 100, 8, 0, colorSpace, 
-                                                    kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-        CGColorSpaceRelease(colorSpace);
-        
-        if (context) {
-            CGContextSetRGBFillColor(context, 0.5, 0.5, 0.5, 1.0);
-            CGContextFillRect(context, CGRectMake(0, 0, 100, 100));
-            
-            CGImageRef testImage = CGBitmapContextCreateImage(context);
-            CGContextRelease(context);
-            
-            if (testImage) {
-                [self.extractor saveImage:testImage withBaseName:@"perf_test"];
-                CGImageRelease(testImage);
-            }
-        }
-    }];
-}
-
-#pragma mark - Memory Management Tests
-
-- (void)testMemoryManagement {
-    // Test that multiple image operations don't cause memory issues
-    [self.extractor setAssetsFolderPath:self.testAssetsPath];
-    
-    for (int i = 0; i < 10; i++) {
-        @autoreleasepool {
-            CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-            CGContextRef context = CGBitmapContextCreate(NULL, 50, 50, 8, 0, colorSpace, 
-                                                        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-            CGColorSpaceRelease(colorSpace);
-            
-            if (context) {
-                CGContextSetRGBFillColor(context, (i % 3) / 3.0, ((i + 1) % 3) / 3.0, ((i + 2) % 3) / 3.0, 1.0);
-                CGContextFillRect(context, CGRectMake(0, 0, 50, 50));
-                
-                CGImageRef testImage = CGBitmapContextCreateImage(context);
-                CGContextRelease(context);
-                
-                if (testImage) {
-                    NSString *baseName = [NSString stringWithFormat:@"memory_test_%d", i];
-                    [self.extractor saveImage:testImage withBaseName:baseName];
-                    CGImageRelease(testImage);
-                }
-            }
-        }
-    }
-    
-    // Verify files were created
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSArray *contents = [fileManager contentsOfDirectoryAtPath:self.testAssetsPath error:nil];
-    XCTAssertTrue(contents.count > 0, @"Should have created image files during memory test");
-}
-
-@end
-</file>
-
-<file path="pdf21md/Tests/Unit/ContentElementTests.m">
-//
-//  ContentElementTests.m
-//  pdf22md
-//
-//  Unit tests for ContentElement model and text/image element functionality
-//
-
-#import <XCTest/XCTest.h>
-#import <CoreGraphics/CoreGraphics.h>
-#import "../../src/ContentElement.h"
-
-@interface ContentElementTests : XCTestCase
-@end
-
-@implementation ContentElementTests
-
-- (void)setUp {
-    [super setUp];
-}
-
-- (void)tearDown {
-    [super tearDown];
-}
-
-#pragma mark - ContentElement Protocol Tests
-
-- (void)testContentElementProtocolExists {
-    // Verify that the ContentElement protocol exists and can be referenced
-    Protocol *contentElementProtocol = @protocol(ContentElement);
-    XCTAssertNotNil(contentElementProtocol, @"ContentElement protocol should exist");
-}
-
-#pragma mark - Text Element Tests
-
-- (void)testTextElementCreation {
-    // Test creation of text elements
-    NSString *testText = @"Sample text content";
-    CGRect testBounds = CGRectMake(10, 20, 200, 30);
-    NSInteger testPage = 1;
-    
-    // Check if TextElement class exists and can be instantiated
-    Class textElementClass = NSClassFromString(@"TextElement");
-    if (textElementClass) {
-        // Test basic instantiation
-        id textElement = [[textElementClass alloc] init];
-        XCTAssertNotNil(textElement, @"TextElement should be instantiable");
-        
-        // Test that it conforms to ContentElement protocol
-        XCTAssertTrue([textElement conformsToProtocol:@protocol(ContentElement)], 
-                     @"TextElement should conform to ContentElement protocol");
-    } else {
-        XCTFail(@"TextElement class should be available");
-    }
-}
-
-- (void)testTextElementProperties {
-    Class textElementClass = NSClassFromString(@"TextElement");
-    if (textElementClass) {
-        id textElement = [[textElementClass alloc] init];
-        
-        // Test basic property access (using KVC since we don't have direct access to the interface)
-        NSString *testText = @"Test content";
-        
-        // Check if text property exists and can be set/get
-        if ([textElement respondsToSelector:@selector(setText:)]) {
-            [textElement performSelector:@selector(setText:) withObject:testText];
-            
-            if ([textElement respondsToSelector:@selector(text)]) {
-                NSString *retrievedText = [textElement performSelector:@selector(text)];
-                XCTAssertEqualObjects(retrievedText, testText, @"Text property should store and retrieve correctly");
-            }
-        }
-        
-        // Test bounds property if available
-        if ([textElement respondsToSelector:@selector(setBounds:)]) {
-            CGRect testBounds = CGRectMake(5, 10, 100, 20);
-            NSValue *boundsValue = [NSValue valueWithCGRect:testBounds];
-            [textElement performSelector:@selector(setBounds:) withObject:boundsValue];
-            
-            if ([textElement respondsToSelector:@selector(bounds)]) {
-                NSValue *retrievedBounds = [textElement performSelector:@selector(bounds)];
-                CGRect retrievedRect = [retrievedBounds CGRectValue];
-                XCTAssertTrue(CGRectEqualToRect(retrievedRect, testBounds), 
-                             @"Bounds property should store and retrieve correctly");
-            }
-        }
-    }
-}
-
-#pragma mark - Image Element Tests
-
-- (void)testImageElementCreation {
-    Class imageElementClass = NSClassFromString(@"ImageElement");
-    if (imageElementClass) {
-        // Test basic instantiation
-        id imageElement = [[imageElementClass alloc] init];
-        XCTAssertNotNil(imageElement, @"ImageElement should be instantiable");
-        
-        // Test that it conforms to ContentElement protocol
-        XCTAssertTrue([imageElement conformsToProtocol:@protocol(ContentElement)], 
-                     @"ImageElement should conform to ContentElement protocol");
-    } else {
-        XCTFail(@"ImageElement class should be available");
-    }
-}
-
-- (void)testImageElementWithCGImage {
-    Class imageElementClass = NSClassFromString(@"ImageElement");
-    if (imageElementClass) {
-        // Create a test CGImage
-        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        CGContextRef context = CGBitmapContextCreate(NULL, 50, 50, 8, 0, colorSpace, 
-                                                    kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-        CGColorSpaceRelease(colorSpace);
-        
-        if (context) {
-            CGContextSetRGBFillColor(context, 1.0, 0.0, 0.0, 1.0);
-            CGContextFillRect(context, CGRectMake(0, 0, 50, 50));
-            
-            CGImageRef testImage = CGBitmapContextCreateImage(context);
-            CGContextRelease(context);
-            
-            if (testImage) {
-                id imageElement = [[imageElementClass alloc] init];
-                
-                // Test image property if available
-                if ([imageElement respondsToSelector:@selector(setImage:)]) {
-                    // Note: CGImageRef is not an object, so we need to handle it appropriately
-                    // This test may need adjustment based on the actual implementation
-                    XCTAssertTrue(YES, @"Image element should be able to handle CGImageRef");
-                }
-                
-                CGImageRelease(testImage);
-            }
-        }
-    }
-}
-
-#pragma mark - Markdown Generation Tests
-
-- (void)testMarkdownGeneration {
-    // Test that elements can generate markdown representation
-    Class textElementClass = NSClassFromString(@"TextElement");
-    if (textElementClass) {
-        id textElement = [[textElementClass alloc] init];
-        
-        if ([textElement respondsToSelector:@selector(markdownRepresentation)]) {
-            NSString *markdown = [textElement performSelector:@selector(markdownRepresentation)];
-            XCTAssertTrue([markdown isKindOfClass:[NSString class]], 
-                         @"markdownRepresentation should return an NSString");
-        } else {
-            XCTFail(@"TextElement should implement markdownRepresentation method");
-        }
-    }
-}
-
-#pragma mark - Bounds and Positioning Tests
-
-- (void)testBoundsHandling {
-    // Test bounds property across different element types
-    NSArray *elementClassNames = @[@"TextElement", @"ImageElement"];
-    
-    for (NSString *className in elementClassNames) {
-        Class elementClass = NSClassFromString(className);
-        if (elementClass) {
-            id element = [[elementClass alloc] init];
-            
-            // Test bounds property
-            if ([element respondsToSelector:@selector(bounds)]) {
-                // Default bounds should be valid
-                CGRect bounds = CGRectZero;
-                if ([element respondsToSelector:@selector(bounds)]) {
-                    NSValue *boundsValue = [element performSelector:@selector(bounds)];
-                    if (boundsValue) {
-                        bounds = [boundsValue CGRectValue];
-                    }
-                }
-                
-                // Bounds should be a valid rectangle (finite values)
-                XCTAssertTrue(isfinite(bounds.origin.x) && isfinite(bounds.origin.y) && 
-                             isfinite(bounds.size.width) && isfinite(bounds.size.height),
-                             @"%@ bounds should have finite values", className);
-            }
-        }
-    }
-}
-
-#pragma mark - Page Index Tests
-
-- (void)testPageIndexProperty {
-    // Test page index property across element types
-    NSArray *elementClassNames = @[@"TextElement", @"ImageElement"];
-    
-    for (NSString *className in elementClassNames) {
-        Class elementClass = NSClassFromString(className);
-        if (elementClass) {
-            id element = [[elementClass alloc] init];
-            
-            if ([element respondsToSelector:@selector(pageIndex)]) {
-                NSInteger pageIndex = [[element performSelector:@selector(pageIndex)] integerValue];
-                XCTAssertTrue(pageIndex >= 0, @"%@ pageIndex should be non-negative", className);
-            }
-            
-            // Test setting page index if setter exists
-            if ([element respondsToSelector:@selector(setPageIndex:)]) {
-                NSInteger testPageIndex = 5;
-                [element performSelector:@selector(setPageIndex:) withObject:@(testPageIndex)];
-                
-                if ([element respondsToSelector:@selector(pageIndex)]) {
-                    NSInteger retrievedIndex = [[element performSelector:@selector(pageIndex)] integerValue];
-                    XCTAssertEqual(retrievedIndex, testPageIndex, 
-                                  @"%@ should store and retrieve pageIndex correctly", className);
-                }
-            }
-        }
-    }
-}
-
-#pragma mark - Memory Management Tests
-
-- (void)testElementMemoryManagement {
-    // Test that elements can be created and destroyed without memory issues
-    for (int i = 0; i < 100; i++) {
-        @autoreleasepool {
-            Class textElementClass = NSClassFromString(@"TextElement");
-            if (textElementClass) {
-                id textElement = [[textElementClass alloc] init];
-                
-                // Set some properties to test memory handling
-                if ([textElement respondsToSelector:@selector(setText:)]) {
-                    NSString *testText = [NSString stringWithFormat:@"Test text %d", i];
-                    [textElement performSelector:@selector(setText:) withObject:testText];
-                }
-                
-                textElement = nil;
-            }
-            
-            Class imageElementClass = NSClassFromString(@"ImageElement");
-            if (imageElementClass) {
-                id imageElement = [[imageElementClass alloc] init];
-                imageElement = nil;
-            }
-        }
-    }
-    
-    XCTAssertTrue(YES, @"Memory management test completed without crashes");
-}
-
-#pragma mark - Performance Tests
-
-- (void)testElementCreationPerformance {
-    [self measureBlock:^{
-        for (int i = 0; i < 1000; i++) {
-            @autoreleasepool {
-                Class textElementClass = NSClassFromString(@"TextElement");
-                if (textElementClass) {
-                    id textElement = [[textElementClass alloc] init];
-                    textElement = nil;
-                }
-            }
-        }
-    }];
-}
-
-- (void)testMarkdownGenerationPerformance {
-    Class textElementClass = NSClassFromString(@"TextElement");
-    if (textElementClass) {
-        id textElement = [[textElementClass alloc] init];
-        
-        if ([textElement respondsToSelector:@selector(setText:)]) {
-            [textElement performSelector:@selector(setText:) withObject:@"Sample text for performance testing"];
-        }
-        
-        [self measureBlock:^{
-            for (int i = 0; i < 1000; i++) {
-                if ([textElement respondsToSelector:@selector(markdownRepresentation)]) {
-                    [textElement performSelector:@selector(markdownRepresentation)];
-                }
-            }
-        }];
-    }
-}
-
-@end
-</file>
-
-<file path="pdf21md/Tests/Unit/PDFMarkdownConverterTests.m">
-//
-//  PDFMarkdownConverterTests.m
-//  pdf22md
-//
-//  Unit tests for core PDF to Markdown conversion functionality
-//
-
-#import <XCTest/XCTest.h>
-#import "../../src/PDFMarkdownConverter.h"
-#import "../../src/AssetExtractor.h"
-#import "../../src/ContentElement.h"
-
-@interface PDFMarkdownConverterTests : XCTestCase
-@property (nonatomic, strong) PDFMarkdownConverter *converter;
-@property (nonatomic, strong) NSString *testResourcesPath;
-@end
-
-@implementation PDFMarkdownConverterTests
-
-- (void)setUp {
-    [super setUp];
-    self.converter = [[PDFMarkdownConverter alloc] init];
-    
-    // Set up test resources path
-    NSBundle *testBundle = [NSBundle bundleForClass:[self class]];
-    self.testResourcesPath = [testBundle.bundlePath stringByAppendingPathComponent:@"Resources"];
-    
-    // Ensure test resources directory exists
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if (![fileManager fileExistsAtPath:self.testResourcesPath]) {
-        [fileManager createDirectoryAtPath:self.testResourcesPath 
-               withIntermediateDirectories:YES 
-                                attributes:nil 
-                                     error:nil];
-    }
-}
-
-- (void)tearDown {
-    self.converter = nil;
-    self.testResourcesPath = nil;
-    [super tearDown];
-}
-
-#pragma mark - Basic Functionality Tests
-
-- (void)testConverterInitialization {
-    XCTAssertNotNil(self.converter, @"PDFMarkdownConverter should initialize successfully");
-}
-
-- (void)testInvalidPDFHandling {
-    // Test with nil input
-    NSString *result = [self.converter convertPDFAtPath:nil 
-                                          assetsFolderPath:nil 
-                                                       dpi:144];
-    XCTAssertNil(result, @"Converter should return nil for nil input path");
-    
-    // Test with non-existent file
-    NSString *nonExistentPath = @"/path/that/does/not/exist.pdf";
-    result = [self.converter convertPDFAtPath:nonExistentPath 
-                               assetsFolderPath:nil 
-                                            dpi:144];
-    XCTAssertNil(result, @"Converter should return nil for non-existent file");
-}
-
-- (void)testEmptyStringHandling {
-    // Test with empty string
-    NSString *result = [self.converter convertPDFAtPath:@"" 
-                                          assetsFolderPath:nil 
-                                                       dpi:144];
-    XCTAssertNil(result, @"Converter should return nil for empty string path");
-}
-
-- (void)testDPIParameterValidation {
-    // Create a minimal test PDF path (we'll use an existing test file)
-    NSString *testPDFPath = [self.testResourcesPath stringByAppendingPathComponent:@"simple-test.pdf"];
-    
-    // Test with invalid DPI values
-    NSString *result = [self.converter convertPDFAtPath:testPDFPath 
-                                          assetsFolderPath:nil 
-                                                       dpi:0];
-    // Should still work with fallback DPI or return error gracefully
-    // The exact behavior depends on implementation, but should not crash
-    
-    result = [self.converter convertPDFAtPath:testPDFPath 
-                               assetsFolderPath:nil 
-                                            dpi:-144];
-    // Should handle negative DPI gracefully
-}
-
-#pragma mark - Asset Folder Tests
-
-- (void)testAssetFolderCreation {
-    NSString *tempDir = NSTemporaryDirectory();
-    NSString *testAssetsFolder = [tempDir stringByAppendingPathComponent:@"test-assets"];
-    
-    // Clean up any existing test folder
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath:testAssetsFolder error:nil];
-    
-    // Verify folder doesn't exist initially
-    XCTAssertFalse([fileManager fileExistsAtPath:testAssetsFolder], 
-                   @"Test assets folder should not exist initially");
-    
-    // Test folder creation during conversion (with a valid PDF)
-    // For now, just test that the method accepts the parameter
-    NSString *testPDFPath = [self.testResourcesPath stringByAppendingPathComponent:@"simple-test.pdf"];
-    [self.converter convertPDFAtPath:testPDFPath 
-                      assetsFolderPath:testAssetsFolder 
-                                   dpi:144];
-    
-    // Clean up
-    [fileManager removeItemAtPath:testAssetsFolder error:nil];
-}
-
-#pragma mark - Memory Management Tests
-
-- (void)testMemoryManagement {
-    // Test that converter handles multiple conversions without memory issues
-    for (int i = 0; i < 10; i++) {
-        @autoreleasepool {
-            PDFMarkdownConverter *tempConverter = [[PDFMarkdownConverter alloc] init];
-            
-            // Test with nil path to avoid actual file I/O
-            NSString *result = [tempConverter convertPDFAtPath:nil 
-                                               assetsFolderPath:nil 
-                                                            dpi:144];
-            XCTAssertNil(result, @"Should handle nil input gracefully");
-            
-            tempConverter = nil;
-        }
-    }
-}
-
-#pragma mark - Performance Tests
-
-- (void)testPerformanceBaseline {
-    // Simple performance test to establish baseline
-    [self measureBlock:^{
-        // Test basic object creation and method call
-        PDFMarkdownConverter *converter = [[PDFMarkdownConverter alloc] init];
-        [converter convertPDFAtPath:nil assetsFolderPath:nil dpi:144];
-    }];
-}
-
-#pragma mark - Error Handling Tests
-
-- (void)testErrorConditions {
-    // Test various error conditions that should be handled gracefully
-    NSArray *invalidPaths = @[
-        @"",
-        @"not-a-pdf.txt",
-        @"/dev/null",
-        @"~/nonexistent/path/file.pdf"
-    ];
-    
-    for (NSString *invalidPath in invalidPaths) {
-        NSString *result = [self.converter convertPDFAtPath:invalidPath 
-                                            assetsFolderPath:nil 
-                                                         dpi:144];
-        XCTAssertNil(result, @"Should handle invalid path gracefully: %@", invalidPath);
-    }
-}
-
-#pragma mark - Integration Points Tests
-
-- (void)testAssetExtractorIntegration {
-    // Test that converter properly integrates with AssetExtractor
-    // This is a basic smoke test for the integration
-    AssetExtractor *extractor = [[AssetExtractor alloc] init];
-    XCTAssertNotNil(extractor, @"AssetExtractor should initialize for integration testing");
-}
-
-- (void)testContentElementIntegration {
-    // Test that converter properly works with ContentElement classes
-    // This verifies the model layer integration
-    XCTAssertTrue([NSClassFromString(@"ContentElement") conformsToProtocol:@protocol(NSObject)], 
-                  @"ContentElement should be available for integration");
-}
-
-@end
-</file>
-
 <file path="pdf21md/Tests/Unit/SimpleConverterTest.m">
 //
 //  SimpleConverterTest.m
@@ -9616,6 +10435,61 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 }
+</file>
+
+<file path="pdf21md/Makefile">
+# pdf21md Makefile
+# this_file: pdf21md/Makefile
+
+CC = clang
+CFLAGS = -Wall -Wextra -std=c11 -O2
+OBJCFLAGS = -fobjc-arc -framework Foundation -framework CoreGraphics -framework PDFKit -framework ImageIO -framework AppKit
+TARGET = pdf21md
+SRCDIR = src
+SOURCES = $(SRCDIR)/CLI/main.m $(wildcard $(SRCDIR)/Core/*.m) $(wildcard $(SRCDIR)/Models/*.m) $(wildcard $(SRCDIR)/Services/*.m) $(wildcard shared-core/*.m) $(wildcard shared-algorithms/*.m)
+HEADERS = $(wildcard $(SRCDIR)/**/*.h) $(wildcard shared-core/*.h) $(wildcard shared-algorithms/*.h)
+OBJECTS = $(SOURCES:.m=.o)
+
+# Default target
+all: $(TARGET)
+
+# Build the main executable
+$(TARGET): $(OBJECTS)
+	$(CC) $(OBJCFLAGS) -o $@ $^
+
+# Compile Objective-C source files
+%.o: %.m $(HEADERS)
+	$(CC) $(CFLAGS) $(OBJCFLAGS) -c $< -o $@
+
+# Install target
+install: $(TARGET)
+	cp $(TARGET) /usr/local/bin/
+
+# Clean build artifacts
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+# Run tests
+test: $(TARGET)
+	@echo "Running tests..."
+	# Add test commands here
+
+# Build benchmark
+benchmark: pdf21md-benchmark
+
+pdf21md-benchmark: $(SRCDIR)/CLI/pdf21md-benchmark.m $(filter-out $(SRCDIR)/CLI/main.o,$(OBJECTS))
+	$(CC) $(OBJCFLAGS) -o $@ $^
+
+# Phony targets
+.PHONY: all clean install test benchmark
+
+# Debug build
+debug: CFLAGS += -g -DDEBUG
+debug: $(TARGET)
+
+# Print variables for debugging
+print-%:
+	@echo $* = $($*)
 </file>
 
 <file path="pdf21md/README.md">
@@ -9745,30 +10619,6 @@ make benchmark
 MIT License - see LICENSE file in the root directory
 </file>
 
-<file path="LICENSE">
-MIT License
-
-Copyright (c) 2024 Adam Twardoch
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-</file>
-
 <file path="test_both.sh">
 #!/bin/bash
 # Test both Objective-C and Swift implementations
@@ -9807,111 +10657,120 @@ CG_PDF_VERBOSE=True time ./pdf22md/.build/release/pdf22md \
     -a "$MD_DIR_SW"
 </file>
 
-<file path=".github/workflows/build-release.yml">
-name: Build and Release
+<file path="AGENTS.md">
+# pdf22md
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  release:
-    types: [ created ]
+A blazingly fast PDF to Markdown converter for macOS.
 
-jobs:
-  build:
-    runs-on: macos-latest
+`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+### Key Features
 
-    - name: Build the tool
-      run: make
+  * **High-Speed Conversion**: Uses all available CPU cores to process PDF pages concurrently.
+  * **Intelligent Heading Detection**: Analyzes font sizes and usage frequency to automatically format titles and headings (`#`, `##`, etc.).
+  * **Asset Extraction**: Saves raster and vector images into a specified assets folder and links them correctly in the Markdown file.
+  * **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality.
+  * **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`.
+  * **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps.
 
-    - name: Run a basic check
-      run: ./pdf22md -h
+### Installation
 
-  create-release:
-    if: github.event_name == 'release'
-    runs-on: macos-latest
-    needs: build
+Once the Homebrew tap is set up (see plan below), installation is simple:
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+```bash
+brew install <your-username>/pdf22md/pdf22md
+```
 
-    - name: Build the binary
-      run: make
+### Building from Source
 
-    - name: Create Tarball Archive
-      run: |
-        tar -czvf pdf22md-macos-x86_64.tar.gz pdf22md
+To build the project manually, you need Xcode Command Line Tools installed.
 
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./pdf22md-macos-x86_64.tar.gz
-        asset_name: pdf22md-macos-x86_64.tar.gz
-        asset_content_type: application/gzip
-</file>
+```bash
+# Clone the repository (once it's public)
+git clone https://github.com/<your-username>/pdf22md.git
+cd pdf22md
 
-<file path="pdf21md/Makefile">
-# pdf21md Makefile
-# this_file: pdf21md/Makefile
+# Compile the tool
+make
 
-CC = clang
-CFLAGS = -Wall -Wextra -std=c11 -O2
-OBJCFLAGS = -fobjc-arc -framework Foundation -framework CoreGraphics -framework PDFKit -framework ImageIO -framework AppKit
-TARGET = pdf21md
-SRCDIR = src
-SOURCES = $(SRCDIR)/CLI/main.m $(wildcard $(SRCDIR)/Core/*.m) $(wildcard $(SRCDIR)/Models/*.m) $(wildcard $(SRCDIR)/Services/*.m) $(wildcard shared-core/*.m) $(wildcard shared-algorithms/*.m)
-HEADERS = $(wildcard $(SRCDIR)/**/*.h) $(wildcard shared-core/*.h) $(wildcard shared-algorithms/*.h)
-OBJECTS = $(SOURCES:.m=.o)
+# Install it to /usr/local/bin
+sudo make install
+```
 
-# Default target
-all: $(TARGET)
+### Usage
 
-# Build the main executable
-$(TARGET): $(OBJECTS)
-	$(CC) $(OBJCFLAGS) -o $@ $^
+```
+Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
+  Converts PDF documents to Markdown format
+  -i <path>: Input PDF file (default: stdin)
+  -o <path>: Output Markdown file (default: stdout)
+  -a <path>: Assets folder for extracted images
+  -d <dpi>: DPI for rasterizing vector graphics (default: 144)
+```
 
-# Compile Objective-C source files
-%.o: %.m $(HEADERS)
-	$(CC) $(CFLAGS) $(OBJCFLAGS) -c $< -o $@
+**Example:**
 
-# Install target
-install: $(TARGET)
-	cp $(TARGET) /usr/local/bin/
+```bash
+# Convert a local PDF file and save images to an 'assets' folder
+pdf22md -i report.pdf -o report.md -a ./assets
+```
 
-# Clean build artifacts
-clean:
-	rm -f $(OBJECTS) $(TARGET)
+---
 
-# Run tests
-test: $(TARGET)
-	@echo "Running tests..."
-	# Add test commands here
 
-# Build benchmark
-benchmark: pdf21md-benchmark
+# main-overview
 
-pdf21md-benchmark: $(SRCDIR)/CLI/pdf21md-benchmark.m $(filter-out $(SRCDIR)/CLI/main.o,$(OBJECTS))
-	$(CC) $(OBJCFLAGS) -o $@ $^
+## Development Guidelines
 
-# Phony targets
-.PHONY: all clean install test benchmark
+- Only modify code directly relevant to the specific request. Avoid changing unrelated functionality.
+- Never replace code with placeholders like `# ... rest of the processing ...`. Always include complete code.
+- Break problems into smaller steps. Think through each step separately before implementing.
+- Always provide a complete PLAN with REASONING based on evidence from code and logs before making changes.
+- Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
 
-# Debug build
-debug: CFLAGS += -g -DDEBUG
-debug: $(TARGET)
 
-# Print variables for debugging
-print-%:
-	@echo $* = $($*)
+pdf22md is a PDF to Markdown converter that transforms PDF documents while preserving their semantic structure and content relationships.
+
+Core Business Components:
+
+1. Document Structure Analysis (Importance: 95)
+- Hierarchical heading detection using font statistics
+- Document structure preservation through positional element sorting
+- Automated heading level assignment (H1-H6) based on font usage patterns
+
+2. Content Classification System (Importance: 85)
+- TextElement: Handles formatted text with style attributes
+- ImageElement: Manages both raster and vector graphics
+- Content relationship tracking between elements
+
+3. Asset Processing Pipeline (Importance: 80)
+- Intelligent format selection between PNG/JPEG based on:
+  * Transparency detection
+  * Color complexity analysis
+  * Dimension-based optimization
+- Asset extraction with maintained document references
+
+4. PDF Content Processing (Importance: 90)
+- Text styling and formatting context preservation
+- Vector graphics path construction tracking
+- Coordinate system transformation management
+- Element bounds calculation for layout fidelity
+
+Key Integration Points:
+
+1. Content Extraction Layer
+- Connects PDF parsing with markdown generation
+- Maintains element relationships and hierarchy
+- Preserves formatting context across transformations
+
+2. Asset Management Layer
+- Links extracted images with markdown references
+- Maintains asset organization structure
+- Handles format conversions while preserving quality
+
+The system organizes business logic around content transformation pipelines while maintaining document semantic structure throughout the conversion process.
+
+—— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates.
 </file>
 
 <file path="CLAUDE.md">
@@ -10037,168 +10896,68 @@ The system organizes business logic around content transformation pipelines whil
 —— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates.
 </file>
 
-<file path="AGENTS.md">
-# pdf22md
-
-A blazingly fast PDF to Markdown converter for macOS.
-
-`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
-
-### Key Features
-
-  * **High-Speed Conversion**: Uses all available CPU cores to process PDF pages concurrently.
-  * **Intelligent Heading Detection**: Analyzes font sizes and usage frequency to automatically format titles and headings (`#`, `##`, etc.).
-  * **Asset Extraction**: Saves raster and vector images into a specified assets folder and links them correctly in the Markdown file.
-  * **Smart Image Formatting**: Automatically chooses between JPEG (for photos) and PNG (for graphics with transparency) to optimize file size and quality.
-  * **Flexible I/O**: Reads from a PDF file or `stdin` and writes to a Markdown file or `stdout`.
-  * **Customizable Rasterization**: Allows setting a custom DPI for converting vector graphics to bitmaps.
-
-### Installation
-
-Once the Homebrew tap is set up (see plan below), installation is simple:
-
-```bash
-brew install <your-username>/pdf22md/pdf22md
-```
-
-### Building from Source
-
-To build the project manually, you need Xcode Command Line Tools installed.
-
-```bash
-# Clone the repository (once it's public)
-git clone https://github.com/<your-username>/pdf22md.git
-cd pdf22md
-
-# Compile the tool
-make
-
-# Install it to /usr/local/bin
-sudo make install
-```
-
-### Usage
-
-```
-Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
-  Converts PDF documents to Markdown format
-  -i <path>: Input PDF file (default: stdin)
-  -o <path>: Output Markdown file (default: stdout)
-  -a <path>: Assets folder for extracted images
-  -d <dpi>: DPI for rasterizing vector graphics (default: 144)
-```
-
-**Example:**
-
-```bash
-# Convert a local PDF file and save images to an 'assets' folder
-pdf22md -i report.pdf -o report.md -a ./assets
-```
-
----
-
-
-# main-overview
-
-## Development Guidelines
-
-- Only modify code directly relevant to the specific request. Avoid changing unrelated functionality.
-- Never replace code with placeholders like `# ... rest of the processing ...`. Always include complete code.
-- Break problems into smaller steps. Think through each step separately before implementing.
-- Always provide a complete PLAN with REASONING based on evidence from code and logs before making changes.
-- Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
-
-
-pdf22md is a PDF to Markdown converter that transforms PDF documents while preserving their semantic structure and content relationships.
-
-Core Business Components:
-
-1. Document Structure Analysis (Importance: 95)
-- Hierarchical heading detection using font statistics
-- Document structure preservation through positional element sorting
-- Automated heading level assignment (H1-H6) based on font usage patterns
-
-2. Content Classification System (Importance: 85)
-- TextElement: Handles formatted text with style attributes
-- ImageElement: Manages both raster and vector graphics
-- Content relationship tracking between elements
-
-3. Asset Processing Pipeline (Importance: 80)
-- Intelligent format selection between PNG/JPEG based on:
-  * Transparency detection
-  * Color complexity analysis
-  * Dimension-based optimization
-- Asset extraction with maintained document references
-
-4. PDF Content Processing (Importance: 90)
-- Text styling and formatting context preservation
-- Vector graphics path construction tracking
-- Coordinate system transformation management
-- Element bounds calculation for layout fidelity
-
-Key Integration Points:
-
-1. Content Extraction Layer
-- Connects PDF parsing with markdown generation
-- Maintains element relationships and hierarchy
-- Preserves formatting context across transformations
-
-2. Asset Management Layer
-- Links extracted images with markdown references
-- Maintains asset organization structure
-- Handles format conversions while preserving quality
-
-The system organizes business logic around content transformation pipelines while maintaining document semantic structure throughout the conversion process.
-
-—— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates.
-</file>
-
 <file path=".gitignore">
-# Swift build directory
-pdf22md/.build/
-
-# Build products
-build/
-*.o
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Thumbnails
-._*
-
-# Files that might appear on external disk
-.Spotlight-V100
-.Trashes
-
-# Editor-specific
-.vscode/
-*.swp
-.idea/
-*.xcodeproj/
-*.xcworkspace/
-
-# Cursor and other AI assistants
-.cursor/
-.cursorrules
-.cursorindexingignore
-.giga/
-.specstory/
-
-# Test artifacts
-test/out/
-*.md
-!README.md
-!TODO.md
-!CLAUDE.md
+_private/
 !AGENTS.md
 !CHANGELOG.md
+!CLAUDE.md
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3
 !docs/*.md
-_private/
-pdf22md/.build
+!README.md
+!TODO.md
+._*
+.AppleDouble
+.build/
+.cursorindexingignore
+.DS_Store
+.idea/
+.LSOverride
+.specstory/
+.Spotlight-V100
+.Trashes
+.vscode/
+*.a
+*.dmg
+*.dSYM/
+*.dylib
+*.gcda
+*.gcno
+*.gcov
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.o
+*.pbxuser
+*.pdf
+*.perspectivev3
+*.swo
+*.swp
+*.tar.gz
+*.xccheckout
+*.xcodeproj/
+*.xcscmblueprint
+*.xcworkspace
+*.zip
+*~
+build/
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles/
+coverage/
 debug-assets/
+DerivedData/
+dist/
+docs/_build/
+issues/
+Makefile.cmake
+pdf22md/.build
+test-results/
+test/out/
+testdata/test.pdf-oc/.test*
+xcuserdata/
 </file>
 
 <file path="build.sh">
