@@ -6,9 +6,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Core/PDF22MDConverter.h"
-#import "Core/PDF22MDConversionOptions.h"
-#import "Core/PDF22MDError.h"
+#import "Core/PDF21MDConverter.h"
+#import "Core/PDF21MDConversionOptions.h"
+#import "Core/PDF21MDError.h"
 
 // Simple assertion macro for non-XCTest testing
 #define ASSERT(condition, message) \
@@ -25,33 +25,33 @@ int main(int argc, char *argv[]) {
         printf("==================================\n");
         
         // Test 1: Options initialization
-        PDF22MDConversionOptions *options = [[PDF22MDConversionOptions alloc] init];
+        PDF21MDConversionOptions *options = [[PDF21MDConversionOptions alloc] init];
         ASSERT(options != nil, "Options should initialize successfully");
         ASSERT(options.rasterizationDPI == 144.0, "Default DPI should be 144");
         
         // Test 2: Default options creation
-        PDF22MDConversionOptions *defaultOptions = [PDF22MDConversionOptions defaultOptions];
+        PDF21MDConversionOptions *defaultOptions = [PDF21MDConversionOptions defaultOptions];
         ASSERT(defaultOptions != nil, "Default options should initialize successfully");
         
         // Test 3: Error handling for nil URL
-        PDF22MDConverter *converter = [[PDF22MDConverter alloc] initWithPDFURL:nil];
+        PDF21MDConverter *converter = [[PDF21MDConverter alloc] initWithPDFURL:nil];
         ASSERT(converter == nil, "Should return nil for nil URL");
         
         // Test 4: Error handling for non-existent file  
         NSURL *nonExistentURL = [NSURL fileURLWithPath:@"/nonexistent/file.pdf"];
-        converter = [[PDF22MDConverter alloc] initWithPDFURL:nonExistentURL];
+        converter = [[PDF21MDConverter alloc] initWithPDFURL:nonExistentURL];
         ASSERT(converter == nil, "Should return nil for non-existent file");
         
         // Test 5: Error helper methods
-        NSError *testError = [PDF22MDErrorHelper invalidPDFError];
+        NSError *testError = [PDF21MDErrorHelper invalidPDFError];
         ASSERT(testError != nil, "Error helper should create error");
         ASSERT(testError.localizedDescription != nil, "Error should have localized description");
         ASSERT(testError.localizedDescription.length > 0, "Error description should not be empty");
         
         // Test 6: File not found error
-        NSError *fileError = [PDF22MDErrorHelper fileNotFoundErrorWithPath:@"/test/path"];
+        NSError *fileError = [PDF21MDErrorHelper fileNotFoundErrorWithPath:@"/test/path"];
         ASSERT(fileError != nil, "Should create file not found error");
-        ASSERT(fileError.code == PDF22MDErrorFileNotFound, "Should have correct error code");
+        ASSERT(fileError.code == PDF21MDErrorFileNotFound, "Should have correct error code");
         
         printf("\n🎉 All simple tests passed!\n");
         return 0;

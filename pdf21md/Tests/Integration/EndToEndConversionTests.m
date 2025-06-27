@@ -6,12 +6,12 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "PDF22MDConverter.h"
-#import "PDF22MDConversionOptions.h"
-#import "PDF22MDError.h"
+#import "PDF21MDConverter.h"
+#import "PDF21MDConversionOptions.h"
+#import "PDF21MDError.h"
 
 @interface EndToEndConversionTests : XCTestCase
-@property (nonatomic, strong) PDF22MDConverter *converter;
+@property (nonatomic, strong) PDF21MDConverter *converter;
 @property (nonatomic, strong) NSString *testResourcesPath;
 @property (nonatomic, strong) NSString *tempOutputPath;
 @end
@@ -20,7 +20,7 @@
 
 - (void)setUp {
     [super setUp];
-    self.converter = [[PDF22MDConverter alloc] init];
+    self.converter = [[PDF21MDConverter alloc] init];
     
     // Set up test resources path
     NSBundle *bundle = [NSBundle bundleForClass:[self class]];
@@ -52,7 +52,7 @@
         return;
     }
     
-    PDF22MDConversionOptions *options = [[PDF22MDConversionOptions alloc] init];
+    PDF21MDConversionOptions *options = [[PDF21MDConversionOptions alloc] init];
     options.assetsPath = [self.tempOutputPath stringByAppendingPathComponent:@"assets"];
     
     NSError *error = nil;
@@ -81,7 +81,7 @@
         return;
     }
     
-    PDF22MDConversionOptions *options = [[PDF22MDConversionOptions alloc] init];
+    PDF21MDConversionOptions *options = [[PDF21MDConversionOptions alloc] init];
     options.assetsPath = [self.tempOutputPath stringByAppendingPathComponent:@"assets"];
     options.dpi = 200; // Higher DPI for quality
     
@@ -119,7 +119,7 @@
         return;
     }
     
-    PDF22MDConversionOptions *options = [[PDF22MDConversionOptions alloc] init];
+    PDF21MDConversionOptions *options = [[PDF21MDConversionOptions alloc] init];
     options.assetsPath = [self.tempOutputPath stringByAppendingPathComponent:@"assets"];
     
     NSDate *startTime = [NSDate date];
@@ -148,7 +148,7 @@
         return;
     }
     
-    PDF22MDConversionOptions *options = [[PDF22MDConversionOptions alloc] init];
+    PDF21MDConversionOptions *options = [[PDF21MDConversionOptions alloc] init];
     
     NSError *error = nil;
     NSString *markdown = [self.converter convertPDFAtPath:testPDFPath 
@@ -176,7 +176,7 @@
         return;
     }
     
-    PDF22MDConversionOptions *options = [[PDF22MDConversionOptions alloc] init];
+    PDF21MDConversionOptions *options = [[PDF21MDConversionOptions alloc] init];
     
     NSError *error = nil;
     NSString *markdown = [self.converter convertPDFAtPath:testPDFPath 
@@ -185,14 +185,14 @@
     
     XCTAssertNil(markdown, @"Should not convert encrypted PDF without password");
     XCTAssertNotNil(error, @"Should return error for encrypted PDF");
-    XCTAssertEqual(error.code, PDF22MDErrorEncryptedPDF, @"Should return encrypted PDF error code");
+    XCTAssertEqual(error.code, PDF21MDErrorEncryptedPDF, @"Should return encrypted PDF error code");
 }
 
 #pragma mark - Memory Stress Tests
 
 - (void)testMemoryStabilityUnderLoad {
     // Test multiple conversions to ensure memory stability
-    PDF22MDConversionOptions *options = [[PDF22MDConversionOptions alloc] init];
+    PDF21MDConversionOptions *options = [[PDF21MDConversionOptions alloc] init];
     options.assetsPath = [self.tempOutputPath stringByAppendingPathComponent:@"stress-assets"];
     
     NSString *testPDFPath = [self.testResourcesPath stringByAppendingPathComponent:@"simple-text.pdf"];
@@ -226,7 +226,7 @@
         return;
     }
     
-    PDF22MDConversionOptions *options = [[PDF22MDConversionOptions alloc] init];
+    PDF21MDConversionOptions *options = [[PDF21MDConversionOptions alloc] init];
     
     NSError *error = nil;
     NSString *markdown = [self.converter convertPDFAtPath:testPDFPath 
@@ -249,7 +249,7 @@
         return;
     }
     
-    PDF22MDConversionOptions *options = [[PDF22MDConversionOptions alloc] init];
+    PDF21MDConversionOptions *options = [[PDF21MDConversionOptions alloc] init];
     
     NSError *error = nil;
     NSString *actualMarkdown = [self.converter convertPDFAtPath:testPDFPath 

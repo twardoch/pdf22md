@@ -3,8 +3,8 @@
 ## 🚨 PRIORITY 1: Implementation Renaming (pdf21md / pdf22md)
 
 ### Phase 1: Directory Renaming
-- [ ] Rename `pdf22md-objc/` directory to `pdf21md/`
-- [ ] Keep `pdf22md-swift/` directory as is
+- [x] Rename `pdf22md-objc/` directory to `pdf21md/`
+- [ ] Keep `pdf22md/` directory as is
 
 ### Phase 2: Objective-C Updates (pdf21md)
 #### Makefile
@@ -24,8 +24,8 @@
 - [ ] Update all `@class` forward declarations
 
 ### Phase 3: Swift Updates (pdf22md)
-- [ ] Update Package.swift: Change executable product name from `pdf22md-swift` to `pdf22md`
-- [ ] Update main.swift: Change `commandName` from `pdf22md-swift` to `pdf22md`
+- [ ] Update Package.swift: Change executable product name from `pdf22md` to `pdf22md`
+- [ ] Update main.swift: Change `commandName` from `pdf22md` to `pdf22md`
 
 ### Phase 4: Build Scripts
 - [ ] Update build.sh: Replace all `pdf22md-objc` with `pdf21md`
@@ -37,9 +37,9 @@
 ### Phase 5: Documentation Updates
 - [ ] Update README.md with new binary names
 - [ ] Update CHANGELOG.md with renaming entry
-- [ ] Update CLAUDE.md project description
+- [x] Update CLAUDE.md project description
 - [ ] Update pdf21md/README.md (formerly pdf22md-objc/README.md)
-- [ ] Update pdf22md-swift/README.md
+- [ ] Update pdf22md/README.md
 - [ ] Create/update man pages for pdf21md and pdf22md
 
 ## 🚨 PRIORITY 2: Fix Markdown Output Generation

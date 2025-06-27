@@ -1,4 +1,4 @@
-# pdf22md-objc
+# pdf21md
 
 A blazingly fast PDF to Markdown converter for macOS, built with Objective-C and optimized for performance using Grand Central Dispatch (GCD).
 
@@ -36,7 +36,7 @@ make clean
 # Compile manually
 clang -fobjc-arc -framework Foundation -framework CoreGraphics -framework PDFKit -framework ImageIO \
   src/CLI/*.m src/Core/*.m src/Models/*.m src/Services/*.m shared-core/*.m shared-algorithms/*.m \
-  -o pdf22md
+  -o pdf21md
 ```
 
 ## Installation
@@ -51,22 +51,22 @@ sudo make install
 
 ```bash
 # Convert a PDF file
-./pdf22md -i document.pdf -o document.md
+./pdf21md -i document.pdf -o document.md
 
 # Extract images to assets folder
-./pdf22md -i report.pdf -o report.md -a ./assets
+./pdf21md -i report.pdf -o report.md -a ./assets
 
 # Customize DPI for vector graphics
-./pdf22md -i large.pdf -o large.md -d 300
+./pdf21md -i large.pdf -o large.md -d 300
 
 # Use with pipes
-cat document.pdf | ./pdf22md > document.md
+cat document.pdf | ./pdf21md > document.md
 ```
 
 ### Command Line Options
 
 ```
-Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
+Usage: pdf21md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
   Converts PDF documents to Markdown format
   -i <path>: Input PDF file (default: stdin)
   -o <path>: Output Markdown file (default: stdout)
@@ -79,21 +79,21 @@ Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
 The Objective-C implementation is organized into several key components:
 
 ### Core Components
-- **PDF22MDConverter**: Main conversion coordinator
-- **PDF22MDPageProcessor**: Handles individual page processing
-- **PDF22MDFontAnalyzer**: Analyzes font usage for heading detection
-- **PDF22MDAssetManager**: Manages image extraction and saving
-- **PDF22MDMarkdownGenerator**: Generates final Markdown output
+- **PDF21MDConverter**: Main conversion coordinator
+- **PDF21MDPageProcessor**: Handles individual page processing
+- **PDF21MDFontAnalyzer**: Analyzes font usage for heading detection
+- **PDF21MDAssetManager**: Manages image extraction and saving
+- **PDF21MDMarkdownGenerator**: Generates final Markdown output
 
 ### Models
-- **PDF22MDContentElement**: Base protocol for content elements
-- **PDF22MDTextElement**: Represents text content with formatting
-- **PDF22MDImageElement**: Represents image content
+- **PDF21MDContentElement**: Base protocol for content elements
+- **PDF21MDTextElement**: Represents text content with formatting
+- **PDF21MDImageElement**: Represents image content
 
 ### Shared Components
-- **PDF22MDConstants**: Shared constants and configuration
-- **PDF22MDFileSystemUtils**: File system utilities
-- **PDF22MDImageFormatDetection**: Image format detection algorithms
+- **PDF21MDConstants**: Shared constants and configuration
+- **PDF21MDFileSystemUtils**: File system utilities
+- **PDF21MDImageFormatDetection**: Image format detection algorithms
 
 ## Testing
 
@@ -103,7 +103,7 @@ make test
 
 # Run benchmark
 make benchmark
-./pdf22md-benchmark
+./pdf21md-benchmark
 ```
 
 ## Performance

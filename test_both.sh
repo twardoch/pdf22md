@@ -22,14 +22,14 @@ MD_DIR_SW="$PDF_DIR/$PDF_NAME-sw"
 
 # Run Objective-C version
 echo "oc"
-CG_PDF_VERBOSE=True time ./pdf22md-objc/pdf22md \
+CG_PDF_VERBOSE=True time ./pdf21md/pdf21md \
     -i "$PDF" \
     -o "$MD_DIR_OC.md" \
     -a "$MD_DIR_OC"
 
 # Run Swift version
 echo "sw"
-CG_PDF_VERBOSE=True time ./pdf22md-swift/.build/release/pdf22md-swift \
+CG_PDF_VERBOSE=True time ./pdf22md/.build/release/pdf22md \
     -i "$PDF" \
     -o "$MD_DIR_SW.md" \
     -a "$MD_DIR_SW"

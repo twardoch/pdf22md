@@ -1,6 +1,6 @@
 //
 //  PDF21MDImageFormatDetection.h
-//  pdf22md - Shared Components
+//  pdf21md - Shared Components
 //
 //  Shared utility for determining optimal image format (JPEG vs PNG)
 //  based on image characteristics and source type.

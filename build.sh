@@ -1,7 +1,9 @@
 #!/bin/bash
 # Build script for pdf22md (both Objective-C and Swift versions)
 
-set -e  # Exit on any error
+set -e # Exit on any error
+
+npx repomix -o llms.txt .
 
 # Colors for output
 RED='\033[0;31m'
@@ -28,7 +30,7 @@ print_warning() {
 }
 
 # Check if we're in the right directory
-if [ ! -d "pdf22md-objc" ] || [ ! -d "pdf22md-swift" ]; then
+if [ ! -d "pdf21md" ] || [ ! -d "pdf22md" ]; then
     print_error "This script must be run from the pdf22md root directory"
     exit 1
 fi
@@ -42,59 +44,59 @@ BUILD_TYPE="release"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --objc-only)
-            BUILD_SWIFT=false
-            shift
-            ;;
-        --swift-only)
-            BUILD_OBJC=false
-            shift
-            ;;
-        --clean)
-            CLEAN=true
-            shift
-            ;;
-        --install)
-            INSTALL=true
-            shift
-            ;;
-        --debug)
-            BUILD_TYPE="debug"
-            shift
-            ;;
-        -h|--help)
-            echo "Usage: $0 [options]"
-            echo "Options:"
-            echo "  --objc-only      Build only the Objective-C version"
-            echo "  --swift-only     Build only the Swift version"
-            echo "  --clean          Clean build artifacts before building"
-            echo "  --install        Install binaries to /usr/local/bin after building"
-            echo "  --debug          Build in debug mode"
-            echo "  -h, --help       Show this help message"
-            exit 0
-            ;;
-        *)
-            print_error "Unknown option: $1"
-            exit 1
-            ;;
+    --objc-only)
+        BUILD_SWIFT=false
+        shift
+        ;;
+    --swift-only)
+        BUILD_OBJC=false
+        shift
+        ;;
+    --clean)
+        CLEAN=true
+        shift
+        ;;
+    --install)
+        INSTALL=true
+        shift
+        ;;
+    --debug)
+        BUILD_TYPE="debug"
+        shift
+        ;;
+    -h | --help)
+        echo "Usage: $0 [options]"
+        echo "Options:"
+        echo "  --objc-only      Build only the Objective-C version"
+        echo "  --swift-only     Build only the Swift version"
+        echo "  --clean          Clean build artifacts before building"
+        echo "  --install        Install binaries to /usr/local/bin after building"
+        echo "  --debug          Build in debug mode"
+        echo "  -h, --help       Show this help message"
+        exit 0
+        ;;
+    *)
+        print_error "Unknown option: $1"
+        exit 1
+        ;;
     esac
 done
 
 # Clean if requested
 if [ "$CLEAN" = true ]; then
     print_status "Cleaning build artifacts"
-    
+
     if [ "$BUILD_OBJC" = true ]; then
-        cd pdf22md-objc
-        make clean > /dev/null 2>&1 || true
+        cd pdf21md
+        make clean >/dev/null 2>&1 || true
         cd ..
         print_success "Cleaned Objective-C build artifacts"
     fi
-    
+
     if [ "$BUILD_SWIFT" = true ]; then
-        cd pdf22md-swift
-        swift package clean > /dev/null 2>&1 || true
-        rm -rf .build > /dev/null 2>&1 || true
+        cd pdf22md
+        swift package clean >/dev/null 2>&1 || true
+        rm -rf .build >/dev/null 2>&1 || true
         cd ..
         print_success "Cleaned Swift build artifacts"
     fi
@@ -103,86 +105,85 @@ fi
 # Build Objective-C version
 if [ "$BUILD_OBJC" = true ]; then
     print_status "Building Objective-C version"
-    cd pdf22md-objc
-    
+    cd pdf21md
+
     if [ "$BUILD_TYPE" = "debug" ]; then
         make debug
     else
         make
     fi
-    
+
     if [ $? -eq 0 ]; then
         print_success "Objective-C build completed successfully"
-        if [ -f "pdf22md" ]; then
-            print_success "Binary created: pdf22md-objc/pdf22md"
+        if [ -f "pdf21md" ]; then
+            print_success "Binary created: pdf21md/pdf21md"
         fi
     else
         print_error "Objective-C build failed"
         exit 1
     fi
-    
+
     cd ..
 fi
 
 # Build Swift version
 if [ "$BUILD_SWIFT" = true ]; then
     print_status "Building Swift version"
-    cd pdf22md-swift
-    
+    cd pdf22md
+
     if [ "$BUILD_TYPE" = "debug" ]; then
         swift build
     else
         swift build -c release
     fi
-    
+
     if [ $? -eq 0 ]; then
         print_success "Swift build completed successfully"
-        
+
         # Create a convenience symlink to the Swift binary
         if [ "$BUILD_TYPE" = "debug" ]; then
             SWIFT_BINARY=".build/debug/pdf22md"
         else
             SWIFT_BINARY=".build/release/pdf22md"
         fi
-        
+
         if [ -f "$SWIFT_BINARY" ]; then
-            ln -sf "$SWIFT_BINARY" pdf22md-swift
-            print_success "Binary created: pdf22md-swift/pdf22md-swift"
+            ln -sf "$SWIFT_BINARY" pdf22md
+            print_success "Binary created: pdf22md/pdf22md"
         fi
     else
         print_error "Swift build failed"
         exit 1
     fi
-    
+
     cd ..
 fi
 
 # Install if requested
 if [ "$INSTALL" = true ]; then
     print_status "Installing binaries"
-    
-    if [ "$BUILD_OBJC" = true ] && [ -f "pdf22md-objc/pdf22md" ]; then
-        sudo cp pdf22md-objc/pdf22md /usr/local/bin/pdf22md-objc
-        print_success "Installed pdf22md-objc to /usr/local/bin/"
+
+    if [ "$BUILD_OBJC" = true ] && [ -f "pdf21md/pdf21md" ]; then
+        sudo cp pdf21md/pdf21md /usr/local/bin/pdf21md
+        print_success "Installed pdf21md to /usr/local/bin/"
     fi
-    
+
     if [ "$BUILD_SWIFT" = true ]; then
         if [ "$BUILD_TYPE" = "debug" ]; then
-            SWIFT_BINARY="pdf22md-swift/.build/debug/pdf22md"
+            SWIFT_BINARY="pdf22md/.build/debug/pdf22md"
         else
-            SWIFT_BINARY="pdf22md-swift/.build/release/pdf22md"
+            SWIFT_BINARY="pdf22md/.build/release/pdf22md"
         fi
-        
+
         if [ -f "$SWIFT_BINARY" ]; then
-            sudo cp "$SWIFT_BINARY" /usr/local/bin/pdf22md-swift
-            print_success "Installed pdf22md-swift to /usr/local/bin/"
+            sudo cp "$SWIFT_BINARY" /usr/local/bin/pdf22md
+            print_success "Installed pdf22md to /usr/local/bin/"
         fi
     fi
-    
-    print_warning "Note: You may want to create a symlink to your preferred version:"
-    print_warning "  sudo ln -sf /usr/local/bin/pdf22md-objc /usr/local/bin/pdf22md"
-    print_warning "  or"
-    print_warning "  sudo ln -sf /usr/local/bin/pdf22md-swift /usr/local/bin/pdf22md"
+
+    print_warning "Note: Both versions are now installed:"
+    print_warning "  pdf21md - Objective-C implementation"
+    print_warning "  pdf22md - Swift implementation"
 fi
 
 print_success "Build completed successfully!"
@@ -190,16 +191,16 @@ print_success "Build completed successfully!"
 # Show summary
 echo
 print_status "Build Summary:"
-if [ "$BUILD_OBJC" = true ] && [ -f "pdf22md-objc/pdf22md" ]; then
-    echo "  • Objective-C binary: pdf22md-objc/pdf22md"
+if [ "$BUILD_OBJC" = true ] && [ -f "pdf21md/pdf21md" ]; then
+    echo "  • Objective-C binary: pdf21md/pdf21md"
 fi
 if [ "$BUILD_SWIFT" = true ]; then
     if [ "$BUILD_TYPE" = "debug" ]; then
-        echo "  • Swift binary: pdf22md-swift/.build/debug/pdf22md"
+        echo "  • Swift binary: pdf22md/.build/debug/pdf22md"
     else
-        echo "  • Swift binary: pdf22md-swift/.build/release/pdf22md"
+        echo "  • Swift binary: pdf22md/.build/release/pdf22md"
     fi
-    if [ -L "pdf22md-swift/pdf22md-swift" ]; then
-        echo "  • Swift symlink: pdf22md-swift/pdf22md-swift"
+    if [ -L "pdf22md/pdf22md" ]; then
+        echo "  • Swift symlink: pdf22md/pdf22md"
     fi
 fi

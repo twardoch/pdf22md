@@ -8,13 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **IMPLEMENTATION RENAMING**: 
+  - Renamed Objective-C implementation from `pdf22md-objc` to `pdf21md` (directory and binary)
+  - Renamed Swift implementation binary from `pdf22md` to `pdf22md`
+  - Updated all class prefixes from `PDF22MD` to `PDF21MD` in Objective-C implementation
+  - Updated all build scripts and documentation to reflect new naming
 - **MAJOR CODEBASE RESTRUCTURING**: Complete reorganization into two self-contained implementations
 - **Dual Implementation Architecture**: 
-  - `pdf22md-objc/`: Production-ready Objective-C implementation with full functionality
-  - `pdf22md-swift/`: Modern Swift library foundation with Swift Package Manager
+  - `pdf21md/`: Production-ready Objective-C implementation with full functionality
+  - `pdf22md/`: Modern Swift library foundation with Swift Package Manager
 - **Shared Component Integration**: Moved shared components to implementation-specific directories:
-  - `pdf22md-objc/shared-core/`: FileSystemUtils, Constants, ErrorFactory, ConcurrencyManager
-  - `pdf22md-objc/shared-algorithms/`: ImageFormatDetection
+  - `pdf21md/shared-core/`: FileSystemUtils, Constants, ErrorFactory, ConcurrencyManager
+  - `pdf21md/shared-algorithms/`: ImageFormatDetection
 - **Build System Consolidation**: 
   - Created self-contained Makefile for Objective-C implementation
   - Simplified Swift Package Manager manifest for Swift implementation
@@ -31,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Test resources and test suites
   - Documentation and usage examples
   - Shared components integrated locally
-- **Production-Ready Objective-C**: Fully functional `pdf22md` executable with:
+- **Production-Ready Objective-C**: Fully functional `pdf21md` executable with:
   - Complete PDF-to-Markdown conversion
   - Parallel processing with GCD
   - Smart image extraction and format detection
@@ -52,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Build System Issues**: 
+  - Resolved module cache issues in Swift build.
   - Resolved duplicate main symbol errors in Objective-C build
   - Fixed import path references for shared components
   - Corrected Swift Package Manager manifest syntax errors
@@ -95,26 +101,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package installer (.pkg) generation for macOS
 
 ### Changed
-- Restructured project with separate directories for each implementation (pdf22md-objc, pdf22md-swift)
+- Restructured project with separate directories for each implementation (pdf21md, pdf22md)
 - Moved test files and resources to implementation-specific directories
 - Updated object file compilation commands in build scripts
 
 ### Improved
 - Build scripts now provide clearer guidance when Swift toolchain is corrupted
 - Swift build failures are handled more gracefully with specific remediation steps
-- Build process for pdf22md-objc to resolve duplicate symbol errors
+- Build process for pdf21md to resolve duplicate symbol errors
 - Error reporting now includes process IDs for easier debugging
 - Conversion feedback with detailed status messages during operations
 
 ### Fixed
-- Duplicate symbol errors in pdf22md-objc build process
+- Duplicate symbol errors in pdf21md build process
 - Build script compatibility issues with object file handling
 - PDF processing hang issue with timeout implementation
 - Memory leaks in asset management
 
 ### Removed
 - Legacy archived-old-implementation directory (2,000+ lines of obsolete code)
-- Duplicate build scripts (pdf22md-objc/build.sh, release.sh, run-tests.sh)
+- Duplicate build scripts (pdf21md/build.sh, release.sh, run-tests.sh)
 - Duplicate README files and documentation
 - Duplicate PARALLEL_PROCESSING.md files across implementations
 - Resolved issue files (102, 201) after fixing Swift toolchain problems
@@ -122,7 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **210+ duplicate test images** across 3 implementations (58MB saved)
 - **Duplicate PDF test files** across implementations
 - **Duplicate man pages** from implementation directories
-- **Duplicate Swift build scripts** (pdf22md-swift/build.sh, release.sh)
+- **Duplicate Swift build scripts** (pdf22md/build.sh, release.sh)
 
 ### Streamlined
 - **File system operations**: Consolidated NSFileManager patterns from 4+ files into PDF22MDFileSystemUtils (~150 lines eliminated)

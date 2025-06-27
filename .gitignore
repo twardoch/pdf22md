@@ -1,5 +1,5 @@
 # Swift build directory
-pdf22md-swift/.build/
+pdf22md/.build/
 
 # Build products
 build/
@@ -41,5 +41,5 @@ test/out/
 !CHANGELOG.md
 !docs/*.md
 _private/
-pdf22md-swift/.build
+pdf22md/.build
 debug-assets/

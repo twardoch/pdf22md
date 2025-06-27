@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <PDFKit/PDFKit.h>
-#import "../Core/PDF22MDConverter.h"
-#import "../Core/PDF22MDConversionOptions.h"
+#import "../Core/PDF21MDConverter.h"
+#import "../Core/PDF21MDConversionOptions.h"
 
 #ifndef VERSION
 #define VERSION "1.0.0"
@@ -20,7 +20,7 @@ void printUsage(const char *programName) {
 }
 
 void printVersion() {
-    printf("pdf22md version %s\n", VERSION);
+    printf("pdf21md version %s\n", VERSION);
 }
 
 int main(int argc, const char *argv[]) {
@@ -88,7 +88,7 @@ int main(int argc, const char *argv[]) {
         }
         
         // Initialize converter
-        PDF22MDConverter *converter = nil;
+        PDF21MDConverter *converter = nil;
         
         if (inputPath) {
             // Read from file
@@ -96,7 +96,7 @@ int main(int argc, const char *argv[]) {
             if (debugMode) {
                 fprintf(stderr, "[DEBUG] Loading PDF from: %s\n", [inputPath UTF8String]);
             }
-            converter = [[PDF22MDConverter alloc] initWithPDFURL:pdfURL];
+            converter = [[PDF21MDConverter alloc] initWithPDFURL:pdfURL];
             if (!converter) {
                 fprintf(stderr, "Failed to load PDF from: %s\n", [inputPath UTF8String]);
                 return 1;
@@ -114,7 +114,7 @@ int main(int argc, const char *argv[]) {
                 return 1;
             }
             
-            converter = [[PDF22MDConverter alloc] initWithPDFData:pdfData];
+            converter = [[PDF21MDConverter alloc] initWithPDFData:pdfData];
             if (!converter) {
                 fprintf(stderr, "Failed to create PDF document from stdin data\n");
                 return 1;
@@ -122,7 +122,7 @@ int main(int argc, const char *argv[]) {
         }
         
         // Create conversion options
-        PDF22MDConversionOptionsBuilder *builder = [[PDF22MDConversionOptionsBuilder alloc] init];
+        PDF21MDConversionOptionsBuilder *builder = [[PDF21MDConversionOptionsBuilder alloc] init];
         builder.assetsFolderPath = assetsPath;
         builder.rasterizationDPI = dpi;
         builder.extractImages = (assetsPath != nil);
@@ -143,7 +143,7 @@ int main(int argc, const char *argv[]) {
             };
         }
         
-        PDF22MDConversionOptions *options = [builder build];
+        PDF21MDConversionOptions *options = [builder build];
         
         if (debugMode) {
             fprintf(stderr, "[DEBUG] Starting conversion...\n");

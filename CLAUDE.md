@@ -1,8 +1,8 @@
 # pdf22md
 
-A blazingly fast PDF to Markdown converter for macOS.
+A blazingly fast PDF to Markdown converter for macOS, available in two implementations: `pdf21md` (Objective-C) and `pdf22md` (Swift).
 
-`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
+`pdf21md` and `pdf22md` are command-line tools that extract all text and image content from a PDF file and convert it into a clean Markdown document. The Objective-C version (`pdf21md`) uses Grand Central Dispatch (GCD) while the Swift version (`pdf22md`) uses modern async/await for parallel processing, making both exceptionally fast for multi-page documents.
 
 ### Key Features
 
@@ -30,11 +30,15 @@ To build the project manually, you need Xcode Command Line Tools installed.
 git clone https://github.com/<your-username>/pdf22md.git
 cd pdf22md
 
-# Compile the tool
+# For Objective-C version (pdf21md)
+cd pdf21md
 make
-
-# Install it to /usr/local/bin
 sudo make install
+
+# For Swift version (pdf22md)
+cd ../pdf22md
+swift build -c release
+sudo cp .build/release/pdf22md /usr/local/bin/
 ```
 
 ### Usage
@@ -51,7 +55,10 @@ Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
 **Example:**
 
 ```bash
-# Convert a local PDF file and save images to an 'assets' folder
+# Convert using Objective-C version
+pdf21md -i report.pdf -o report.md -a ./assets
+
+# Or using Swift version
 pdf22md -i report.pdf -o report.md -a ./assets
 ```
 
