@@ -1,3 +1,6 @@
+# Swift build directory
+pdf22md-swift/.build/
+
 # Build products
 build/
 *.o
