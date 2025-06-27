@@ -78,12 +78,16 @@ final class PDFPageProcessor {
     }
     
     private func getBounds(for range: NSRange) -> CGRect {
-        // Get selection bounds for the text range
-        if let selection = pdfPage.selection(for: CGRect(x: 0, y: 0, width: 1000, height: 1000)) {
-            let bounds = selection.bounds(for: pdfPage)
-            return bounds
+        guard range.location != NSNotFound, range.length > 0 else {
+            return .zero
         }
-        return .zero
+        
+        // Use characterBounds which is much more efficient than creating selections.
+        // We union the bounds of the first and last character for a good approximation.
+        let startBounds = pdfPage.characterBounds(at: range.location)
+        let endBounds = pdfPage.characterBounds(at: NSMaxRange(range) - 1)
+        
+        return startBounds.union(endBounds)
     }
     
     private func extractImageElements() -> [ImageElement] {

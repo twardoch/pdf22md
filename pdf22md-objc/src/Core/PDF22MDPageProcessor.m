@@ -6,6 +6,7 @@
 
 #if TARGET_OS_MAC && !TARGET_OS_IPHONE
 #import <AppKit/AppKit.h>
+#import <AppKit/NSAttributedString.h>
 #else
 #import <UIKit/UIKit.h>
 #endif
@@ -54,62 +55,41 @@
     NSMutableArray<id<PDF22MDContentElement>> *elements = [NSMutableArray array];
     
     @try {
-        // Extract text using PDFKit's high-level API
-        NSString *pageText = [self.pdfPage string];
-        if (!pageText || pageText.length == 0) {
-            return elements;
-        }
-    
-    // Get page bounds for positioning
-    CGRect pageRect = [self.pdfPage boundsForBox:kPDFDisplayBoxMediaBox];
-    CGFloat pageHeight = CGRectGetHeight(pageRect);
-    
-    // Split into paragraphs while preserving structure
-    NSArray<NSString *> *paragraphs = [self extractParagraphsFromPageText:pageText];
-    
-    // Create text elements with approximate positioning
-    CGFloat cursorY = pageHeight - 20; // Start near top with margin
-    CGFloat lineHeight = 14.0; // Default line height
-    CGFloat paragraphSpacing = lineHeight * 0.5;
-    
-    for (NSString *paragraph in paragraphs) {
-        NSString *trimmed = [paragraph stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-        if (trimmed.length == 0) {
-            cursorY -= paragraphSpacing;
-            continue;
-        }
+        // Use selections to iterate through text and get attributes
+        // This is more robust than iterating through the attributed string directly
+        PDFSelection *selection = [self.pdfPage selectionForRect:[self.pdfPage boundsForBox:kPDFDisplayBoxMediaBox]];
+        NSArray<PDFSelection *> *selections = [selection selectionsByLine];
         
-        // Try to extract font information from PDF selections (with timeout protection)
-        NSDictionary *fontInfo = @{@"fontName": @"Unknown", @"fontSize": @12.0, @"isBold": @NO, @"isItalic": @NO};
-        @try {
-            // This operation can hang on malformed PDFs, so we wrap it in a try-catch
-            PDFSelection *selection = [self.pdfPage selectionForRange:NSMakeRange(0, MIN(trimmed.length, 100))];
-            if (selection) {
-                fontInfo = [self extractFontInfoFromSelection:selection] ?: fontInfo;
+        for (PDFSelection *lineSelection in selections) {
+            NSString *text = [lineSelection string];
+            NSString *trimmed = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+            
+            if (trimmed.length > 0) {
+                CGRect bounds = [lineSelection boundsForPage:self.pdfPage];
+                NSAttributedString *attributedString = [lineSelection attributedString];
+                
+                if (attributedString.length > 0) {
+                    NSDictionary *attributes = [attributedString attributesAtIndex:0 effectiveRange:NULL];
+                    NSFont *font = attributes[NSFontAttributeName];
+                    
+                    NSString *fontName = font.fontName ?: @"Helvetica";
+                    CGFloat fontSize = font.pointSize ?: 12.0;
+                    BOOL isBold = (font.fontDescriptor.symbolicTraits & NSFontBoldTrait) != 0;
+                    BOOL isItalic = (font.fontDescriptor.symbolicTraits & NSFontItalicTrait) != 0;
+                    
+                    PDF22MDTextElement *element = [[PDF22MDTextElement alloc] initWithText:trimmed
+                                                                                    bounds:bounds
+                                                                                 pageIndex:self.pageIndex
+                                                                                  fontName:fontName
+                                                                                  fontSize:fontSize
+                                                                                    isBold:isBold
+                                                                                  isItalic:isItalic];
+                    [elements addObject:element];
+                }
             }
-        } @catch (NSException *exception) {
-            // If font extraction fails, continue with defaults
-            NSLog(@"Warning: Font extraction failed for page %ld: %@", (long)self.pageIndex, exception.reason);
         }
-        
-        PDF22MDTextElement *element = [[PDF22MDTextElement alloc] initWithText:trimmed
-                                                                        bounds:CGRectMake(20, cursorY - lineHeight, pageRect.size.width - 40, lineHeight)
-                                                                     pageIndex:self.pageIndex
-                                                                      fontName:fontInfo[@"fontName"]
-                                                                      fontSize:[fontInfo[@"fontSize"] doubleValue]
-                                                                        isBold:[fontInfo[@"isBold"] boolValue]
-                                                                      isItalic:[fontInfo[@"isItalic"] boolValue]];
-        
-        [elements addObject:element];
-        
-        // Update cursor position
-        NSInteger lineCount = [self estimateLineCountForText:trimmed inWidth:pageRect.size.width - 40];
-        cursorY -= (lineHeight * lineCount + paragraphSpacing);
-        }
-        
     } @catch (NSException *exception) {
         NSLog(@"Error extracting text from page %ld: %@", (long)self.pageIndex, exception.reason);
-        // Return empty array on error rather than crashing
         return @[];
     }
     

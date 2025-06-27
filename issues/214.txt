@@ -1,0 +1,52 @@
+Completely rewrite PLAN.md and also adjust TODO.md as a linearized itemized version of PLAN.md to reflect the actual steps we need to do next, given the following priorities: 
+
+## Task 1
+Above all prioritize the following in PLAN.md and TODO: we want the ObjC implementation to be   called 'pdf21md' and the Swift implementation to be called 'pdf22md'. The entire project   must be reorganized around that. Analyze the current project and into PLAN.md as the topmost   priority write the steps that we need to take to make it happen. Make sure to plan for   adjusting all necessary core and auxiliary files. 
+
+## Task 2
+Improve code based on this: When I run `./test_both.sh` then both implementations compile, and then both output 134 PNGs into the specified asset folders, but none implementation produces the actual Markdown files which are the MAIN purpose of the whole exercise. Instead, we get this output: 
+
+```
+==> Building Objective-C version
+make: Nothing to be done for `all'.
+✓ Objective-C build completed successfully
+✓ Binary created: pdf22md-objc/pdf22md
+==> Building Swift version
+[1/1] Planning build
+Building for production...
+/Users/adam/Developer/vcs/github.twardoch/pub/pdf22md/pdf22md-swift/Sources/PDF22MD/PDFPageProcessorOptimized.swift:70:17: warning: initialization of immutable value 'fontName' was never used; consider replacing with assignment to '_' or removing it
+ 68 |             // Extract font information using cached values
+ 69 |             var fontSize: CGFloat = 12.0
+ 70 |             let fontName = "Helvetica"
+    |                 `- warning: initialization of immutable value 'fontName' was never used; consider replacing with assignment to '_' or removing it
+ 71 |             var isBold = false
+ 72 |             var isItalic = false
+[6/6] Compiling PDF22MDCli main.swift
+Build complete! (14.94s)
+✓ Swift build completed successfully
+✓ Build completed successfully!
+==> Build Summary:
+  • Objective-C binary: pdf22md-objc/pdf22md
+  • Swift binary: pdf22md-swift/.build/release/pdf22md
+oc
+.notdef: no mapping.
+can't create CMap `Adobe-Identity-UCS2'.
+can't create CMap `Adobe-Identity-UCS2'..notdef: no mapping.
+CTLD took 0.000514984 seconds
+can't create CMap `Adobe-Identity-UCS2'.CTLD took 0.000735998 seconds
+CTLD took 0.000614047 seconds
+CTLD took 0.000527024 secondsCTLD took 0.000769019 seconds
+CTLD took 0.00062108 seconds
+CTLD took 0.000742078 seconds.notdef: no mapping.
+CTLD took 0.00069201 seconds.notdef: no mapping.
+CTLD took 0.000601888 seconds.notdef: no mapping.
+CTLD took 0.000251055 seconds.notdef: no mapping.
+CTLD took 0.00041306 seconds
+CTLD took 0.000160098 seconds
+CTLD took 0.000663042 seconds
+CTLD took 0.00299895 seconds
+CTLD took 0.00113595 seconds
+CTLD took 0.002321 seconds
+^Ctime: command terminated abnormally
+       61.92 real         0.07 user         0.04 sys
+```
