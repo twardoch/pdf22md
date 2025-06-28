@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Proper XObject Image Extraction**: Implemented extraction of embedded images from PDF XObject streams
+- **Conditional Asset Processing**: Only process images when `-a`/`--assets` flag is provided
+- **Improved Asset Naming**: Assets now named as `basename-pagenumber-assetnumber.ext` with proper padding
+
 ### Changed
 - **IMPLEMENTATION RENAMING**: 
   - Renamed Objective-C implementation from `pdf22md-objc` to `pdf21md` (directory and binary)

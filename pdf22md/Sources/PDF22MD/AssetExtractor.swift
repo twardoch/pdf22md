@@ -20,31 +20,50 @@ final class AssetExtractor {
         }
     }
     
-    /// Save an image asset and return the relative path for markdown reference
+    /// Save an image asset and return the (relative) path to be used in Markdown.
+    ///
+    /// The returned string now always contains the **assets directory prefix** so that
+    /// generated Markdown references point to the actual file location, e.g.
+    /// `assets/report-001-01.png`.
+    /// - Note: If the provided `assetsPath` is absolute, the absolute path is returned.
+    ///         If it is relative (e.g. `./assets` or `assets`), the same relative prefix
+    ///         will be included in the returned value.
     func saveImage(_ image: CGImage, pageIndex: Int, isVector: Bool) -> String? {
         guard let assetsPath = assetsPath else { return nil }
         
-        // Get or initialize count for this page
+        // Increment asset counter for the current page
         let assetNumber = (pageImageCounts[pageIndex] ?? 0) + 1
         pageImageCounts[pageIndex] = assetNumber
         
-        // Determine format based on image characteristics
+        // Decide on output format
         let format = shouldUsePNG(for: image) ? "png" : "jpg"
         
-        // Create filename: basename-pagenumber-assetnumber.ext
-        let fileName = String(format: "%@-%03d-%02d.%@", 
-                            pdfBasename, 
-                            pageIndex + 1,  // Convert to 1-based page numbering
-                            assetNumber, 
-                            format)
+        // Construct file name: <basename>-<page>-<asset>.<ext>
+        let fileName = String(
+            format: "%@-%03d-%02d.%@",
+            pdfBasename,
+            pageIndex + 1,
+            assetNumber,
+            format
+        )
+        
+        // Full filesystem path where the image will be saved
         let filePath = (assetsPath as NSString).appendingPathComponent(fileName)
         
-        // Save the image
-        let saved = format == "png" 
-            ? savePNG(image, to: filePath)
-            : saveJPEG(image, to: filePath)
+        // Persist the image to disk
+        let saved: Bool = format == "png" ? savePNG(image, to: filePath) : saveJPEG(image, to: filePath)
         
-        return saved ? fileName : nil
+        guard saved else { return nil }
+        
+        // Return the path that should be placed in Markdown. Prefer a *relative* path
+        // when the assets directory itself is relative; otherwise fall back to absolute.
+        if (assetsPath as NSString).isAbsolutePath {
+            return filePath
+        } else {
+            // Remove leading "./" if present for cleaner Markdown
+            let cleanedAssetsPath = assetsPath.hasPrefix("./") ? String(assetsPath.dropFirst(2)) : assetsPath
+            return (cleanedAssetsPath as NSString).appendingPathComponent(fileName)
+        }
     }
     
     private func shouldUsePNG(for image: CGImage) -> Bool {

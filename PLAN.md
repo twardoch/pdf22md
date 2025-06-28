@@ -35,7 +35,7 @@ The current Swift implementation has the following structure:
 #### 2.1 Implement Real PDF XObject Image Extraction
 Based on the tutorial in `Report_PDF_Parsing.md`, we need to:
 - Access the page's CGPDFPage reference from PDFPage
-- Navigate the PDF structure: Page � Resources � XObject dictionary
+- Navigate the PDF structure: Page → Resources → XObject dictionary
 - Iterate through XObject entries and filter for Subtype "Image"
 - Extract image data using CGPDFStreamCopyData
 - Handle different image formats (JPEG, JPEG2000, raw bitmap data)
@@ -45,7 +45,7 @@ Replace the current annotation-based approach with proper XObject extraction:
 ```swift
 // New approach structure:
 1. Get CGPDFPage from PDFPage.pageRef
-2. Get page dictionary � Resources � XObject
+2. Get page dictionary → Resources → XObject
 3. Iterate XObject entries with CGPDFDictionaryApplyBlock
 4. Check if entry is stream with Subtype "Image"
 5. Extract image data and format
@@ -79,6 +79,14 @@ For the initial implementation, use a pragmatic approach:
 - Pass PDF basename to AssetExtractor
 - Ensure markdown image references use correct relative paths
 - Handle cases where assets folder is not provided (skip image references)
+
+#### 4.3 Correct Markdown Image Path Handling
+- Ensure the path returned by `AssetExtractor.saveImage` includes the relative assets folder prefix so that the generated Markdown points to the **actual** asset location (e.g. `assets/report-001-01.png` instead of just `report-001-01.png`).
+- Pass the *relative* assets directory (derived from the `-a/--assets` argument) into the Markdown generator so the converter can build correct paths regardless of where the output Markdown file resides.
+- Add unit tests that verify the generated Markdown contains valid image links when:
+  * the assets directory is a sibling of the Markdown file (common case: `./assets`)
+  * the assets directory is an absolute path elsewhere on disk
+- Fail gracefully (log a warning) if the computed relative path cannot be determined, falling back to the absolute path so links still work.
 
 ### Phase 5: Testing and Refinement
 
@@ -133,8 +141,9 @@ Future enhancement could include:
 2. **Proper Naming**: Assets follow the naming convention `basename-pagenumber-assetnumber.ext`
 3. **Conditional Processing**: No image processing occurs when `-a` is not provided
 4. **Vector Graphics**: Vector graphics are detected and rasterized at specified DPI
-5. **Performance**: Maintains concurrent processing capabilities
-6. **Compatibility**: Works with various PDF types and image formats
+5. **Markdown Links**: All image references in the generated Markdown resolve to existing files in the assets folder (verified by tests)
+6. **Performance**: Maintains concurrent processing capabilities
+7. **Compatibility**: Works with various PDF types and image formats
 
 ## Risk Mitigation
 

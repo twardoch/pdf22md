@@ -123,9 +123,24 @@ public final class PDFMarkdownConverterOptimized {
         // Extract PDF basename for asset naming
         let pdfBasename = pdfURL.deletingPathExtension().lastPathComponent
         let assetExtractor = AssetExtractor(assetsPath: assetsPath, pdfBasename: pdfBasename)
+        
+        // Sort elements by page and vertical position (like the regular converter)
+        let sortedElements = elements.sorted { lhs, rhs in
+            if lhs.pageIndex != rhs.pageIndex {
+                return lhs.pageIndex < rhs.pageIndex
+            }
+            // Sort top to bottom (flip Y coordinate)
+            return lhs.bounds.origin.y > rhs.bounds.origin.y
+        }
+        
         var previousElement: PDFElement?
         
-        for element in elements {
+        for element in sortedElements {
+            // Add page breaks
+            if let prev = previousElement, prev.pageIndex != element.pageIndex {
+                markdown.append("\n---\n\n")
+            }
+            
             switch element {
             case let textElement as TextElement:
                 let headingLevel = fontStats.headingLevel(for: textElement.fontSize)
@@ -170,7 +185,8 @@ public final class PDFMarkdownConverterOptimized {
             previousElement = element
         }
         
-        return (markdown as String).trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalMarkdown = (markdown as String).trimmingCharacters(in: .whitespacesAndNewlines)
+        return finalMarkdown
     }
     
     private func shouldAddLineBreak(current: PDFElement, previous: PDFElement?) -> Bool {

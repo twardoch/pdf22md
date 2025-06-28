@@ -78,7 +78,14 @@ final class PDFPageProcessor {
                 textElements.append(element)
             }
             
-            currentPosition = NSMaxRange(effectiveRange)
+            // Prevent infinite loop: ensure we always advance
+            let nextPosition = NSMaxRange(effectiveRange)
+            if nextPosition <= currentPosition {
+                // Safety: advance by at least 1 if range didn't advance
+                currentPosition += 1
+            } else {
+                currentPosition = nextPosition
+            }
         }
         
         return textElements
