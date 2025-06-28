@@ -61,3 +61,4 @@ test/out/
 testdata/test.pdf-oc/.test*
 xcuserdata/
 .DS_Store
+/testdata
