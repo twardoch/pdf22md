@@ -7,10 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **MAJOR**: Removed Objective-C implementation (`pdf21md`) - project is now Swift-only
+- **Build System**: Replaced build.sh with Makefile supporting `make build`, `make install`, and `make dist`
+- **Distribution**: Added automated .pkg and .dmg creation for macOS installation
+- **CI/CD**: Added GitHub Actions workflow for automated builds and releases on semver tags
+- **Documentation**: Updated all documentation to reflect Swift-only implementation
+
 ### Added
+- **Makefile**: Comprehensive build automation with targets for building, installing, and packaging
+- **GitHub Actions**: Automated release workflow that creates DMG installers on version tags
 - **Proper XObject Image Extraction**: Implemented extraction of embedded images from PDF XObject streams
 - **Conditional Asset Processing**: Only process images when `-a`/`--assets` flag is provided
 - **Improved Asset Naming**: Assets now named as `basename-pagenumber-assetnumber.ext` with proper padding
+
+## [1.4.2] - 2024-11-07
 
 ### Changed
 - **IMPLEMENTATION RENAMING**: 

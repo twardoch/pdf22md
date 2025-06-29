@@ -1,35 +1,12 @@
-# PDF to Markdown Converter - Implementation Tasks
+# PDF to Markdown Converter
 
-## Phase 1: Conditional Asset Processing
-- [x] Update PDFMarkdownConverter to pass assets path to PDFPageProcessor
-- [x] Modify PDFPageProcessor.processPage() to skip image extraction when assetsPath is nil
-- [x] Update AssetExtractor init to only create directory when assetsPath is provided
-- [x] Update PDFMarkdownConverterOptimized to pass assetsPath
-- [x] Update PDFPageProcessorOptimized to conditionally extract images
-- [x] Update PDFMarkdownConverterUltraOptimized to pass assetsPath
-- [x] Test that no image processing occurs when -a flag is not provided
+## Phase 1: Swift-Only Implementation ✅
+- [x] Remove all traces of pdf21md (Objective-C implementation)
+- [x] Create Makefile with build, install, and dist targets
+- [x] Implement .pkg creation for installation to /usr/local/bin
+- [x] Implement .dmg creation containing the .pkg installer
+- [x] Create GitHub Action for automated builds and releases on semver tags      
 
-## Phase 2: Asset Naming Updates
-- [x] Add pdfBasename parameter to AssetExtractor initializer
-- [x] Update AssetExtractor.saveImage to use new naming format: `basename-pagenum-assetnum.ext`
-- [x] Implement 3-digit zero-padding for page numbers
-- [x] Implement 2-digit zero-padding for asset numbers per page
-- [x] Reset asset counter for each page (using pageImageCounts dictionary)
-- [x] Update PDFMarkdownConverter to extract basename from PDF URL
-- [x] Pass basename and page index to AssetExtractor
-- [x] Update PDFMarkdownConverterOptimized to use new AssetExtractor API
-
-## Phase 3: XObject Image Extraction
-- [x] Create new extractXObjectImages method in CGPDFImageExtractor
-- [x] Implement CGPDFPage dictionary navigation (Page → Resources → XObject)
-- [x] Add CGPDFDictionaryApplyBlock to iterate XObject entries
-- [x] Filter for streams with Subtype "Image"
-- [x] Extract image data using CGPDFStreamCopyData
-- [x] Handle JPEG encoded format (save directly)
-- [x] Handle JPEG2000 format (save with .jp2 extension)
-- [x] Handle raw bitmap data (create CGImage with color space info)
-- [x] Add image bounds calculation from stream dictionary
-- [x] Replace annotation-based extraction with XObject extraction
 
 ## Phase 4: Vector Graphics Improvements
 - [ ] Simplify grid-based approach to use larger sections

@@ -1,8 +1,8 @@
 # pdf22md
 
-A blazingly fast PDF to Markdown converter for macOS, available in two implementations: `pdf21md` (Objective-C) and `pdf22md` (Swift).
+A blazingly fast PDF to Markdown converter for macOS.
 
-`pdf21md` and `pdf22md` are command-line tools that extract all text and image content from a PDF file and convert it into a clean Markdown document. The Objective-C version (`pdf21md`) uses Grand Central Dispatch (GCD) while the Swift version (`pdf22md`) uses modern async/await for parallel processing, making both exceptionally fast for multi-page documents.
+`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. Built with Swift and using modern async/await for parallel processing, it's exceptionally fast for multi-page documents.
 
 ### Key Features
 
@@ -15,10 +15,10 @@ A blazingly fast PDF to Markdown converter for macOS, available in two implement
 
 ### Installation
 
-Once the Homebrew tap is set up (see plan below), installation is simple:
+Once the Homebrew tap is set up, installation is simple:
 
 ```bash
-brew install <your-username>/pdf22md/pdf22md
+brew install twardoch/tap/pdf22md
 ```
 
 ### Building from Source
@@ -26,19 +26,13 @@ brew install <your-username>/pdf22md/pdf22md
 To build the project manually, you need Xcode Command Line Tools installed.
 
 ```bash
-# Clone the repository (once it's public)
-git clone https://github.com/<your-username>/pdf22md.git
+# Clone the repository
+git clone https://github.com/twardoch/pdf22md.git
 cd pdf22md
 
-# For Objective-C version (pdf21md)
-cd pdf21md
-make
+# Build and install
+make build
 sudo make install
-
-# For Swift version (pdf22md)
-cd ../pdf22md
-swift build -c release
-sudo cp .build/release/pdf22md /usr/local/bin/
 ```
 
 ### Usage
@@ -55,10 +49,7 @@ Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
 **Example:**
 
 ```bash
-# Convert using Objective-C version
-pdf21md -i report.pdf -o report.md -a ./assets
-
-# Or using Swift version
+# Convert a PDF to Markdown
 pdf22md -i report.pdf -o report.md -a ./assets
 ```
 

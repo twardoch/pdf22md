@@ -1,239 +1,86 @@
-name: Release
+name: Build and Release
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'  # Matches version tags like v1.0.0, v2.1.3, etc.
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-and-release:
+  build:
+    name: Build on macOS
     runs-on: macos-latest
     
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Full history for version tags
+        fetch-depth: 0  # Fetch all history for proper versioning
     
-    - name: Setup Xcode
-      uses: maxim-lobanov/setup-xcode@v1
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v2
       with:
-        xcode-version: latest-stable
+        swift-version: '5.9'
     
-    - name: Get version from tag
-      id: version
+    - name: Get version
+      id: get_version
       run: |
-        VERSION=${GITHUB_REF#refs/tags/v}
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+        fi
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "Building version: ${VERSION}"
     
-    - name: Build universal binary
-      run: |
-        # Build for Intel
-        make clean
-        make VERSION="${{ steps.version.outputs.VERSION }}" CFLAGS="-Wall -Wextra -O2 -fobjc-arc -arch x86_64"
-        mv pdf22md pdf22md-x86_64
-        
-        # Build for Apple Silicon
-        make clean
-        make VERSION="${{ steps.version.outputs.VERSION }}" CFLAGS="-Wall -Wextra -O2 -fobjc-arc -arch arm64"
-        mv pdf22md pdf22md-arm64
-        
-        # Create universal binary
-        lipo -create -output pdf22md pdf22md-x86_64 pdf22md-arm64
-        chmod +x pdf22md
-        
-        # Verify universal binary
-        lipo -info pdf22md
-        ./pdf22md -v
+    - name: Build
+      run: make build
+    
+    - name: Run tests
+      run: make test
     
     - name: Create distribution package
-      run: |
-        # Create directory structure
-        mkdir -p dist/usr/local/bin
-        mkdir -p dist/usr/local/share/man/man1
-        mkdir -p dist/usr/local/share/doc/pdf22md
-        
-        # Copy files
-        cp pdf22md dist/usr/local/bin/
-        cp LICENSE dist/usr/local/share/doc/pdf22md/
-        cp README.md dist/usr/local/share/doc/pdf22md/
-        cp docs/PARALLEL_PROCESSING.md dist/usr/local/share/doc/pdf22md/ || true
-        
-        # Create man page
-        cat > dist/usr/local/share/man/man1/pdf22md.1 << EOF
-        .TH PDF22MD 1 "$(date +'%B %Y')" "pdf22md ${{ steps.version.outputs.VERSION }}" "User Commands"
-        .SH NAME
-        pdf22md \- Convert PDF documents to Markdown format
-        .SH SYNOPSIS
-        .B pdf22md
-        [\fB\-i\fR \fIinput.pdf\fR]
-        [\fB\-o\fR \fIoutput.md\fR]
-        [\fB\-a\fR \fIassets_folder\fR]
-        [\fB\-d\fR \fIdpi\fR]
-        [\fB\-v\fR]
-        [\fB\-h\fR]
-        .SH DESCRIPTION
-        .B pdf22md
-        is a high-performance PDF to Markdown converter for macOS that uses Grand Central Dispatch (GCD) for parallel processing.
-        .SH OPTIONS
-        .TP
-        .BR \-i " " \fIpath\fR
-        Input PDF file (default: stdin)
-        .TP
-        .BR \-o " " \fIpath\fR
-        Output Markdown file (default: stdout)
-        .TP
-        .BR \-a " " \fIpath\fR
-        Assets folder for extracted images
-        .TP
-        .BR \-d " " \fIdpi\fR
-        DPI for rasterizing vector graphics (default: 144)
-        .TP
-        .BR \-v
-        Display version information
-        .TP
-        .BR \-h
-        Display help message
-        .SH EXAMPLES
-        .TP
-        Convert a PDF file to Markdown:
-        .B pdf22md -i document.pdf -o document.md
-        .TP
-        Convert with images saved to an assets folder:
-        .B pdf22md -i report.pdf -o report.md -a ./assets
-        .TP
-        Use with pipes:
-        .B cat document.pdf | pdf22md > document.md
-        .SH AUTHOR
-        Adam Twardoch
-        .SH LICENSE
-        MIT License
-        EOF
+      if: startsWith(github.ref, 'refs/tags/')
+      run: make dist
     
-    - name: Create installer package
-      run: |
-        # Create package info
-        mkdir -p package_resources
-        
-        # Create postinstall script
-        cat > package_resources/postinstall << 'EOF'
-        #!/bin/bash
-        # Update man database
-        if command -v makewhatis >/dev/null 2>&1; then
-            makewhatis /usr/local/share/man
-        fi
-        exit 0
-        EOF
-        chmod +x package_resources/postinstall
-        
-        # Build the package
-        pkgbuild --root dist \
-                 --identifier com.twardoch.pdf22md \
-                 --version "${{ steps.version.outputs.VERSION }}" \
-                 --scripts package_resources \
-                 --ownership recommended \
-                 pdf22md-${{ steps.version.outputs.VERSION }}.pkg
-        
-        # Create a distribution XML for productbuild (optional, for more control)
-        cat > distribution.xml << EOF
-        <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-        <installer-gui-script minSpecVersion="2.0">
-            <title>pdf22md ${{ steps.version.outputs.VERSION }}</title>
-            <organization>com.twardoch</organization>
-            <domains enable_localSystem="true"/>
-            <options customize="never" require-scripts="true" rootVolumeOnly="true"/>
-            <pkg-ref id="com.twardoch.pdf22md">
-                <bundle-version>
-                    <bundle CFBundleVersion="${{ steps.version.outputs.VERSION }}" id="com.twardoch.pdf22md" path="pdf22md"/>
-                </bundle-version>
-            </pkg-ref>
-            <choices-outline>
-                <line choice="default">
-                    <line choice="com.twardoch.pdf22md"/>
-                </line>
-            </choices-outline>
-            <choice id="default" title="pdf22md" description="PDF to Markdown converter"/>
-            <choice id="com.twardoch.pdf22md" visible="false">
-                <pkg-ref id="com.twardoch.pdf22md"/>
-            </choice>
-            <pkg-ref id="com.twardoch.pdf22md" version="${{ steps.version.outputs.VERSION }}" onConclusion="none">pdf22md-${{ steps.version.outputs.VERSION }}.pkg</pkg-ref>
-        </installer-gui-script>
-        EOF
-        
-        # Sign the package if certificates are available
-        if security find-identity -p basic -v | grep -q "Developer ID Installer"; then
-            INSTALLER_CERT=$(security find-identity -p basic -v | grep "Developer ID Installer" | head -1 | awk '{print $2}')
-            productsign --sign "$INSTALLER_CERT" \
-                        pdf22md-${{ steps.version.outputs.VERSION }}.pkg \
-                        pdf22md-${{ steps.version.outputs.VERSION }}-signed.pkg
-            mv pdf22md-${{ steps.version.outputs.VERSION }}-signed.pkg pdf22md-${{ steps.version.outputs.VERSION }}.pkg
-        fi
-    
-    - name: Create release archives
-      run: |
-        # Create tarball with binary and docs
-        mkdir -p pdf22md-${{ steps.version.outputs.VERSION }}
-        cp pdf22md pdf22md-${{ steps.version.outputs.VERSION }}/
-        cp README.md LICENSE pdf22md-${{ steps.version.outputs.VERSION }}/
-        cp -r docs pdf22md-${{ steps.version.outputs.VERSION }}/ || true
-        tar -czf pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz pdf22md-${{ steps.version.outputs.VERSION }}
-        
-        # Create zip for those who prefer it
-        zip -r pdf22md-${{ steps.version.outputs.VERSION }}-macos.zip pdf22md-${{ steps.version.outputs.VERSION }}
-    
-    - name: Generate release notes
-      id: release_notes
-      run: |
-        # Get previous tag
-        PREVIOUS_TAG=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -2 | head -1)
-        
-        # Generate changelog
-        if [ -n "$PREVIOUS_TAG" ]; then
-          echo "## What's Changed" > release_notes.md
-          echo "" >> release_notes.md
-          git log --pretty=format:"* %s (%h)" ${PREVIOUS_TAG}..HEAD >> release_notes.md
-        else
-          echo "## Initial Release" > release_notes.md
-          echo "" >> release_notes.md
-          echo "First release of pdf22md!" >> release_notes.md
-        fi
-        
-        echo "" >> release_notes.md
-        echo "## Installation" >> release_notes.md
-        echo "" >> release_notes.md
-        echo "### Using the installer package (recommended):" >> release_notes.md
-        echo '```bash' >> release_notes.md
-        echo "curl -LO https://github.com/twardoch/pdf22md/releases/download/${{ steps.version.outputs.TAG }}/pdf22md-${{ steps.version.outputs.VERSION }}.pkg" >> release_notes.md
-        echo "sudo installer -pkg pdf22md-${{ steps.version.outputs.VERSION }}.pkg -target /" >> release_notes.md
-        echo '```' >> release_notes.md
-        echo "" >> release_notes.md
-        echo "### Manual installation:" >> release_notes.md
-        echo '```bash' >> release_notes.md
-        echo "curl -LO https://github.com/twardoch/pdf22md/releases/download/${{ steps.version.outputs.TAG }}/pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz" >> release_notes.md
-        echo "tar -xzf pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz" >> release_notes.md
-        echo "sudo cp pdf22md-${{ steps.version.outputs.VERSION }}/pdf22md /usr/local/bin/" >> release_notes.md
-        echo '```' >> release_notes.md
-    
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+    - name: Upload DMG artifact
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v4
       with:
-        name: pdf22md ${{ steps.version.outputs.VERSION }}
-        body_path: release_notes.md
-        files: |
-          pdf22md-${{ steps.version.outputs.VERSION }}.pkg
-          pdf22md-${{ steps.version.outputs.VERSION }}-macos.tar.gz
-          pdf22md-${{ steps.version.outputs.VERSION }}-macos.zip
-        draft: false
-        prerelease: false
+        name: pdf22md-${{ steps.get_version.outputs.VERSION }}.dmg
+        path: dist/pdf22md-${{ steps.get_version.outputs.VERSION }}.dmg
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      id: create_release
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: pdf22md ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## pdf22md ${{ steps.get_version.outputs.VERSION }}
+          
+          ### Installation
+          
+          Download the DMG file below and open it. Double-click the installer package to install pdf22md to `/usr/local/bin`.
+          
+          ### What's New
+          
+          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref }}/CHANGELOG.md) for details.
+        draft: false
+        prerelease: false
     
-    - name: Update Homebrew formula
-      run: |
-        # This would typically update a homebrew tap repository
-        # For now, we'll just output what should be done
-        echo "To update Homebrew formula:"
-        echo "1. Update the url to: https://github.com/twardoch/pdf22md/archive/refs/tags/${{ steps.version.outputs.TAG }}.tar.gz"
-        echo "2. Update the sha256 hash"
-        echo "3. Update the version in the formula"
+    - name: Upload Release Asset
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/pdf22md-${{ steps.get_version.outputs.VERSION }}.dmg
+        asset_name: pdf22md-${{ steps.get_version.outputs.VERSION }}.dmg
+        asset_content_type: application/x-apple-diskimage
