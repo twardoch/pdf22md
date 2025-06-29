@@ -36,6 +36,7 @@
 - [ ] Add error handling for corrupted image streams
 - [ ] Handle PDFs with no Resources dictionary
 - [ ] Add progress logging for large PDFs
-- [ ] Update documentation and comments
+- [x] Overhaul README.md with detailed general and technical sections.
+- [ ] Update documentation and comments (README updated; other docs might need review)
 - [ ] Run linting and type checking
 - [ ] Update CHANGELOG.md with changes
