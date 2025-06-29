@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "pdf22md has been installed to /usr/local/bin"
+echo "You can now use it by running: pdf22md"

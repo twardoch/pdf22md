@@ -22,7 +22,6 @@ _private/
 .Trashes
 .vscode/
 *.a
-*.dmg
 *.dSYM/
 *.dylib
 *.gcda
@@ -51,7 +50,6 @@ CMakeFiles/
 coverage/
 debug-assets/
 DerivedData/
-dist/
 docs/_build/
 issues/
 Makefile.cmake
