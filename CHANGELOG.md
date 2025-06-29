@@ -8,12 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- **Documentation**: Overhauled `README.md` to provide comprehensive general and technical information.
-- **MAJOR**: Removed Objective-C implementation (`pdf21md`) - project is now Swift-only
-- **Build System**: Replaced build.sh with Makefile supporting `make build`, `make install`, and `make dist`
-- **Distribution**: Added automated .pkg and .dmg creation for macOS installation
-- **CI/CD**: Added GitHub Actions workflow for automated builds and releases on semver tags
-- **Documentation**: Updated all documentation to reflect Swift-only implementation
+- **Documentation**: Complete rewrite of `README.md` with comprehensive project documentation (#2)
+  - Added detailed feature descriptions and usage examples
+  - Improved installation instructions for Homebrew tap
+  - Enhanced building from source documentation
+  - Updated project description to emphasize Swift implementation
 
 ### Added
 - **Makefile**: Comprehensive build automation with targets for building, installing, and packaging
