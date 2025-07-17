@@ -1,0 +1,185 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Cache Swift dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          pdf22md/.build
+          pdf22md/Package.resolved
+        key: ${{ runner.os }}-swift-${{ hashFiles('pdf22md/Package.swift', 'pdf22md/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-swift-
+          
+    - name: Run tests
+      run: |
+        chmod +x scripts/test.sh
+        scripts/test.sh --verbose
+        
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          test-output/
+          pdf22md/.build/
+        retention-days: 7
+
+  lint:
+    name: Lint
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Install SwiftLint
+      run: brew install swiftlint
+      
+    - name: Run SwiftLint
+      run: |
+        cd pdf22md
+        swiftlint --reporter github-actions-logging
+
+  build:
+    name: Build
+    runs-on: macos-latest
+    needs: [test, lint]
+    
+    strategy:
+      matrix:
+        arch: [x86_64, arm64]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Cache Swift dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          pdf22md/.build
+          pdf22md/Package.resolved
+        key: ${{ runner.os }}-swift-${{ matrix.arch }}-${{ hashFiles('pdf22md/Package.swift', 'pdf22md/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-swift-${{ matrix.arch }}-
+          ${{ runner.os }}-swift-
+          
+    - name: Inject version information
+      run: |
+        chmod +x scripts/inject-version.sh
+        scripts/inject-version.sh
+        
+    - name: Build for ${{ matrix.arch }}
+      run: |
+        cd pdf22md
+        swift build -c release --arch ${{ matrix.arch }}
+        
+    - name: Create binary artifact
+      run: |
+        VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+        mkdir -p dist
+        cp pdf22md/.build/release/pdf22md dist/pdf22md-$VERSION-macos-${{ matrix.arch }}
+        
+    - name: Upload binary artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: pdf22md-macos-${{ matrix.arch }}
+        path: dist/pdf22md-*-macos-${{ matrix.arch }}
+        retention-days: 30
+
+  security:
+    name: Security Scan
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security scan
+      run: |
+        # Check for common security issues
+        echo "Checking for hardcoded secrets..."
+        git log --all --grep="password\|secret\|token\|key" --oneline || true
+        
+        echo "Checking for sensitive files..."
+        find . -name "*.pem" -o -name "*.key" -o -name "*.p12" -o -name "*.keystore" || true
+        
+        echo "Security scan completed"
+
+  package:
+    name: Create Packages
+    runs-on: macos-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Create universal binary
+      run: |
+        VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+        mkdir -p dist
+        
+        # Find the downloaded artifacts
+        X86_BINARY=$(find . -name "*-macos-x86_64" -type f | head -1)
+        ARM_BINARY=$(find . -name "*-macos-arm64" -type f | head -1)
+        
+        if [ -f "$X86_BINARY" ] && [ -f "$ARM_BINARY" ]; then
+          lipo -create "$X86_BINARY" "$ARM_BINARY" -output "dist/pdf22md-$VERSION-universal"
+          chmod +x "dist/pdf22md-$VERSION-universal"
+        fi
+        
+    - name: Create packages
+      run: |
+        chmod +x scripts/inject-version.sh
+        scripts/inject-version.sh
+        make dist
+        
+    - name: Upload packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-packages
+        path: |
+          dist/*.dmg
+          dist/*.pkg
+        retention-days: 30
