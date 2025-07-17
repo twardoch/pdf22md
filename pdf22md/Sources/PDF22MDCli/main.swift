@@ -7,7 +7,7 @@ struct PDF22MDCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "pdf22md",
         abstract: "Converts PDF documents to Markdown format (Swift implementation)",
-        version: "1.0.0"
+        version: Version.fullVersion
     )
     
     @Option(name: .shortAndLong, help: "Input PDF file (default: stdin)")

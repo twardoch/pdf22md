@@ -39,6 +39,8 @@ all: build
 # Build target
 .PHONY: build
 build:
+	@echo "$(BLUE)==>$(NC) Injecting version information..."
+	@./scripts/inject-version.sh
 	@echo "$(BLUE)==>$(NC) Building $(PROJECT_NAME)..."
 	@cd $(SWIFT_DIR) && swift build -c release
 	@echo "$(GREEN)✓$(NC) Build complete: $(RELEASE_DIR)/$(BINARY_NAME)"
@@ -46,6 +48,8 @@ build:
 # Debug build
 .PHONY: debug
 debug:
+	@echo "$(BLUE)==>$(NC) Injecting version information..."
+	@./scripts/inject-version.sh
 	@echo "$(BLUE)==>$(NC) Building $(PROJECT_NAME) (debug)..."
 	@cd $(SWIFT_DIR) && swift build
 	@echo "$(GREEN)✓$(NC) Debug build complete: $(DEBUG_DIR)/$(BINARY_NAME)"

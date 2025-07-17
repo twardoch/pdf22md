@@ -3,7 +3,8 @@
 
 set -e # Exit on any error
 
-npx repomix -i "docs" -o llms.txt .
+# Update codebase snapshot
+npx repomix -i "docs" -o llms.txt . || true
 
 # Colors for output
 RED='\033[0;31m'
@@ -79,6 +80,10 @@ if [ "$CLEAN" = true ]; then
     cd ..
     print_success "Cleaned Swift build artifacts"
 fi
+
+# Inject version information
+print_status "Injecting version information"
+./scripts/inject-version.sh
 
 # Build Swift version
 print_status "Building Swift version"

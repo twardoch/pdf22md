@@ -29,7 +29,7 @@ let package = Package(
             dependencies: [],
             path: "Sources/PDF22MD",
             swiftSettings: [
-                .define("VERSION", .when(platforms: [.macOS]))
+                .define("SWIFT_PACKAGE", .when(platforms: [.macOS]))
             ]
         ),
         .executableTarget(
@@ -44,7 +44,10 @@ let package = Package(
         .testTarget(
             name: "PDF22MDTests",
             dependencies: ["PDF22MD"],
-            path: "Tests/PDF22MDTests"
+            path: "Tests/PDF22MDTests",
+            resources: [
+                .copy("test-resources")
+            ]
         )
     ]
 ) 
