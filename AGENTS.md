@@ -2,7 +2,7 @@
 
 A blazingly fast PDF to Markdown converter for macOS.
 
-`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. It uses Grand Central Dispatch (GCD) to process pages and save images in parallel, making it exceptionally fast for multi-page documents.
+`pdf22md` is a command-line tool that extracts all text and image content from a PDF file and converts it into a clean Markdown document. Built with Swift and using modern async/await for parallel processing, it's exceptionally fast for multi-page documents.
 
 ### Key Features
 
@@ -15,10 +15,10 @@ A blazingly fast PDF to Markdown converter for macOS.
 
 ### Installation
 
-Once the Homebrew tap is set up (see plan below), installation is simple:
+Once the Homebrew tap is set up, installation is simple:
 
 ```bash
-brew install <your-username>/pdf22md/pdf22md
+brew install twardoch/tap/pdf22md
 ```
 
 ### Building from Source
@@ -26,14 +26,12 @@ brew install <your-username>/pdf22md/pdf22md
 To build the project manually, you need Xcode Command Line Tools installed.
 
 ```bash
-# Clone the repository (once it's public)
-git clone https://github.com/<your-username>/pdf22md.git
+# Clone the repository
+git clone https://github.com/twardoch/pdf22md.git
 cd pdf22md
 
-# Compile the tool
-make
-
-# Install it to /usr/local/bin
+# Build and install
+make build
 sudo make install
 ```
 
@@ -51,7 +49,7 @@ Usage: pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi]
 **Example:**
 
 ```bash
-# Convert a local PDF file and save images to an 'assets' folder
+# Convert a PDF to Markdown
 pdf22md -i report.pdf -o report.md -a ./assets
 ```
 
@@ -111,3 +109,7 @@ Key Integration Points:
 The system organizes business logic around content transformation pipelines while maintaining document semantic structure throughout the conversion process.
 
 —— When you’re done with a round of updates, update CHANGELOG.md with the changes, remove done things from TODO.md, identify new things that need to be done and add them to TODO.md. Then build the app or run ./release.sh and then continue updates. 
+
+If you work with Python, use 'uv pip' instead of 'pip', and use 'uvx hatch test' instead of 'python -m pytest'. 
+
+When I say /report, you must: Read all `./TODO.md` and `./PLAN.md` files and analyze recent changes. Document all changes in `./CHANGELOG.md`. From `./TODO.md` and `./PLAN.md` remove things that are done. Make sure that `./PLAN.md` contains a detailed, clear plan that discusses specifics, while `./TODO.md` is its flat simplified itemized `- [ ]`-prefixed representation. When I say /work, you must work in iterations like so: Read all `./TODO.md` and `./PLAN.md` files and reflect. Work on the tasks. Think, contemplate, research, reflect, refine, revise. Be careful, curious, vigilant, energetic. Verify your changes. Think aloud. Consult, research, reflect. Then update `./PLAN.md` and `./TODO.md` with tasks that will lead to improving the work you’ve just done. Then '/report', and then iterate again.
