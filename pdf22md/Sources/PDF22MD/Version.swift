@@ -18,7 +18,7 @@ public struct Version {
     /// Git commit hash, set at build time
     public static let commit: String = {
         #if SWIFT_PACKAGE
-        return "56876d063fbf40abbd4d51308b7a302d84f724e0"
+        return "bd6815ba3d19de1751aef2e4b793feb21518063d"
         #else
         return "unknown"
         #endif
