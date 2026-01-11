@@ -2,9 +2,15 @@
 
 ## v1.6.0 Release Ready
 
-All core features complete. Ready to push.
+All core features complete. Ready to push with `git push origin main`.
 
-## Recent Changes
+## Benchmark Results (example.sh -q)
 
-- **example.sh**: Enhanced with CLI options (-h, -q, -t, -m), quiet mode, timing
-- **README.md**: Added Batch Testing documentation section
+| Method | Speed | Size | Notes |
+|--------|-------|------|-------|
+| ultra | 0-1s | 80K | Fastest, NSString-based |
+| optimized | 0-1s | 7.1M | GCD-based, with images |
+| standard | 3-400s | 20M | Full Vision OCR |
+| fast | 0s | 20M | PDF text only |
+
+Test PDFs: bloo.pdf, frut.pdf, gard.pdf, jlmp.pdf, scan.pdf, test.pdf
