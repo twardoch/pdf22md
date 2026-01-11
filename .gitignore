@@ -60,3 +60,8 @@ testdata/test.pdf-oc/.test*
 xcuserdata/
 .DS_Store
 /testdata
+external/
+LLXPRT.md
+QWEN.md
+md.txt
+.claude/
