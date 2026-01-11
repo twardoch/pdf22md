@@ -67,6 +67,9 @@ pdf22md -i encrypted.pdf -o document.md --password secret123
 
 # Batch convert all PDFs in a directory
 pdf22md -i ./pdfs --batch -o ./output -v
+
+# Parallel batch with 4 jobs
+pdf22md -i ./pdfs --batch -o ./output -j 4 -v
 ```
 
 ### CLI Options
@@ -85,9 +88,26 @@ pdf22md -i ./pdfs --batch -o ./output -v
 | `--threshold` | Vision text preference threshold (default: 1.5) |
 | `--password` | Password for encrypted PDF files |
 | `--batch` | Process all PDF files in input directory |
+| `-j, --jobs` | Parallel jobs for batch mode (default: 1) |
 | `-v, --verbose` | Show progress during conversion |
+| `-q, --quiet` | Suppress all non-error output |
 | `--optimized` | Use GCD implementation |
 | `--ultra-optimized` | Use aggressive optimization |
+
+### Supported Languages for OCR
+
+Common ISO 639-1 codes for `--languages`:
+- `en` - English (default)
+- `fr` - French
+- `de` - German
+- `es` - Spanish
+- `it` - Italian
+- `pt` - Portuguese
+- `zh` - Chinese
+- `ja` - Japanese
+- `ko` - Korean
+
+Multiple languages: `--languages en,fr,de`
 
 ### API Format
 

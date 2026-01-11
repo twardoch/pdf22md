@@ -13,7 +13,10 @@
 - [x] Unit tests for API parsing, text selection, serialization
 - [x] Password-protected PDF support (`--password`)
 - [x] Batch processing (`--batch` flag)
+- [x] Parallel batch processing (`-j/--jobs`)
+- [x] Quiet mode (`-q/--quiet`)
 - [x] AI integration tests (sliding window context pattern)
+- [x] Language documentation in README
 
 ## Optional Testing
 
@@ -23,12 +26,12 @@
 ## Future Enhancements
 
 - [ ] OCR result caching
-- [ ] Parallel batch processing (concurrent file processing)
 - [ ] Custom AI prompt templates
+- [ ] Progress bar for batch processing
 
 ## Notes
 
 - Vision OCR can be slow for multi-page PDFs
 - Fast mode (`--fast`) recommended for PDFs with good text layers
 - AI processing requires external API or macOS 26+ for Apple Intelligence
-- Test PDFs available in `testdata/pdf/`
+- Parallel jobs (`-j`) capped at CPU core count

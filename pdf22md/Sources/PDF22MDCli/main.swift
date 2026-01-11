@@ -24,11 +24,17 @@ struct PDF22MDCommand: AsyncParsableCommand {
               pdf22md -i doc.pdf -o doc.md -a ./images
                   Extract images to ./images folder
 
+              pdf22md -i french.pdf -o french.md --languages fr,en
+                  OCR with French and English language support
+
               pdf22md -i doc.pdf -o doc.md --password secret123
                   Convert password-protected PDF
 
               pdf22md -i ./pdfs --batch -o ./output -v
                   Batch convert all PDFs in directory
+
+              pdf22md -i ./pdfs --batch -o ./output -j 4 -v
+                  Batch convert with 4 parallel jobs
 
               cat doc.pdf | pdf22md > doc.md
                   Read from stdin, write to stdout
@@ -83,8 +89,14 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Password for encrypted PDF files")
     var password: String?
 
+    @Option(name: .shortAndLong, help: "Parallel jobs for batch mode (default: 1)")
+    var jobs: Int = 1
+
     @Flag(name: .shortAndLong, help: "Show progress during conversion")
     var verbose: Bool = false
+
+    @Flag(name: .shortAndLong, help: "Suppress all non-error output")
+    var quiet: Bool = false
 
     func run() async throws {
         // Check for batch mode
@@ -168,6 +180,21 @@ struct PDF22MDCommand: AsyncParsableCommand {
         }
     }
 
+    /// Log message to stderr (respects quiet flag)
+    private func log(_ message: String) {
+        guard !quiet else { return }
+        if verbose {
+            FileHandle.standardError.write(Data("[pdf22md] \(message)\n".utf8))
+        }
+    }
+
+    /// Log error to stderr (always shown unless quiet)
+    private func logError(_ message: String) {
+        if !quiet {
+            FileHandle.standardError.write(Data("[pdf22md] Error: \(message)\n".utf8))
+        }
+    }
+
     /// Process all PDFs in a directory (batch mode)
     private func runBatch() async throws {
         guard let inputPath = input else {
@@ -197,39 +224,68 @@ struct PDF22MDCommand: AsyncParsableCommand {
             at: inputURL,
             includingPropertiesForKeys: nil
         )
-        let pdfFiles = contents.filter { $0.pathExtension.lowercased() == "pdf" }
+        let pdfFiles = contents.filter { $0.pathExtension.lowercased() == "pdf" }.sorted { $0.path < $1.path }
 
         guard !pdfFiles.isEmpty else {
             throw ValidationError("No PDF files found in directory: \(inputPath)")
         }
 
-        if verbose {
-            FileHandle.standardError.write(Data("[pdf22md] Batch mode: \(pdfFiles.count) PDF file(s) found\n".utf8))
-        }
+        let effectiveJobs = max(1, min(jobs, ProcessInfo.processInfo.activeProcessorCount))
+        log("Batch mode: \(pdfFiles.count) PDF file(s), \(effectiveJobs) parallel job(s)")
 
-        var successCount = 0
-        var failCount = 0
+        // Process files with concurrency limit
+        let results = await withTaskGroup(of: (String, Bool).self) { group in
+            var pending = pdfFiles.makeIterator()
+            var inFlight = 0
+            var results: [(String, Bool)] = []
 
-        for pdfURL in pdfFiles {
-            let baseName = pdfURL.deletingPathExtension().lastPathComponent
-            let outputFile = outputDir.appendingPathComponent("\(baseName).md")
+            // Start initial batch of jobs
+            while inFlight < effectiveJobs, let pdfURL = pending.next() {
+                let baseName = pdfURL.deletingPathExtension().lastPathComponent
+                let outputFile = outputDir.appendingPathComponent("\(baseName).md")
 
-            if verbose {
-                FileHandle.standardError.write(Data("[pdf22md] Processing: \(pdfURL.lastPathComponent)\n".utf8))
+                group.addTask {
+                    do {
+                        try await self.processSinglePDF(inputURL: pdfURL, outputPath: outputFile.path)
+                        return (pdfURL.lastPathComponent, true)
+                    } catch {
+                        return (pdfURL.lastPathComponent, false)
+                    }
+                }
+                inFlight += 1
             }
 
-            do {
-                try await processSinglePDF(inputURL: pdfURL, outputPath: outputFile.path)
-                successCount += 1
-            } catch {
-                failCount += 1
-                FileHandle.standardError.write(Data("[pdf22md] Error processing \(pdfURL.lastPathComponent): \(error.localizedDescription)\n".utf8))
+            // Process remaining files as jobs complete
+            for await (filename, success) in group {
+                results.append((filename, success))
+                if success {
+                    log("Completed: \(filename)")
+                } else {
+                    logError("Failed: \(filename)")
+                }
+
+                // Start next job if available
+                if let pdfURL = pending.next() {
+                    let baseName = pdfURL.deletingPathExtension().lastPathComponent
+                    let outputFile = outputDir.appendingPathComponent("\(baseName).md")
+
+                    group.addTask {
+                        do {
+                            try await self.processSinglePDF(inputURL: pdfURL, outputPath: outputFile.path)
+                            return (pdfURL.lastPathComponent, true)
+                        } catch {
+                            return (pdfURL.lastPathComponent, false)
+                        }
+                    }
+                }
             }
+
+            return results
         }
 
-        if verbose {
-            FileHandle.standardError.write(Data("[pdf22md] Batch complete: \(successCount) succeeded, \(failCount) failed\n".utf8))
-        }
+        let successCount = results.filter { $0.1 }.count
+        let failCount = results.count - successCount
+        log("Batch complete: \(successCount) succeeded, \(failCount) failed")
     }
 
     /// Build ProcessingOptions from CLI arguments
