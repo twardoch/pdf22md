@@ -55,6 +55,12 @@ pdf22md -i document.pdf -o document.md --ai
 
 # Specify languages for Vision OCR
 pdf22md -i french.pdf -o french.md --languages fr,en
+
+# Preview first 3 pages only
+pdf22md -i large.pdf -o preview.md --max-pages 3
+
+# Verbose mode to show progress
+pdf22md -i document.pdf -o document.md -v
 ```
 
 ### CLI Options
@@ -69,6 +75,8 @@ pdf22md -i french.pdf -o french.md --languages fr,en
 | `--ai` | Enable AI text correction |
 | `--api` | AI API in format `model:api_key@base_url` |
 | `--languages` | Languages for Vision OCR (comma-separated ISO 639 codes) |
+| `--max-pages` | Maximum pages to process (default: all) |
+| `--threshold` | Vision text preference threshold (default: 1.5) |
 | `-v, --verbose` | Show progress during conversion |
 | `--optimized` | Use GCD implementation |
 | `--ultra-optimized` | Use aggressive optimization |
