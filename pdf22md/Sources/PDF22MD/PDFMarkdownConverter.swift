@@ -199,6 +199,13 @@ public final class PDFMarkdownConverter {
 
     // MARK: - Enhanced Conversion (with Vision and AI)
 
+    /// Log progress to stderr if verbose mode enabled
+    private func logProgress(_ message: String) {
+        if options.verbose {
+            FileHandle.standardError.write(Data("[pdf22md] \(message)\n".utf8))
+        }
+    }
+
     /// Convert PDF to Markdown with enhanced processing (Vision OCR + optional AI)
     public func convertEnhanced() async throws {
         guard let pdfDocument = PDFDocument(url: pdfURL) else {
@@ -210,7 +217,13 @@ public final class PDFMarkdownConverter {
         var allImageElements: [ImageElement] = []
         var allPdfElements: [PDFElement] = []
 
+        logProgress("Processing \(pageCount) page(s) from \(pdfURL.lastPathComponent)")
+        let modeDesc = options.fastMode ? "fast (PDF only)" : "standard (PDF + Vision OCR)"
+        logProgress("Mode: \(modeDesc)")
+
         // Phase 1: Extract text from all pages (parallel)
+        logProgress("Phase 1: Extracting text...")
+        var completedPages = 0
         let extractionResults = await withTaskGroup(of: PDFPageProcessor.EnhancedPageResult?.self) { group in
             for pageIndex in 0..<pageCount {
                 group.addTask {
@@ -233,6 +246,10 @@ public final class PDFMarkdownConverter {
             for await result in group {
                 if let result = result {
                     results.append(result)
+                    completedPages += 1
+                    if self.options.verbose {
+                        FileHandle.standardError.write(Data("[pdf22md] Extracted page \(completedPages)/\(pageCount)\n".utf8))
+                    }
                 }
             }
             return results.sorted { $0.pageIndex < $1.pageIndex }
@@ -245,21 +262,27 @@ public final class PDFMarkdownConverter {
             allImageElements.append(contentsOf: result.imageElements)
             allPdfElements.append(contentsOf: result.pdfElements)
         }
+        logProgress("Extraction complete: \(pageContents.count) pages")
 
         // Phase 2: AI processing (sequential, sliding window)
         var finalTexts: [String] = []
 
         if options.enableAI, let apiConfig = options.apiConfig {
             // Use external AI API
+            logProgress("Phase 2: AI correction using \(apiConfig.model)...")
             let aiProcessor = AITextProcessor(apiConfig: apiConfig)
             finalTexts = try await aiProcessor.processPages(pageContents)
+            logProgress("AI correction complete")
         } else if options.enableAI {
             // Try Apple Intelligence (will fail if unavailable, then fall back)
+            logProgress("Phase 2: AI correction using Apple Intelligence...")
             do {
                 let aiProcessor = AITextProcessor(provider: .appleIntelligence)
                 finalTexts = try await aiProcessor.processPages(pageContents)
+                logProgress("AI correction complete")
             } catch AIProcessingError.appleIntelligenceUnavailable {
                 // Fall back to best available text
+                logProgress("Apple Intelligence unavailable, using extracted text")
                 finalTexts = pageContents.map { $0.bestText }
             }
         } else {
@@ -268,6 +291,7 @@ public final class PDFMarkdownConverter {
         }
 
         // Phase 3: Generate Markdown
+        logProgress("Phase 3: Generating Markdown...")
         let markdown = generateEnhancedMarkdown(
             texts: finalTexts,
             imageElements: allImageElements,
@@ -276,6 +300,7 @@ public final class PDFMarkdownConverter {
 
         // Write output
         try writeOutput(markdown)
+        logProgress("Done!")
     }
 
     /// Generate Markdown from enhanced extraction results

@@ -68,16 +68,16 @@
 
 - [ ] Write unit tests for `VisionTextExtractor`
 - [ ] Write unit tests for `OpenAIClient` request/response serialization
-- [ ] Write unit tests for API argument parsing
-- [ ] Write unit tests for text selection logic
+- [x] Write unit tests for API argument parsing
+- [x] Write unit tests for text selection logic
 - [ ] Write integration tests for AI processing pipeline
 - [ ] Test with scanned PDF documents (OCR-only)
 - [ ] Test AI mode with external API (OpenAI/Claude/Ollama)
 
 ### Future Enhancements
 
-- [ ] Add progress reporting for long-running conversions
-- [ ] Add verbose logging mode
+- [x] Add progress reporting for long-running conversions (--verbose flag)
+- [x] Add verbose logging mode
 - [ ] Add batch processing for multiple PDFs
 - [ ] Add support for password-protected PDFs
 - [ ] Add caching of OCR results

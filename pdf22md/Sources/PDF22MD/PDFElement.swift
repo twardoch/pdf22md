@@ -126,6 +126,9 @@ public struct ProcessingOptions {
     /// AI API configuration (if provided)
     public var apiConfig: APIConfiguration?
 
+    /// Enable verbose progress output to stderr
+    public var verbose: Bool = false
+
     public static let `default` = ProcessingOptions()
     public static let fast = ProcessingOptions(fastMode: true)
 
@@ -136,7 +139,8 @@ public struct ProcessingOptions {
         languages: [String] = ["en"],
         useFastRecognition: Bool = false,
         visionPreferenceThreshold: Double = 1.5,
-        apiConfig: APIConfiguration? = nil
+        apiConfig: APIConfiguration? = nil,
+        verbose: Bool = false
     ) {
         self.fastMode = fastMode
         self.enableAI = enableAI
@@ -145,6 +149,7 @@ public struct ProcessingOptions {
         self.useFastRecognition = useFastRecognition
         self.visionPreferenceThreshold = visionPreferenceThreshold
         self.apiConfig = apiConfig
+        self.verbose = verbose
     }
 }
 

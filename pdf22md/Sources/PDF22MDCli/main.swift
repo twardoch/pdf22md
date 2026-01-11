@@ -42,6 +42,9 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Languages for Vision OCR (comma-separated ISO 639 codes, default: en)")
     var languages: String = "en"
 
+    @Flag(name: .shortAndLong, help: "Show progress during conversion")
+    var verbose: Bool = false
+
     func run() async throws {
         let inputURL: URL
 
@@ -126,7 +129,8 @@ struct PDF22MDCommand: AsyncParsableCommand {
             languages: languageList,
             useFastRecognition: false,
             visionPreferenceThreshold: 1.5,
-            apiConfig: apiConfig
+            apiConfig: apiConfig,
+            verbose: verbose
         )
     }
 } 

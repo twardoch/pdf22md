@@ -69,6 +69,7 @@ pdf22md -i french.pdf -o french.md --languages fr,en
 | `--ai` | Enable AI text correction |
 | `--api` | AI API in format `model:api_key@base_url` |
 | `--languages` | Languages for Vision OCR (comma-separated ISO 639 codes) |
+| `-v, --verbose` | Show progress during conversion |
 | `--optimized` | Use GCD implementation |
 | `--ultra-optimized` | Use aggressive optimization |
 
