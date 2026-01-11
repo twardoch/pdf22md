@@ -21,6 +21,7 @@ Results stored in testdata/{fast,standard,optimized,ultra}/
 
 Options:
   -h, --help     Show this help
+  -V, --version  Show version
   -q, --quiet    Suppress conversion output (show only summary)
   -t SECONDS     Timeout per file (default: 120)
   -m METHODS     Comma-separated methods (default: fast,standard,optimized,ultra)
@@ -42,6 +43,7 @@ METHODS_STR="fast,standard,optimized,ultra"
 while [[ $# -gt 0 ]]; do
     case $1 in
         -h|--help) usage ;;
+        -V|--version) echo "example.sh v${VERSION}"; exit 0 ;;
         -q|--quiet) QUIET=true; shift ;;
         -t) TIMEOUT="$2"; shift 2 ;;
         -m) METHODS_STR="$2"; shift 2 ;;

@@ -1,8 +1,8 @@
 # TODO: PDF22MD
 
-## v1.6.0 Complete ✅
+## v1.6.1 Complete ✅
 
-All core features implemented and tested. See CHANGELOG.md for details.
+All core features implemented and tested. Added example.sh batch testing script.
 
 ## Optional Testing
 
