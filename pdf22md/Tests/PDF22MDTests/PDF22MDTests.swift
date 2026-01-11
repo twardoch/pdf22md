@@ -573,4 +573,250 @@ final class PDF22MDTests: XCTestCase {
         XCTAssertTrue(options.useFastRecognition)
         XCTAssertEqual(options.visionPreferenceThreshold, 2.0)
     }
+
+    func testProcessingOptionsVerbose() {
+        let options = ProcessingOptions(verbose: true)
+        XCTAssertTrue(options.verbose)
+
+        let defaultOptions = ProcessingOptions.default
+        XCTAssertFalse(defaultOptions.verbose)
+    }
+
+    // MARK: - ChatMessage Tests
+
+    func testChatMessageSystem() {
+        let message = ChatMessage.system("You are helpful.")
+        XCTAssertEqual(message.role, "system")
+        XCTAssertEqual(message.content, "You are helpful.")
+    }
+
+    func testChatMessageUser() {
+        let message = ChatMessage.user("Hello!")
+        XCTAssertEqual(message.role, "user")
+        XCTAssertEqual(message.content, "Hello!")
+    }
+
+    func testChatMessageAssistant() {
+        let message = ChatMessage.assistant("Hi there!")
+        XCTAssertEqual(message.role, "assistant")
+        XCTAssertEqual(message.content, "Hi there!")
+    }
+
+    // MARK: - ChatCompletionRequest Tests
+
+    func testChatCompletionRequestEncoding() throws {
+        let messages = [
+            ChatMessage.system("You are helpful."),
+            ChatMessage.user("Hello!")
+        ]
+        let request = ChatCompletionRequest(
+            model: "gpt-4o",
+            messages: messages,
+            temperature: 0.7,
+            maxTokens: 100
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(request)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+
+        XCTAssertEqual(json?["model"] as? String, "gpt-4o")
+        XCTAssertEqual(json?["temperature"] as? Double, 0.7)
+        XCTAssertEqual(json?["max_tokens"] as? Int, 100)
+
+        let encodedMessages = json?["messages"] as? [[String: String]]
+        XCTAssertEqual(encodedMessages?.count, 2)
+        XCTAssertEqual(encodedMessages?[0]["role"], "system")
+        XCTAssertEqual(encodedMessages?[1]["role"], "user")
+    }
+
+    // MARK: - ChatCompletionResponse Tests
+
+    func testChatCompletionResponseDecoding() throws {
+        let json = """
+        {
+            "id": "chatcmpl-123",
+            "object": "chat.completion",
+            "created": 1677652288,
+            "model": "gpt-4o",
+            "choices": [{
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "Hello! How can I help?"
+                },
+                "finish_reason": "stop"
+            }],
+            "usage": {
+                "prompt_tokens": 9,
+                "completion_tokens": 12,
+                "total_tokens": 21
+            }
+        }
+        """.data(using: .utf8)!
+
+        let response = try JSONDecoder().decode(ChatCompletionResponse.self, from: json)
+
+        XCTAssertEqual(response.id, "chatcmpl-123")
+        XCTAssertEqual(response.model, "gpt-4o")
+        XCTAssertEqual(response.choices.count, 1)
+        XCTAssertEqual(response.choices[0].message.content, "Hello! How can I help?")
+        XCTAssertEqual(response.choices[0].finish_reason, "stop")
+        XCTAssertEqual(response.usage?.total_tokens, 21)
+    }
+
+    func testChatCompletionResponseMinimal() throws {
+        // Minimal response (some APIs return fewer fields)
+        let json = """
+        {
+            "choices": [{
+                "index": 0,
+                "message": {
+                    "content": "Response text"
+                }
+            }]
+        }
+        """.data(using: .utf8)!
+
+        let response = try JSONDecoder().decode(ChatCompletionResponse.self, from: json)
+
+        XCTAssertNil(response.id)
+        XCTAssertEqual(response.choices.count, 1)
+        XCTAssertEqual(response.choices[0].message.content, "Response text")
+    }
+
+    // MARK: - OpenAIClient Initialization Tests
+
+    func testOpenAIClientInit() {
+        let client = OpenAIClient(
+            baseURL: URL(string: "https://api.openai.com/v1")!,
+            apiKey: "sk-test",
+            model: "gpt-4o"
+        )
+
+        XCTAssertEqual(client.baseURL.absoluteString, "https://api.openai.com/v1")
+        XCTAssertEqual(client.apiKey, "sk-test")
+        XCTAssertEqual(client.model, "gpt-4o")
+        XCTAssertEqual(client.timeout, 60.0)
+        XCTAssertEqual(client.temperature, 0.3)
+        XCTAssertEqual(client.maxRetries, 2)
+    }
+
+    func testOpenAIClientFromConfig() throws {
+        let config = try APIConfiguration.parse("gpt-4o:sk-xxx@https://api.openai.com/v1")
+        let client = OpenAIClient(config: config)
+
+        XCTAssertEqual(client.model, "gpt-4o")
+        XCTAssertEqual(client.apiKey, "sk-xxx")
+        XCTAssertEqual(client.baseURL.absoluteString, "https://api.openai.com/v1")
+    }
+
+    func testOpenAIClientConvenienceOpenAI() {
+        let client = OpenAIClient.openAI(apiKey: "sk-test", model: "gpt-4o-mini")
+
+        XCTAssertEqual(client.baseURL.absoluteString, "https://api.openai.com/v1")
+        XCTAssertEqual(client.apiKey, "sk-test")
+        XCTAssertEqual(client.model, "gpt-4o-mini")
+    }
+
+    func testOpenAIClientConvenienceOllama() {
+        let client = OpenAIClient.ollama(model: "llama3")
+
+        XCTAssertEqual(client.baseURL.absoluteString, "http://localhost:11434/v1")
+        XCTAssertEqual(client.apiKey, "")
+        XCTAssertEqual(client.model, "llama3")
+    }
+
+    // MARK: - OpenAIClientError Tests
+
+    func testOpenAIClientErrorDescriptions() {
+        XCTAssertEqual(
+            OpenAIClientError.invalidURL.errorDescription,
+            "Invalid API URL"
+        )
+        XCTAssertEqual(
+            OpenAIClientError.timeout.errorDescription,
+            "Request timed out"
+        )
+        XCTAssertEqual(
+            OpenAIClientError.emptyContent.errorDescription,
+            "Empty content in response"
+        )
+        XCTAssertEqual(
+            OpenAIClientError.noResponse.errorDescription,
+            "No response from API"
+        )
+        XCTAssertEqual(
+            OpenAIClientError.httpError(statusCode: 404, message: "Not found").errorDescription,
+            "HTTP 404: Not found"
+        )
+        XCTAssertEqual(
+            OpenAIClientError.httpError(statusCode: 500, message: nil).errorDescription,
+            "HTTP error: 500"
+        )
+        XCTAssertEqual(
+            OpenAIClientError.rateLimited(retryAfter: 30).errorDescription,
+            "Rate limited. Retry after 30 seconds"
+        )
+        XCTAssertEqual(
+            OpenAIClientError.rateLimited(retryAfter: nil).errorDescription,
+            "Rate limited"
+        )
+    }
+
+    // MARK: - PageTextContent Tests
+
+    func testPageTextContentBestTextPDFKit() {
+        let content = PageTextContent(
+            pageIndex: 0,
+            pdfText: "PDF text",
+            visionText: "Vision text",
+            correctedText: nil,
+            selectedSource: .pdfKit
+        )
+        XCTAssertEqual(content.bestText, "PDF text")
+    }
+
+    func testPageTextContentBestTextVision() {
+        let content = PageTextContent(
+            pageIndex: 0,
+            pdfText: "PDF text",
+            visionText: "Vision text",
+            correctedText: nil,
+            selectedSource: .vision
+        )
+        XCTAssertEqual(content.bestText, "Vision text")
+    }
+
+    func testPageTextContentBestTextAICorrected() {
+        let content = PageTextContent(
+            pageIndex: 0,
+            pdfText: "PDF text",
+            visionText: "Vision text",
+            correctedText: "Corrected text",
+            selectedSource: .aiCorrected
+        )
+        XCTAssertEqual(content.bestText, "Corrected text")
+    }
+
+    func testPageTextContentBestTextAIFallback() {
+        // AI selected but no corrected text, should fall back to vision then pdf
+        let content = PageTextContent(
+            pageIndex: 0,
+            pdfText: "PDF text",
+            visionText: "Vision text",
+            correctedText: nil,
+            selectedSource: .aiCorrected
+        )
+        XCTAssertEqual(content.bestText, "Vision text")
+
+        let content2 = PageTextContent(
+            pageIndex: 0,
+            pdfText: "PDF text",
+            visionText: nil,
+            correctedText: nil,
+            selectedSource: .aiCorrected
+        )
+        XCTAssertEqual(content2.bestText, "PDF text")
+    }
 }

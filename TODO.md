@@ -66,10 +66,11 @@
 
 ### Phase 7: Testing (optional)
 
-- [ ] Write unit tests for `VisionTextExtractor`
-- [ ] Write unit tests for `OpenAIClient` request/response serialization
+- [x] Write unit tests for `VisionTextExtractor` (basic structure tests)
+- [x] Write unit tests for `OpenAIClient` request/response serialization
 - [x] Write unit tests for API argument parsing
 - [x] Write unit tests for text selection logic
+- [x] Write unit tests for `PageTextContent` bestText logic
 - [ ] Write integration tests for AI processing pipeline
 - [ ] Test with scanned PDF documents (OCR-only)
 - [ ] Test AI mode with external API (OpenAI/Claude/Ollama)

@@ -1,27 +1,35 @@
 # Work Progress
 
-## Completed: Verbose Progress Flag
+## Sprint Completed: Quality Improvements
 
-Added `--verbose` / `-v` flag for progress reporting during conversion.
+### Commits This Sprint
+- `aaacd2b` - Add verbose progress flag and extend unit tests
 
-### Changes
-- Added `verbose` property to `ProcessingOptions`
-- Added `--verbose` / `-v` CLI flag
-- Added progress logging to `convertEnhanced()` method
-- Logs go to stderr to not interfere with stdout output
+### Tasks Completed
+1. Added `--verbose`/`-v` CLI flag for progress reporting
+2. Added unit tests for OpenAIClient (messages, requests, responses, errors)
+3. Added unit tests for PageTextContent bestText logic
+4. Updated TODO.md with completed items
 
-### Example Output
-```
-[pdf22md] Processing 5 page(s) from document.pdf
-[pdf22md] Mode: standard (PDF + Vision OCR)
-[pdf22md] Phase 1: Extracting text...
-[pdf22md] Extracted page 1/5
-[pdf22md] Extracted page 2/5
-...
-[pdf22md] Extraction complete: 5 pages
-[pdf22md] Phase 3: Generating Markdown...
-[pdf22md] Done!
-```
+### Tests Added
+- `testProcessingOptionsVerbose()`
+- `testChatMessageSystem/User/Assistant()`
+- `testChatCompletionRequestEncoding()`
+- `testChatCompletionResponseDecoding()`
+- `testChatCompletionResponseMinimal()`
+- `testOpenAIClientInit()`
+- `testOpenAIClientFromConfig()`
+- `testOpenAIClientConvenienceOpenAI/Ollama()`
+- `testOpenAIClientErrorDescriptions()`
+- `testPageTextContentBestText*()` (4 tests)
 
-### Next Tasks
-See TODO.md for remaining optional tasks.
+### Build Status
+All builds pass. Tests require XCTest (swift test).
+
+## Next Steps
+See TODO.md for remaining optional tasks:
+- Apple Intelligence integration (requires macOS 26+)
+- Integration tests for AI processing pipeline
+- Batch PDF processing
+- Password-protected PDF support
+- OCR result caching
