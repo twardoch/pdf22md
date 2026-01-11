@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-01-11
+
+### Added
+- **Batch Testing Script**: `example.sh` for comparing conversion methods
+  - CLI options: `-q` quiet, `-t` timeout, `-m` methods, `-h` help
+  - Timing information per conversion
+  - Summary with file counts and sizes
+  - Filters noisy system debug output
+
+### Documentation
+- Added benchmark results comparing conversion methods:
+  - ultra: 0-1s per file (fastest)
+  - optimized: 0-1s per file
+  - standard: 3-400s per file (full OCR)
+  - fast: instant (PDF text only)
+
 ## [1.6.0] - 2025-01-11
 
 ### Added
