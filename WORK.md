@@ -2,12 +2,9 @@
 
 ## v1.6.0 Release Ready
 
-- **Version**: v1.6.0
-- **Tests**: 72 test functions
-- **Code**: 15 source files, 3142 lines
+All core features complete. Ready to push.
 
-Ready to push with `git push origin main`.
+## Recent Changes
 
-## Recent: Added example.sh
-
-Batch conversion script added for testing all 4 conversion methods against sample PDFs.
+- **example.sh**: Enhanced with CLI options (-h, -q, -t, -m), quiet mode, timing
+- **README.md**: Added Batch Testing documentation section
