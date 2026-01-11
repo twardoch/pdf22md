@@ -24,6 +24,12 @@ struct PDF22MDCommand: AsyncParsableCommand {
               pdf22md -i doc.pdf -o doc.md -a ./images
                   Extract images to ./images folder
 
+              pdf22md -i doc.pdf -o doc.md --password secret123
+                  Convert password-protected PDF
+
+              pdf22md -i ./pdfs --batch -o ./output -v
+                  Batch convert all PDFs in directory
+
               cat doc.pdf | pdf22md > doc.md
                   Read from stdin, write to stdout
 
@@ -33,14 +39,17 @@ struct PDF22MDCommand: AsyncParsableCommand {
         version: Version.fullVersion
     )
 
-    @Option(name: .shortAndLong, help: "Input PDF file (default: stdin)")
+    @Option(name: .shortAndLong, help: "Input PDF file or directory (default: stdin)")
     var input: String?
 
-    @Option(name: .shortAndLong, help: "Output Markdown file (default: stdout)")
+    @Option(name: .shortAndLong, help: "Output Markdown file or directory (default: stdout)")
     var output: String?
 
     @Option(name: .shortAndLong, help: "Assets folder for extracted images")
     var assets: String?
+
+    @Flag(name: .long, help: "Process all PDF files in input directory (batch mode)")
+    var batch: Bool = false
 
     @Option(name: .shortAndLong, help: "DPI for rasterizing vector graphics (default: 144)")
     var dpi: Double = 144.0
@@ -71,10 +80,20 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Vision text preference threshold (default: 1.5, use Vision if >N times longer)")
     var threshold: Double = 1.5
 
+    @Option(name: .long, help: "Password for encrypted PDF files")
+    var password: String?
+
     @Flag(name: .shortAndLong, help: "Show progress during conversion")
     var verbose: Bool = false
 
     func run() async throws {
+        // Check for batch mode
+        if batch {
+            try await runBatch()
+            return
+        }
+
+        // Single file mode
         let inputURL: URL
 
         if let inputPath = input {
@@ -96,6 +115,16 @@ struct PDF22MDCommand: AsyncParsableCommand {
             inputURL = tempFile
         }
 
+        try await processSinglePDF(inputURL: inputURL, outputPath: output)
+
+        // Clean temp file if created
+        if input == nil {
+            try? FileManager.default.removeItem(at: inputURL)
+        }
+    }
+
+    /// Process a single PDF file
+    private func processSinglePDF(inputURL: URL, outputPath: String?) async throws {
         // Determine if we should use enhanced mode
         let useEnhancedMode = !fast || ai || api != nil
 
@@ -104,7 +133,7 @@ struct PDF22MDCommand: AsyncParsableCommand {
             let options = try buildProcessingOptions()
             let converter = PDFMarkdownConverter(
                 pdfURL: inputURL,
-                outputPath: output,
+                outputPath: outputPath,
                 assetsPath: assets,
                 options: options
             )
@@ -113,7 +142,7 @@ struct PDF22MDCommand: AsyncParsableCommand {
             // Legacy ultra-optimized mode
             let converter = PDFMarkdownConverterUltraOptimized(
                 pdfURL: inputURL,
-                outputPath: output,
+                outputPath: outputPath,
                 assetsPath: assets,
                 dpi: CGFloat(dpi)
             )
@@ -122,7 +151,7 @@ struct PDF22MDCommand: AsyncParsableCommand {
             // Legacy optimized mode
             let converter = PDFMarkdownConverterOptimized(
                 pdfURL: inputURL,
-                outputPath: output,
+                outputPath: outputPath,
                 assetsPath: assets,
                 dpi: CGFloat(dpi)
             )
@@ -131,16 +160,75 @@ struct PDF22MDCommand: AsyncParsableCommand {
             // Legacy standard mode (fast by default for backward compatibility)
             let converter = PDFMarkdownConverter(
                 pdfURL: inputURL,
-                outputPath: output,
+                outputPath: outputPath,
                 assetsPath: assets,
                 dpi: CGFloat(dpi)
             )
             try await converter.convert()
         }
+    }
 
-        // Clean temp file if created
-        if input == nil {
-            try? FileManager.default.removeItem(at: inputURL)
+    /// Process all PDFs in a directory (batch mode)
+    private func runBatch() async throws {
+        guard let inputPath = input else {
+            throw ValidationError("Batch mode requires -i <directory>")
+        }
+
+        let inputURL = URL(fileURLWithPath: inputPath)
+        var isDirectory: ObjCBool = false
+
+        guard FileManager.default.fileExists(atPath: inputPath, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            throw ValidationError("Batch mode requires input to be a directory: \(inputPath)")
+        }
+
+        // Determine output directory
+        let outputDir: URL
+        if let outputPath = output {
+            outputDir = URL(fileURLWithPath: outputPath)
+            // Create output directory if it doesn't exist
+            try FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
+        } else {
+            outputDir = inputURL  // Same directory as input
+        }
+
+        // Find all PDF files
+        let contents = try FileManager.default.contentsOfDirectory(
+            at: inputURL,
+            includingPropertiesForKeys: nil
+        )
+        let pdfFiles = contents.filter { $0.pathExtension.lowercased() == "pdf" }
+
+        guard !pdfFiles.isEmpty else {
+            throw ValidationError("No PDF files found in directory: \(inputPath)")
+        }
+
+        if verbose {
+            FileHandle.standardError.write(Data("[pdf22md] Batch mode: \(pdfFiles.count) PDF file(s) found\n".utf8))
+        }
+
+        var successCount = 0
+        var failCount = 0
+
+        for pdfURL in pdfFiles {
+            let baseName = pdfURL.deletingPathExtension().lastPathComponent
+            let outputFile = outputDir.appendingPathComponent("\(baseName).md")
+
+            if verbose {
+                FileHandle.standardError.write(Data("[pdf22md] Processing: \(pdfURL.lastPathComponent)\n".utf8))
+            }
+
+            do {
+                try await processSinglePDF(inputURL: pdfURL, outputPath: outputFile.path)
+                successCount += 1
+            } catch {
+                failCount += 1
+                FileHandle.standardError.write(Data("[pdf22md] Error processing \(pdfURL.lastPathComponent): \(error.localizedDescription)\n".utf8))
+            }
+        }
+
+        if verbose {
+            FileHandle.standardError.write(Data("[pdf22md] Batch complete: \(successCount) succeeded, \(failCount) failed\n".utf8))
         }
     }
 
@@ -167,7 +255,8 @@ struct PDF22MDCommand: AsyncParsableCommand {
             visionPreferenceThreshold: threshold,
             maxPages: maxPages,
             apiConfig: apiConfig,
-            verbose: verbose
+            verbose: verbose,
+            password: password
         )
     }
 } 

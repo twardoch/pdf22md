@@ -25,13 +25,32 @@ public final class PDFMarkdownConverter {
         self.options = options
     }
 
+    // MARK: - PDF Loading with Password Support
+
+    /// Load PDF document, handling password-protected files
+    private func loadPDFDocument() throws -> PDFDocument {
+        guard let pdfDocument = PDFDocument(url: pdfURL) else {
+            throw PDFConversionError.invalidPDF
+        }
+
+        // Check if document is locked (encrypted)
+        if pdfDocument.isLocked {
+            guard let password = options.password else {
+                throw PDFConversionError.passwordRequired
+            }
+            guard pdfDocument.unlock(withPassword: password) else {
+                throw PDFConversionError.incorrectPassword
+            }
+        }
+
+        return pdfDocument
+    }
+
     // MARK: - Legacy Conversion (fast mode, PDF-only)
 
     /// Convert PDF to Markdown (legacy method, fast mode)
     public func convert() async throws {
-        guard let pdfDocument = PDFDocument(url: pdfURL) else {
-            throw PDFConversionError.invalidPDF
-        }
+        let pdfDocument = try loadPDFDocument()
         
         let pageCount = pdfDocument.pageCount
         var allElements: [PDFElement] = []
@@ -208,9 +227,7 @@ public final class PDFMarkdownConverter {
 
     /// Convert PDF to Markdown with enhanced processing (Vision OCR + optional AI)
     public func convertEnhanced() async throws {
-        guard let pdfDocument = PDFDocument(url: pdfURL) else {
-            throw PDFConversionError.invalidPDF
-        }
+        let pdfDocument = try loadPDFDocument()
 
         let totalPages = pdfDocument.pageCount
         let pageCount = options.maxPages.map { min($0, totalPages) } ?? totalPages

@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Progress Logging**: Enhanced verbose mode with phase-by-phase progress reporting
 - **Environment Variable**: `PDF22MD_API` for API configuration
 - **Unit Tests**: Extended test coverage for API parsing, text selection, OpenAIClient serialization
+- **Password Support**: `--password` option for encrypted PDFs
+- **Batch Processing**: `--batch` flag to convert all PDFs in a directory
+- **AI Integration Tests**: Tests for sliding window context pattern and AI error handling
 
 ### Changed
 - **Documentation**: Complete rewrite of `README.md` with comprehensive project documentation (#2)

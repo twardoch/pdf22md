@@ -8,10 +8,27 @@ protocol PDFElement {
 }
 
 /// Errors that can occur during PDF conversion
-enum PDFConversionError: Error {
+enum PDFConversionError: Error, LocalizedError {
     case invalidPDF
     case fileNotFound
     case conversionFailed(String)
+    case passwordRequired
+    case incorrectPassword
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidPDF:
+            return "Invalid or corrupted PDF file"
+        case .fileNotFound:
+            return "PDF file not found"
+        case .conversionFailed(let message):
+            return "Conversion failed: \(message)"
+        case .passwordRequired:
+            return "PDF is encrypted. Use --password to provide the password"
+        case .incorrectPassword:
+            return "Incorrect password for encrypted PDF"
+        }
+    }
 }
 
 /// Represents a text element extracted from a PDF
@@ -132,6 +149,9 @@ public struct ProcessingOptions {
     /// Enable verbose progress output to stderr
     public var verbose: Bool = false
 
+    /// Password for encrypted PDFs
+    public var password: String?
+
     public static let `default` = ProcessingOptions()
     public static let fast = ProcessingOptions(fastMode: true)
 
@@ -144,7 +164,8 @@ public struct ProcessingOptions {
         visionPreferenceThreshold: Double = 1.5,
         maxPages: Int? = nil,
         apiConfig: APIConfiguration? = nil,
-        verbose: Bool = false
+        verbose: Bool = false,
+        password: String? = nil
     ) {
         self.fastMode = fastMode
         self.enableAI = enableAI
@@ -155,6 +176,7 @@ public struct ProcessingOptions {
         self.maxPages = maxPages
         self.apiConfig = apiConfig
         self.verbose = verbose
+        self.password = password
     }
 }
 

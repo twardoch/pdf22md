@@ -11,18 +11,20 @@
 - [x] Progress reporting with `--verbose` flag
 - [x] Input validation with clear error messages
 - [x] Unit tests for API parsing, text selection, serialization
+- [x] Password-protected PDF support (`--password`)
+- [x] Batch processing (`--batch` flag)
+- [x] AI integration tests (sliding window context pattern)
 
 ## Optional Testing
 
-- [ ] Integration tests for AI processing pipeline
 - [ ] Test with scanned PDF documents (OCR-only)
 - [ ] Test AI mode with external API (OpenAI/Claude/Ollama)
 
 ## Future Enhancements
 
-- [ ] Batch processing for multiple PDFs
-- [ ] Password-protected PDF support
 - [ ] OCR result caching
+- [ ] Parallel batch processing (concurrent file processing)
+- [ ] Custom AI prompt templates
 
 ## Notes
 

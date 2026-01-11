@@ -61,14 +61,20 @@ pdf22md -i large.pdf -o preview.md --max-pages 3
 
 # Verbose mode to show progress
 pdf22md -i document.pdf -o document.md -v
+
+# Password-protected PDF
+pdf22md -i encrypted.pdf -o document.md --password secret123
+
+# Batch convert all PDFs in a directory
+pdf22md -i ./pdfs --batch -o ./output -v
 ```
 
 ### CLI Options
 
 | Option | Description |
 |--------|-------------|
-| `-i, --input` | Input PDF file (default: stdin) |
-| `-o, --output` | Output Markdown file (default: stdout) |
+| `-i, --input` | Input PDF file or directory (default: stdin) |
+| `-o, --output` | Output Markdown file or directory (default: stdout) |
 | `-a, --assets` | Assets folder for extracted images |
 | `-d, --dpi` | DPI for rasterizing vector graphics (default: 144) |
 | `--fast` | Fast mode: use PDF text only, skip Vision OCR |
@@ -77,6 +83,8 @@ pdf22md -i document.pdf -o document.md -v
 | `--languages` | Languages for Vision OCR (comma-separated ISO 639 codes) |
 | `--max-pages` | Maximum pages to process (default: all) |
 | `--threshold` | Vision text preference threshold (default: 1.5) |
+| `--password` | Password for encrypted PDF files |
+| `--batch` | Process all PDF files in input directory |
 | `-v, --verbose` | Show progress during conversion |
 | `--optimized` | Use GCD implementation |
 | `--ultra-optimized` | Use aggressive optimization |
