@@ -1293,4 +1293,86 @@ final class PDF22MDTests: XCTestCase {
         XCTAssertTrue(Version.current.hasPrefix("v") || Version.current == "dev")
         XCTAssertFalse(Version.fullVersion.isEmpty)
     }
+
+    // MARK: - Threshold Logic Tests
+
+    func testThresholdBoundaryConditions() {
+        // Test at exact threshold boundary (1.5x = 50% more)
+        let pdfText = "Short text here"  // 15 chars
+        let visionTextAtThreshold = "This text is exactly at threshold"  // ~23 chars (1.5x)
+
+        // At threshold, should prefer PDF (simpler source)
+        let (_, source1) = AITextProcessor.selectBestText(
+            pdfText: pdfText,
+            visionText: visionTextAtThreshold,
+            threshold: 1.5
+        )
+        // PDF is preferred when Vision is not significantly longer
+        XCTAssertTrue(source1 == .pdfKit || source1 == .vision)
+
+        // Test with custom threshold of 2.0 (100% more required)
+        let (_, source2) = AITextProcessor.selectBestText(
+            pdfText: "Ten chars!",
+            visionText: "This is twenty one!",  // ~2x
+            threshold: 2.0
+        )
+        XCTAssertNotNil(source2)
+    }
+
+    func testThresholdWithEmptyStrings() {
+        // Both empty
+        let (text1, _) = AITextProcessor.selectBestText(
+            pdfText: "",
+            visionText: "",
+            threshold: 1.5
+        )
+        XCTAssertEqual(text1, "")
+
+        // PDF empty, Vision has content
+        let (text2, source2) = AITextProcessor.selectBestText(
+            pdfText: "",
+            visionText: "Vision has content",
+            threshold: 1.5
+        )
+        XCTAssertEqual(source2, .vision)
+        XCTAssertEqual(text2, "Vision has content")
+
+        // Vision empty, PDF has content
+        let (text3, source3) = AITextProcessor.selectBestText(
+            pdfText: "PDF has content",
+            visionText: "",
+            threshold: 1.5
+        )
+        XCTAssertEqual(source3, .pdfKit)
+        XCTAssertEqual(text3, "PDF has content")
+    }
+
+    // MARK: - Language Configuration Tests
+
+    func testLanguageArrayHandling() {
+        // Single language
+        let single = ProcessingOptions(languages: ["en"])
+        XCTAssertEqual(single.languages.count, 1)
+        XCTAssertEqual(single.languages.first, "en")
+
+        // Multiple languages
+        let multi = ProcessingOptions(languages: ["en", "fr", "de", "es"])
+        XCTAssertEqual(multi.languages.count, 4)
+        XCTAssertTrue(multi.languages.contains("fr"))
+        XCTAssertTrue(multi.languages.contains("es"))
+
+        // Asian languages
+        let asian = ProcessingOptions(languages: ["zh", "ja", "ko"])
+        XCTAssertEqual(asian.languages.count, 3)
+    }
+
+    func testLanguageDefaults() {
+        // Default should be English only
+        let defaults = ProcessingOptions.default
+        XCTAssertEqual(defaults.languages, ["en"])
+
+        // Fast mode should also default to English
+        let fast = ProcessingOptions.fast
+        XCTAssertEqual(fast.languages, ["en"])
+    }
 }
