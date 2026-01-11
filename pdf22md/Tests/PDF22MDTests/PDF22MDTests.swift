@@ -835,4 +835,17 @@ final class PDF22MDTests: XCTestCase {
         )
         XCTAssertEqual(content2.bestText, "PDF text")
     }
+
+    // MARK: - AppleIntelligenceProcessor Tests
+
+    func testAppleIntelligenceProcessorNotAvailable() {
+        // Apple Intelligence is not available until macOS 26
+        XCTAssertFalse(AppleIntelligenceProcessor.isAvailable)
+    }
+
+    func testAppleIntelligenceProcessorInit() {
+        // Should be able to create instance even when unavailable
+        let processor = AppleIntelligenceProcessor()
+        XCTAssertNotNil(processor)
+    }
 }

@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `AITextProcessor` with support for OpenAI-compatible APIs
   - New `OpenAIClient` for HTTP communication with LLM APIs
   - Sliding window context: each page corrected with context from previous page
-  - Support for future Apple Intelligence integration (macOS 26+)
+  - New `AppleIntelligenceProcessor` stub for future macOS 26+ support (FoundationModels API)
 - **New CLI Options**:
   - `--fast`: Skip Vision OCR, use PDF text extraction only (faster)
   - `--ai`: Enable AI text correction

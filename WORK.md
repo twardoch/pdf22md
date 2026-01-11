@@ -1,22 +1,21 @@
 # Work Progress
 
-## Sprint Completed: Apple Intelligence Integration
+## Sprint Complete
 
 ### Commit
-- `3aed142` - Add AppleIntelligenceProcessor stub for macOS 26
+- `f4e4b98` - Improve CLI help and input validation
 
 ### Tasks Completed
-1. Created `AppleIntelligenceProcessor.swift` with stub implementation
-2. Added `isAvailable` static property (returns false until macOS 26)
-3. Added `processPage()` and `processPages()` methods
-4. Included full FoundationModels implementation as commented template
-5. Updated TODO.md to mark Apple Intelligence tasks complete
-
-### Notes
-The FoundationModels framework is not yet available in the SDK. The implementation:
-- Uses `#if canImport(FoundationModels)` pattern (commented out)
-- Follows WWDC25 API patterns for SystemLanguageModel, LanguageModelSession
-- Will be enabled automatically when compiled with macOS 26 SDK
+1. Added AppleIntelligenceProcessor to CHANGELOG
+2. Cleaned up TODO.md structure (consolidated completed items)
+3. Added unit tests for AppleIntelligenceProcessor availability
 
 ### All Core Tasks Complete
-See TODO.md for remaining optional testing tasks.
+All v1.6.0 features are implemented:
+- Vision OCR
+- AI Text Correction
+- AppleIntelligenceProcessor stub
+- CLI options (--fast, --ai, --api, --languages, --verbose, --max-pages, --threshold)
+- Unit tests
+
+See TODO.md for optional testing and future enhancements.
