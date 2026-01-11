@@ -6,7 +6,7 @@ All core features implemented and tested. See CHANGELOG.md for details.
 
 ## Optional Testing
 
-- [ ] Test with scanned PDF documents (OCR-only)
+- [x] Test with scanned PDF documents (OCR-only) — Vision OCR works correctly
 - [ ] Test AI mode with external API (OpenAI/Claude/Ollama)
 
 ## Future Enhancements

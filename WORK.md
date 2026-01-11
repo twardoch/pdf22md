@@ -14,3 +14,13 @@ All core features complete. Ready to push with `git push origin main`.
 | fast | 0s | 20M | PDF text only |
 
 Test PDFs: bloo.pdf, frut.pdf, gard.pdf, jlmp.pdf, scan.pdf, test.pdf
+
+## OCR Testing (Scanned Documents)
+
+Created `testdata/pdf/scan.pdf` — an image-based PDF with no embedded text.
+
+**Results:**
+- **Standard mode**: Vision OCR extracts all text correctly
+- **Fast mode**: Empty output (as expected — no PDF text layer)
+
+Vision OCR successfully handles scanned documents.
