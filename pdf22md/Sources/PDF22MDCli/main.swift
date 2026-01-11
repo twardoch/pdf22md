@@ -62,6 +62,12 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Languages for Vision OCR (comma-separated ISO 639 codes, default: en)")
     var languages: String = "en"
 
+    @Option(name: .long, help: "Maximum pages to process (default: all)")
+    var maxPages: Int?
+
+    @Option(name: .long, help: "Vision text preference threshold (default: 1.5, use Vision if >N times longer)")
+    var threshold: Double = 1.5
+
     @Flag(name: .shortAndLong, help: "Show progress during conversion")
     var verbose: Bool = false
 
@@ -155,7 +161,8 @@ struct PDF22MDCommand: AsyncParsableCommand {
             dpi: CGFloat(dpi),
             languages: languageList,
             useFastRecognition: false,
-            visionPreferenceThreshold: 1.5,
+            visionPreferenceThreshold: threshold,
+            maxPages: maxPages,
             apiConfig: apiConfig,
             verbose: verbose
         )
