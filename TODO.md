@@ -1,22 +1,8 @@
 # TODO: PDF22MD
 
-## Completed (v1.6.0)
+## v1.6.0 Complete
 
-- [x] Vision Framework OCR integration (VisionTextExtractor)
-- [x] AI text correction with sliding window (AITextProcessor)
-- [x] OpenAI-compatible API client (OpenAIClient)
-- [x] AppleIntelligenceProcessor stub for macOS 26+
-- [x] CLI options: `--fast`, `--ai`, `--api`, `--languages`, `--verbose`, `--max-pages`, `--threshold`
-- [x] Smart text selection (Vision vs PDF based on content length)
-- [x] Progress reporting with `--verbose` flag
-- [x] Input validation with clear error messages
-- [x] Unit tests for API parsing, text selection, serialization
-- [x] Password-protected PDF support (`--password`)
-- [x] Batch processing (`--batch` flag)
-- [x] Parallel batch processing (`-j/--jobs`)
-- [x] Quiet mode (`-q/--quiet`)
-- [x] AI integration tests (sliding window context pattern)
-- [x] Language documentation in README
+All core features implemented. See PLAN.md for details.
 
 ## Optional Testing
 
@@ -28,10 +14,3 @@
 - [ ] OCR result caching
 - [ ] Custom AI prompt templates
 - [ ] Progress bar for batch processing
-
-## Notes
-
-- Vision OCR can be slow for multi-page PDFs
-- Fast mode (`--fast`) recommended for PDFs with good text layers
-- AI processing requires external API or macOS 26+ for Apple Intelligence
-- Parallel jobs (`-j`) capped at CPU core count

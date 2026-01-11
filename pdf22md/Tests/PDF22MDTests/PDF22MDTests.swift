@@ -1034,4 +1034,74 @@ final class PDF22MDTests: XCTestCase {
         let outputPath = outputDir.appendingPathComponent("\(doc).md").path
         XCTAssertEqual(outputPath, "/path/to/output/document.md")
     }
+
+    // MARK: - Comprehensive ProcessingOptions Tests
+
+    func testProcessingOptionsAllParameters() throws {
+        // Test that all parameters can be set and retrieved correctly
+        let apiConfig = try APIConfiguration.parse("gpt-4o:sk-test@https://api.openai.com/v1")
+
+        let options = ProcessingOptions(
+            fastMode: true,
+            enableAI: true,
+            dpi: 300.0,
+            languages: ["en", "fr", "de"],
+            useFastRecognition: true,
+            visionPreferenceThreshold: 2.5,
+            maxPages: 10,
+            apiConfig: apiConfig,
+            verbose: true,
+            password: "secret123"
+        )
+
+        // Verify all values
+        XCTAssertTrue(options.fastMode)
+        XCTAssertTrue(options.enableAI)
+        XCTAssertEqual(options.dpi, 300.0)
+        XCTAssertEqual(options.languages, ["en", "fr", "de"])
+        XCTAssertTrue(options.useFastRecognition)
+        XCTAssertEqual(options.visionPreferenceThreshold, 2.5)
+        XCTAssertEqual(options.maxPages, 10)
+        XCTAssertNotNil(options.apiConfig)
+        XCTAssertEqual(options.apiConfig?.model, "gpt-4o")
+        XCTAssertTrue(options.verbose)
+        XCTAssertEqual(options.password, "secret123")
+    }
+
+    func testProcessingOptionsPresets() {
+        // Test default preset
+        let defaultOptions = ProcessingOptions.default
+        XCTAssertFalse(defaultOptions.fastMode)
+        XCTAssertFalse(defaultOptions.enableAI)
+        XCTAssertEqual(defaultOptions.dpi, 144.0)
+        XCTAssertEqual(defaultOptions.languages, ["en"])
+        XCTAssertFalse(defaultOptions.useFastRecognition)
+        XCTAssertEqual(defaultOptions.visionPreferenceThreshold, 1.5)
+        XCTAssertNil(defaultOptions.maxPages)
+        XCTAssertNil(defaultOptions.apiConfig)
+        XCTAssertFalse(defaultOptions.verbose)
+        XCTAssertNil(defaultOptions.password)
+
+        // Test fast preset
+        let fastOptions = ProcessingOptions.fast
+        XCTAssertTrue(fastOptions.fastMode)
+    }
+
+    func testTextExtractionSourceCoverage() {
+        // Test all TextExtractionSource enum cases are usable
+        let sources: [TextExtractionSource] = [.pdfKit, .vision, .aiCorrected, .combined]
+
+        for source in sources {
+            let content = PageTextContent(
+                pageIndex: 0,
+                pdfText: "PDF",
+                visionText: "Vision",
+                correctedText: "Corrected",
+                selectedSource: source
+            )
+
+            // Each source should produce valid bestText
+            XCTAssertFalse(content.bestText.isEmpty)
+        }
+    }
 }

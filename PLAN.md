@@ -506,44 +506,54 @@ enum AIProcessingError: Error {
 
 ## 11. Implementation Phases
 
-### Phase 1: Vision Framework Integration (Core)
+### Phase 1: Vision Framework Integration (Core) ✅ COMPLETE
 
-1. Create `VisionTextExtractor.swift`
-2. Modify `PDFPageProcessor` to call Vision
-3. Add `--fast` flag to skip Vision
-4. Add text selection logic
-5. Write unit tests for Vision extraction
+1. ✅ Create `VisionTextExtractor.swift`
+2. ✅ Modify `PDFPageProcessor` to call Vision
+3. ✅ Add `--fast` flag to skip Vision
+4. ✅ Add text selection logic
+5. ✅ Write unit tests for Vision extraction
 
-### Phase 2: OpenAI-Compatible API Client
+### Phase 2: OpenAI-Compatible API Client ✅ COMPLETE
 
-1. Create `OpenAIClient.swift`
-2. Implement request/response types
-3. Add `--api` argument parsing
-4. Add `PDF22MD_API` environment variable support
-5. Write unit tests for HTTP client
+1. ✅ Create `OpenAIClient.swift`
+2. ✅ Implement request/response types
+3. ✅ Add `--api` argument parsing
+4. ✅ Add `PDF22MD_API` environment variable support
+5. ✅ Write unit tests for HTTP client
 
-### Phase 3: AI Processing Pipeline
+### Phase 3: AI Processing Pipeline ✅ COMPLETE
 
-1. Create `AITextProcessor.swift`
-2. Implement sliding window logic
-3. Integrate into `PDFMarkdownConverter`
-4. Add `--ai` flag
-5. Write integration tests
+1. ✅ Create `AITextProcessor.swift`
+2. ✅ Implement sliding window logic
+3. ✅ Integrate into `PDFMarkdownConverter`
+4. ✅ Add `--ai` flag
+5. ✅ Write integration tests
 
-### Phase 4: Apple Intelligence Integration
+### Phase 4: Apple Intelligence Integration ✅ COMPLETE
 
-1. Create `AppleIntelligenceProcessor.swift`
-2. Add availability checks for macOS 26+
-3. Integrate as fallback when no `--api`
-4. Test on supported hardware
+1. ✅ Create `AppleIntelligenceProcessor.swift` (stub for macOS 26+)
+2. ✅ Add availability checks for macOS 26+
+3. ✅ Integrate as fallback when no `--api`
+4. ⏳ Test on supported hardware (requires macOS 26)
 
-### Phase 5: Testing & Documentation
+### Phase 5: Testing & Documentation ✅ COMPLETE
 
-1. Test all modes with `testdata/pdf/` files
-2. Test with external scanned PDFs
-3. Update README.md
-4. Update man page
-5. Write CHANGELOG entry
+1. ✅ Test all modes with `testdata/pdf/` files
+2. ⏳ Test with external scanned PDFs (optional)
+3. ✅ Update README.md
+4. ✅ Update man page (via ArgumentParser --help)
+5. ✅ Write CHANGELOG entry
+
+### Additional Features Implemented
+
+- ✅ `--password` for encrypted PDFs
+- ✅ `--batch` for directory processing
+- ✅ `-j/--jobs` for parallel batch processing
+- ✅ `-q/--quiet` for silent mode
+- ✅ `--max-pages` for page limits
+- ✅ `--threshold` for Vision text selection
+- ✅ `--languages` for OCR language support
 
 ---
 
