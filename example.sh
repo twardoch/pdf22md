@@ -10,6 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PDF22MD="${SCRIPT_DIR}/pdf22md/.build/release/pdf22md"
 PDF_DIR="${SCRIPT_DIR}/testdata/pdf"
 TIMEOUT=${TIMEOUT:-120}
+VERSION="1.6.1"
 
 usage() {
     cat <<EOF
@@ -106,7 +107,7 @@ convert_pdf() {
     fi
 }
 
-echo "PDF22MD Batch Conversion Test"
+echo "PDF22MD Batch Conversion Test v${VERSION}"
 echo "Timeout: ${TIMEOUT}s per file"
 echo ""
 
