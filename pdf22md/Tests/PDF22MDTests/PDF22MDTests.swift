@@ -582,6 +582,22 @@ final class PDF22MDTests: XCTestCase {
         XCTAssertFalse(defaultOptions.verbose)
     }
 
+    func testProcessingOptionsMaxPages() {
+        let options = ProcessingOptions(maxPages: 5)
+        XCTAssertEqual(options.maxPages, 5)
+
+        let defaultOptions = ProcessingOptions.default
+        XCTAssertNil(defaultOptions.maxPages)
+    }
+
+    func testProcessingOptionsThreshold() {
+        let options = ProcessingOptions(visionPreferenceThreshold: 2.5)
+        XCTAssertEqual(options.visionPreferenceThreshold, 2.5)
+
+        let defaultOptions = ProcessingOptions.default
+        XCTAssertEqual(defaultOptions.visionPreferenceThreshold, 1.5)
+    }
+
     // MARK: - ChatMessage Tests
 
     func testChatMessageSystem() {

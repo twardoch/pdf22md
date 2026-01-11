@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `--api <model:key@url>`: Configure external AI API
   - `--languages <codes>`: Set languages for Vision OCR (e.g., "en,fr,de")
   - `--verbose`/`-v`: Show progress during conversion
+  - `--max-pages <n>`: Limit processing to first N pages (useful for previewing)
+  - `--threshold <n>`: Customize Vision vs PDF text selection ratio (default: 1.5)
 - **CLI Usage Examples**: Added comprehensive examples in `--help` output
 - **Input Validation**: Clear error messages for missing input files or empty stdin input
 - **Progress Logging**: Enhanced verbose mode with phase-by-phase progress reporting

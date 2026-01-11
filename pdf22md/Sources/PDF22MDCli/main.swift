@@ -15,6 +15,9 @@ struct PDF22MDCommand: AsyncParsableCommand {
               pdf22md -i doc.pdf -o doc.md --fast
                   Fast mode: PDF text only, skip Vision OCR
 
+              pdf22md -i doc.pdf -o doc.md --max-pages 3
+                  Process only first 3 pages (useful for previewing)
+
               pdf22md -i doc.pdf -o doc.md --ai --api gpt-4o:sk-xxx@https://api.openai.com/v1
                   AI-corrected output using OpenAI API
 
