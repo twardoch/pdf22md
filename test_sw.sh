@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 
 # Default to test.pdf if no argument provided
 if [ $# -ne 1 ]; then
-    PDF="testdata/test.pdf"
+    PDF="testdata/pdf/test.pdf"
 else
     PDF=$(realpath "$1")
 fi

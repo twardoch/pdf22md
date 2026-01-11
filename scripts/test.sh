@@ -129,13 +129,13 @@ rm -rf "$TEST_OUTPUT_DIR"
 mkdir -p "$TEST_OUTPUT_DIR"
 
 # Test with a simple PDF if available
-if [ -f "testdata/test.pdf" ]; then
+if [ -f "testdata/pdf/test.pdf" ]; then
     print_status "Testing with sample PDF"
     
     BINARY_PATH="pdf22md/.build/${BUILD_TYPE}/pdf22md"
     
     if [ -f "$BINARY_PATH" ]; then
-        "$BINARY_PATH" -i testdata/test.pdf -o "$TEST_OUTPUT_DIR/test.md" -a "$TEST_OUTPUT_DIR/assets"
+        "$BINARY_PATH" -i testdata/pdf/test.pdf -o "$TEST_OUTPUT_DIR/test.md" -a "$TEST_OUTPUT_DIR/assets"
         
         if [ -f "$TEST_OUTPUT_DIR/test.md" ]; then
             print_success "Integration test passed - output generated"
@@ -154,7 +154,7 @@ if [ -f "testdata/test.pdf" ]; then
         exit 1
     fi
 else
-    print_warning "No test PDF found at testdata/test.pdf, skipping integration test"
+    print_warning "No test PDF found at testdata/pdf/test.pdf, skipping integration test"
 fi
 
 # Test version output
