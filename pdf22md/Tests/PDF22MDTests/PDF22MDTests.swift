@@ -1104,4 +1104,69 @@ final class PDF22MDTests: XCTestCase {
             XCTAssertFalse(content.bestText.isEmpty)
         }
     }
+
+    // MARK: - API Configuration Edge Cases
+
+    func testAPIConfigurationWithSpecialCharactersInKey() throws {
+        // API keys often contain special characters like + / =
+        let config = try APIConfiguration.parse("gpt-4o:sk-abc+def/ghi=123@https://api.openai.com/v1")
+        XCTAssertEqual(config.model, "gpt-4o")
+        XCTAssertEqual(config.apiKey, "sk-abc+def/ghi=123")
+        XCTAssertEqual(config.baseURL.absoluteString, "https://api.openai.com/v1")
+    }
+
+    func testAPIConfigurationWithColonInKey() throws {
+        // Some API keys may contain colons - should use first colon as separator
+        let config = try APIConfiguration.parse("gpt-4o:sk-key:with:colons@https://api.openai.com/v1")
+        XCTAssertEqual(config.model, "gpt-4o")
+        XCTAssertEqual(config.apiKey, "sk-key:with:colons")
+        XCTAssertEqual(config.baseURL.absoluteString, "https://api.openai.com/v1")
+    }
+
+    func testAPIConfigurationWithPortInURL() throws {
+        // Local servers often use custom ports
+        let config = try APIConfiguration.parse("llama3:@http://localhost:11434/v1")
+        XCTAssertEqual(config.model, "llama3")
+        XCTAssertEqual(config.apiKey, "")
+        XCTAssertEqual(config.baseURL.absoluteString, "http://localhost:11434/v1")
+    }
+
+    func testAPIConfigurationEmptyString() {
+        XCTAssertThrowsError(try APIConfiguration.parse("")) { error in
+            XCTAssertTrue(error is APIConfigurationError)
+        }
+    }
+
+    func testAPIConfigurationOnlyAtSymbol() {
+        XCTAssertThrowsError(try APIConfiguration.parse("@")) { error in
+            XCTAssertTrue(error is APIConfigurationError)
+        }
+    }
+
+    // MARK: - PDFConversionError Tests
+
+    func testPDFConversionErrorDescriptions() {
+        // Test that all error cases have meaningful descriptions
+        let errors: [PDFConversionError] = [
+            .invalidPDF,
+            .fileNotFound,
+            .conversionFailed("test reason"),
+            .passwordRequired,
+            .incorrectPassword
+        ]
+
+        for error in errors {
+            XCTAssertNotNil(error.errorDescription, "Error \(error) should have a description")
+            XCTAssertFalse(error.errorDescription!.isEmpty, "Error \(error) description should not be empty")
+        }
+
+        // Test specific messages
+        XCTAssertTrue(error(.passwordRequired).contains("password") || error(.passwordRequired).contains("encrypted"))
+        XCTAssertTrue(error(.incorrectPassword).contains("password") || error(.incorrectPassword).contains("incorrect"))
+        XCTAssertTrue(error(.conversionFailed("custom")).contains("custom"))
+    }
+
+    private func error(_ e: PDFConversionError) -> String {
+        return e.errorDescription ?? ""
+    }
 }

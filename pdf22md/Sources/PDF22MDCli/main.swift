@@ -234,10 +234,12 @@ struct PDF22MDCommand: AsyncParsableCommand {
         log("Batch mode: \(pdfFiles.count) PDF file(s), \(effectiveJobs) parallel job(s)")
 
         // Process files with concurrency limit
+        let totalFiles = pdfFiles.count
         let results = await withTaskGroup(of: (String, Bool).self) { group in
             var pending = pdfFiles.makeIterator()
             var inFlight = 0
             var results: [(String, Bool)] = []
+            var completedCount = 0
 
             // Start initial batch of jobs
             while inFlight < effectiveJobs, let pdfURL = pending.next() {
@@ -258,10 +260,12 @@ struct PDF22MDCommand: AsyncParsableCommand {
             // Process remaining files as jobs complete
             for await (filename, success) in group {
                 results.append((filename, success))
+                completedCount += 1
+                let progress = "[\(completedCount)/\(totalFiles)]"
                 if success {
-                    log("Completed: \(filename)")
+                    log("\(progress) Completed: \(filename)")
                 } else {
-                    logError("Failed: \(filename)")
+                    logError("\(progress) Failed: \(filename)")
                 }
 
                 // Start next job if available
