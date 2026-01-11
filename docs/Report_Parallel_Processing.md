@@ -1,24 +1,24 @@
 # Parallel Processing in `pdf22md`
 
-This document outlines the implementation of parallel processing in the `pdf22md` command-line tool for converting PDF documents to Markdown format.
+This document describes how `pdf22md` uses parallel processing to convert multi-page PDFs to Markdown more quickly.
 
 ## 1. Objective
 
-The goal was to accelerate the conversion of multi-page PDF documents by processing multiple pages concurrently and saving extracted images in parallel.
+Process multiple PDF pages at the same time and save extracted images in parallel to reduce overall conversion time.
 
 ## 2. Technology: Grand Central Dispatch (GCD)
 
-Similar to `pdfupng`, we utilized Apple's **Grand Central Dispatch (GCD)** framework with the `dispatch_apply` function for parallel execution.
+Like `pdfupng`, we used Apple’s **Grand Central Dispatch (GCD)** framework with `dispatch_apply` for concurrent execution.
 
 ## 3. Implementation Details
 
-### 3.1. Parallel Page Processing
+### 3.1. Parallel Page Conversion
 
-The core changes were made within the `convertWithAssetsFolderPath:rasterizedDPI:completion:` method in `PDFMarkdownConverter.m`.
+Changes were made to the `convertWithAssetsFolderPath:rasterizedDPI:completion:` method in `PDFMarkdownConverter.m`.
 
-#### From Sequential to Concurrent
+#### Replacing the Sequential Loop
 
-The original implementation used a sequential `for` loop:
+Originally, pages were handled one after another:
 
 ```objc
 for (NSInteger pageIndex = 0; pageIndex < pageCount; pageIndex++) {
@@ -27,7 +27,7 @@ for (NSInteger pageIndex = 0; pageIndex < pageCount; pageIndex++) {
 }
 ```
 
-This was replaced with:
+Now, GCD handles them concurrently:
 
 ```objc
 dispatch_apply(pageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t pageIndex) {
@@ -38,16 +38,18 @@ dispatch_apply(pageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFA
 });
 ```
 
-### 3.2. Thread Safety Measures
+### 3.2. Thread Safety
 
-1. **Temporary Storage Arrays**: Instead of directly modifying shared arrays (`allElements`, `fontStats`), we create temporary per-page storage:
+To avoid race conditions, shared data is no longer modified directly during parallel operations.
+
+1. **Per-Page Storage**: Each page writes to its own temporary arrays:
 
 ```objc
 NSMutableArray<NSMutableArray<id<ContentElement>> *> *pageElementsArray = [NSMutableArray arrayWithCapacity:pageCount];
 NSMutableArray<NSMutableDictionary *> *pageFontStatsArray = [NSMutableArray arrayWithCapacity:pageCount];
 ```
 
-2. **Error Handling**: A shared boolean flag with synchronized access:
+2. **Error Flag Sync**: A shared failure flag is accessed using `@synchronized`:
 
 ```objc
 __block BOOL processingFailed = NO;
@@ -59,7 +61,7 @@ NSObject *lock = [[NSObject alloc] init];
 }
 ```
 
-3. **Result Merging**: After parallel processing completes, results are merged sequentially:
+3. **Sequential Merge**: After all pages finish, results are combined:
 
 ```objc
 for (NSInteger i = 0; i < pageCount; i++) {
@@ -70,7 +72,7 @@ for (NSInteger i = 0; i < pageCount; i++) {
 
 ### 3.3. Parallel Image Saving
 
-Image saving was also parallelized:
+Saving images also runs in parallel:
 
 ```objc
 dispatch_apply(imageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t index) {
@@ -88,17 +90,17 @@ dispatch_apply(imageCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEF
 
 ### 3.4. Memory Management
 
-Each parallel operation is wrapped in `@autoreleasepool` to ensure prompt deallocation of temporary objects and prevent memory spikes.
+Each parallel task runs inside an `@autoreleasepool` to keep memory usage from spiraling out of control.
 
-## 4. Performance Benefits
+## 4. Performance Gains
 
-- **Multi-core Utilization**: Pages are processed on multiple CPU cores simultaneously
-- **Reduced Total Time**: For PDFs with many pages, the speedup is nearly linear with the number of cores
-- **Efficient Memory Usage**: Autoreleasepool prevents memory accumulation
-- **Scalability**: The implementation automatically adapts to the available hardware
+- **Multi-core Use**: Pages run on multiple CPU cores at once  
+- **Faster Conversion**: Speedup scales nearly linearly with core count on large documents  
+- **Controlled Memory**: Autorelease pools prevent leaks and bloat  
+- **Hardware Adaptation**: Automatically adjusts to available cores  
 
-## 5. Considerations
+## 5. Notes and Limits
 
-- **Thread Safety**: All shared resources are protected with appropriate synchronization
-- **Memory Overhead**: Each parallel task has its own memory footprint, but autoreleasepool keeps it manageable
-- **I/O Bottlenecks**: Image saving may be limited by disk I/O speed rather than CPU
+- **Thread Safety Required**: Shared data must be guarded with synchronization  
+- **Memory Trade-off**: More tasks mean more memory, but not unmanageable thanks to autorelease pools  
+- **Disk I/O Can Slow Things Down**: Image saving speed depends on storage performance, not just CPU power
