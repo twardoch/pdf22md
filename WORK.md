@@ -1,23 +1,13 @@
 # Work Progress
 
-## Current Session
+## v1.6.0 Release Ready
 
-### Completed: example.sh conversion test script
+- **Version**: v1.6.0
+- **Tests**: 72 test functions
+- **Code**: 15 source files, 3142 lines
 
-Created `example.sh` that converts all PDFs in `testdata/pdf/` using 4 methods:
-- **fast**: PDF text only (no OCR)
-- **standard**: Vision OCR (default)
-- **optimized**: GCD-optimized engine
-- **ultra**: Ultra-optimized NSString engine
+Ready to push with `git push origin main`.
 
-Results stored in `testdata/{method}/` directories with assets.
+## Recent: Added example.sh
 
-**Test Results:**
-- test.pdf: Works in all 4 modes
-- jlmp.pdf: Works in optimized/ultra modes
-- bloo/frut/gard.pdf: Work but need >60s timeout for full processing
-
-**Script Features:**
-- Configurable timeout via `TIMEOUT` env var (default 120s)
-- Filters noisy debug output
-- Shows summary of files generated
+Batch conversion script added for testing all 4 conversion methods against sample PDFs.
