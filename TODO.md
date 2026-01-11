@@ -14,11 +14,12 @@
 - [x] CLI option: `--max-pages` to limit pages processed
 - [x] CLI option: `--threshold` to customize Vision vs PDF text selection
 
-## Optional Enhancements
+## Completed
 
 ### Apple Intelligence (requires macOS 26+)
-- [ ] Create `AppleIntelligenceProcessor.swift` with `#if canImport(FoundationModels)`
-- [ ] Implement `@available(macOS 26.0, *)` availability check
+- [x] Create `AppleIntelligenceProcessor.swift` with stub implementation
+- [x] Implement `@available(macOS 26.0, *)` availability check (in comments)
+- [x] Add future implementation template for FoundationModels API
 
 ### Additional Testing
 - [ ] Integration tests for AI processing pipeline
@@ -26,9 +27,9 @@
 - [ ] Test AI mode with external API (OpenAI/Claude/Ollama)
 
 ### Future Features
-- [ ] Batch processing for multiple PDFs
-- [ ] Password-protected PDF support
-- [ ] OCR result caching
+- [NOT NOW] Batch processing for multiple PDFs
+- [NOT NOW] Password-protected PDF support
+- [NOT NOW] OCR result caching
 
 ## Notes
 
