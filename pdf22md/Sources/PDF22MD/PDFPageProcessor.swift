@@ -1,6 +1,7 @@
 import Foundation
 import PDFKit
 import CoreGraphics
+import Vision
 
 /// Processes individual PDF pages to extract content elements
 final class PDFPageProcessor {
@@ -8,15 +9,19 @@ final class PDFPageProcessor {
     private let pageIndex: Int
     private let dpi: CGFloat
     private let assetsPath: String?
-    
-    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0, assetsPath: String? = nil) {
+    private let options: ProcessingOptions
+
+    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0, assetsPath: String? = nil, options: ProcessingOptions = .default) {
         self.pdfPage = page
         self.pageIndex = pageIndex
         self.dpi = dpi
         self.assetsPath = assetsPath
+        self.options = options
     }
-    
-    /// Process the page and extract all content elements
+
+    // MARK: - Legacy API (backward compatible)
+
+    /// Process the page and extract all content elements (legacy method)
     func processPage() -> [PDFElement] {
         var elements: [PDFElement] = []
         
@@ -191,7 +196,123 @@ final class PDFPageProcessor {
         
         // Draw the PDF page section
         pdfPage.draw(with: .mediaBox, to: context)
-        
+
         return context.makeImage()
+    }
+
+    // MARK: - Enhanced API (with Vision OCR support)
+
+    /// Result from enhanced page processing
+    struct EnhancedPageResult {
+        let pageIndex: Int
+        let pdfElements: [PDFElement]
+        let pdfText: String
+        let visionText: String?
+        let imageElements: [ImageElement]
+    }
+
+    /// Process the page with both PDF and Vision extraction
+    /// - Returns: Enhanced result containing both extraction methods
+    func processPageEnhanced() async -> EnhancedPageResult {
+        // Extract PDF elements (always)
+        let textElements = extractTextElements()
+        let pdfText = textElements.map { $0.text }.joined(separator: "\n")
+
+        // Extract images if assets path provided
+        var imageElements: [ImageElement] = []
+        if assetsPath != nil {
+            imageElements.append(contentsOf: CGPDFImageExtractor.extractImages(
+                from: pdfPage,
+                pageIndex: pageIndex,
+                dpi: dpi
+            ))
+            imageElements.append(contentsOf: extractVectorGraphics())
+        }
+
+        // Extract Vision text if not in fast mode
+        var visionText: String? = nil
+        if !options.fastMode {
+            visionText = await extractVisionText()
+        }
+
+        return EnhancedPageResult(
+            pageIndex: pageIndex,
+            pdfElements: textElements,
+            pdfText: pdfText,
+            visionText: visionText,
+            imageElements: imageElements
+        )
+    }
+
+    /// Extract text using Vision OCR
+    /// - Returns: Concatenated OCR text or nil if extraction fails
+    private func extractVisionText() async -> String? {
+        let config = VisionTextExtractor.Configuration(
+            languages: options.languages,
+            useFastRecognition: options.useFastRecognition
+        )
+        let extractor = VisionTextExtractor(configuration: config)
+
+        do {
+            return try await extractor.extractTextAsString(from: pdfPage, dpi: dpi)
+        } catch {
+            // Vision extraction failed, return nil (graceful degradation)
+            return nil
+        }
+    }
+
+    /// Render entire page to CGImage for Vision OCR
+    func renderPageToImage() -> CGImage? {
+        let pageRect = pdfPage.bounds(for: .mediaBox)
+        let scale = dpi / 72.0
+
+        let width = Int(pageRect.size.width * scale)
+        let height = Int(pageRect.size.height * scale)
+
+        guard width > 0, height > 0 else { return nil }
+
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo.rawValue
+        ) else { return nil }
+
+        // Fill with white background
+        context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+
+        // Scale and draw
+        context.scaleBy(x: scale, y: scale)
+        pdfPage.draw(with: .mediaBox, to: context)
+
+        return context.makeImage()
+    }
+
+    /// Create PageTextContent from enhanced result with automatic text selection
+    static func createPageContent(
+        from result: EnhancedPageResult,
+        options: ProcessingOptions
+    ) -> PageTextContent {
+        let (_, source) = AITextProcessor.selectBestText(
+            pdfText: result.pdfText,
+            visionText: result.visionText,
+            threshold: options.visionPreferenceThreshold
+        )
+
+        return PageTextContent(
+            pageIndex: result.pageIndex,
+            pdfText: result.pdfText,
+            visionText: result.visionText,
+            correctedText: nil,  // Set later by AI processing
+            selectedSource: source,
+            pdfElements: result.pdfElements
+        )
     }
 }

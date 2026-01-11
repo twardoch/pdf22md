@@ -391,37 +391,186 @@ final class PDF22MDTests: XCTestCase {
             XCTFail("Could not find test PDF file")
             return
         }
-        
+
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("pdf22md-tests")
         let outputPath = tempDir.appendingPathComponent("custom-dpi-output.md")
         let assetsPath = tempDir.appendingPathComponent("custom-dpi-assets")
-        
+
         let converter = PDFMarkdownConverter(
             pdfURL: testPDFPath,
             outputPath: outputPath.path,
             assetsPath: assetsPath.path,
             dpi: 300.0 // High DPI
         )
-        
+
         do {
             try await converter.convert()
-            
+
             // Verify output exists
             XCTAssertTrue(FileManager.default.fileExists(atPath: outputPath.path), "Custom DPI output should exist")
-            
+
             // Check if assets were created with higher quality
             let assetFiles = try FileManager.default.contentsOfDirectory(atPath: assetsPath.path)
             let imageFiles = assetFiles.filter { $0.hasSuffix(".png") || $0.hasSuffix(".jpg") || $0.hasSuffix(".jpeg") }
-            
+
             // Higher DPI should potentially create larger files
             if !imageFiles.isEmpty {
                 let firstImagePath = assetsPath.appendingPathComponent(imageFiles[0])
                 let imageData = try Data(contentsOf: firstImagePath)
                 XCTAssertGreaterThan(imageData.count, 0, "Image should have data")
             }
-            
+
         } catch {
             XCTFail("Custom DPI conversion failed: \(error)")
         }
+    }
+
+    // MARK: - API Configuration Tests
+
+    func testAPIConfigurationParseValid() {
+        // Test valid OpenAI format
+        do {
+            let config = try APIConfiguration.parse("gpt-4o:sk-xxx123@https://api.openai.com/v1")
+            XCTAssertEqual(config.model, "gpt-4o")
+            XCTAssertEqual(config.apiKey, "sk-xxx123")
+            XCTAssertEqual(config.baseURL.absoluteString, "https://api.openai.com/v1")
+        } catch {
+            XCTFail("Failed to parse valid OpenAI config: \(error)")
+        }
+
+        // Test local Ollama format (empty API key)
+        do {
+            let config = try APIConfiguration.parse("llama3:@http://localhost:11434/v1")
+            XCTAssertEqual(config.model, "llama3")
+            XCTAssertEqual(config.apiKey, "")
+            XCTAssertEqual(config.baseURL.absoluteString, "http://localhost:11434/v1")
+        } catch {
+            XCTFail("Failed to parse valid Ollama config: \(error)")
+        }
+
+        // Test Anthropic format
+        do {
+            let config = try APIConfiguration.parse("claude-3-haiku:sk-ant-xxx@https://api.anthropic.com/v1")
+            XCTAssertEqual(config.model, "claude-3-haiku")
+            XCTAssertEqual(config.apiKey, "sk-ant-xxx")
+            XCTAssertEqual(config.baseURL.absoluteString, "https://api.anthropic.com/v1")
+        } catch {
+            XCTFail("Failed to parse valid Anthropic config: \(error)")
+        }
+    }
+
+    func testAPIConfigurationParseInvalid() {
+        // Missing @ separator
+        XCTAssertThrowsError(try APIConfiguration.parse("gpt-4o:sk-xxx")) { error in
+            XCTAssertTrue(error is APIConfigurationError)
+        }
+
+        // Missing : separator
+        XCTAssertThrowsError(try APIConfiguration.parse("gpt-4o@https://api.openai.com/v1")) { error in
+            XCTAssertTrue(error is APIConfigurationError)
+        }
+
+        // Empty model name
+        XCTAssertThrowsError(try APIConfiguration.parse(":sk-xxx@https://api.openai.com/v1")) { error in
+            XCTAssertTrue(error is APIConfigurationError)
+        }
+
+        // Invalid URL
+        XCTAssertThrowsError(try APIConfiguration.parse("gpt-4o:sk-xxx@not a valid url")) { error in
+            XCTAssertTrue(error is APIConfigurationError)
+        }
+    }
+
+    // MARK: - Text Selection Tests
+
+    func testSelectBestTextPDFPreferred() {
+        // PDF text is longer, should prefer PDF
+        let (text, source) = AITextProcessor.selectBestText(
+            pdfText: "This is a long PDF text with many words and content.",
+            visionText: "Short OCR",
+            threshold: 1.5
+        )
+        XCTAssertEqual(source, .pdfKit)
+        XCTAssertEqual(text, "This is a long PDF text with many words and content.")
+    }
+
+    func testSelectBestTextVisionPreferred() {
+        // Vision text is significantly longer (>50% more), should prefer Vision
+        let (text, source) = AITextProcessor.selectBestText(
+            pdfText: "Short",
+            visionText: "This is a much longer OCR text with many more words and detailed content.",
+            threshold: 1.5
+        )
+        XCTAssertEqual(source, .vision)
+        XCTAssertEqual(text, "This is a much longer OCR text with many more words and detailed content.")
+    }
+
+    func testSelectBestTextNoVision() {
+        // No Vision text available, should use PDF
+        let (text, source) = AITextProcessor.selectBestText(
+            pdfText: "PDF text only",
+            visionText: nil,
+            threshold: 1.5
+        )
+        XCTAssertEqual(source, .pdfKit)
+        XCTAssertEqual(text, "PDF text only")
+    }
+
+    func testSelectBestTextEmptyVision() {
+        // Empty Vision text, should use PDF
+        let (text, source) = AITextProcessor.selectBestText(
+            pdfText: "PDF text",
+            visionText: "",
+            threshold: 1.5
+        )
+        XCTAssertEqual(source, .pdfKit)
+        XCTAssertEqual(text, "PDF text")
+    }
+
+    func testSelectBestTextVeryShortPDF() {
+        // PDF is very short, Vision has reasonable content
+        let (text, source) = AITextProcessor.selectBestText(
+            pdfText: "Hi",
+            visionText: "This page contains significant text content that was extracted via OCR.",
+            threshold: 1.5
+        )
+        XCTAssertEqual(source, .vision)
+        XCTAssertEqual(text, "This page contains significant text content that was extracted via OCR.")
+    }
+
+    // MARK: - Processing Options Tests
+
+    func testProcessingOptionsDefault() {
+        let options = ProcessingOptions.default
+        XCTAssertFalse(options.fastMode)
+        XCTAssertFalse(options.enableAI)
+        XCTAssertEqual(options.dpi, 144.0)
+        XCTAssertEqual(options.languages, ["en"])
+        XCTAssertFalse(options.useFastRecognition)
+        XCTAssertEqual(options.visionPreferenceThreshold, 1.5)
+        XCTAssertNil(options.apiConfig)
+    }
+
+    func testProcessingOptionsFast() {
+        let options = ProcessingOptions.fast
+        XCTAssertTrue(options.fastMode)
+    }
+
+    func testProcessingOptionsCustom() {
+        let options = ProcessingOptions(
+            fastMode: true,
+            enableAI: true,
+            dpi: 300.0,
+            languages: ["en", "fr", "de"],
+            useFastRecognition: true,
+            visionPreferenceThreshold: 2.0,
+            apiConfig: nil
+        )
+        XCTAssertTrue(options.fastMode)
+        XCTAssertTrue(options.enableAI)
+        XCTAssertEqual(options.dpi, 300.0)
+        XCTAssertEqual(options.languages, ["en", "fr", "de"])
+        XCTAssertTrue(options.useFastRecognition)
+        XCTAssertEqual(options.visionPreferenceThreshold, 2.0)
     }
 }

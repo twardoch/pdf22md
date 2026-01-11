@@ -1,171 +1,90 @@
-# pdf22md TODO List
+# TODO: PDF22MD Vision OCR + AI Enhancement
 
-## Immediate Priority (v1.6.0) - Code Consolidation & Core Fixes
+## Completed
 
-### Architecture Consolidation
-- [ ] Benchmark all three converter implementations (async/await, GCD, ultra-optimized)
-- [ ] Create performance comparison report with different PDF types
-- [ ] Consolidate to single optimized implementation
-- [ ] Remove redundant converter classes
-- [ ] Update CLI to remove --optimized and --ultra-optimized flags
+### Phase 1: Vision Framework Integration
 
-### Existing Issues from Previous TODO
-- [ ] Update `AssetExtractor.saveImage` to return path prefixed with assets directory
-- [ ] Fix Markdown image paths to include correct assets folder prefix
-- [ ] Add unit test validating image references in Markdown
-- [ ] Add error handling for corrupted image streams
-- [ ] Handle PDFs with no Resources dictionary gracefully
+- [x] Create `pdf22md/Sources/PDF22MD/Vision/` directory
+- [x] Create `VisionTextExtractor.swift` with `VisionTextResult` struct
+- [x] Implement `VisionTextExtractor.extractText(from:CGImage)` using `VNRecognizeTextRequest`
+- [x] Implement `VisionTextExtractor.extractText(from:PDFPage)` with page-to-image rendering
+- [x] Add `renderPageToImage()` method to `PDFPageProcessor`
+- [x] Modify `PDFPageProcessor.processPage()` to return both PDF text and Vision text
+- [x] Update `PDFMarkdownConverter` to handle dual text extraction
+- [x] Add `--fast` flag to `main.swift` CLI arguments
+- [x] Implement text selection logic: use Vision text if >50% more content than PDF text
 
-### Error Handling Enhancement
-- [ ] Create comprehensive PDFConversionError enum with specific cases
-- [ ] Add user-friendly error messages with recovery suggestions
-- [ ] Implement proper error propagation in all components
-- [ ] Add error logging with levels (debug, info, warning, error)
+### Phase 2: Data Models Update
 
-## Short Term (v1.7.0) - Testing & Reliability
+- [x] Add `TextExtractionSource` enum to `PDFElement.swift`
+- [x] Create `PageTextContent` struct for holding both extraction sources
+- [x] Create `ProcessingOptions` struct for configuration
+- [x] Create `APIConfiguration` struct for API parsing
+- [x] Update `PDFMarkdownConverter` to use `PageTextContent`
 
-### Test Infrastructure
-- [ ] Set up XCTest framework properly
-- [ ] Create unit tests for FontStatistics (heading detection)
-- [ ] Create unit tests for AssetExtractor (image saving)
-- [ ] Create unit tests for PDFPageProcessor (content extraction)
-- [ ] Add integration tests with sample PDFs
-- [ ] Implement CI test automation in GitHub Actions
-- [ ] Add code coverage reporting (target: 80%+)
+### Phase 3: OpenAI-Compatible API Client
 
-### Test Corpus
-- [ ] Collect diverse PDF samples (text-only, image-heavy, vector graphics)
-- [ ] Add encrypted PDF test cases
-- [ ] Add corrupted PDF test cases
-- [ ] Create expected output fixtures for regression testing
+- [x] Create `pdf22md/Sources/PDF22MD/AI/` directory
+- [x] Create `OpenAIClient.swift` with `ChatMessage` struct
+- [x] Create `ChatCompletionRequest` and `ChatCompletionResponse` structs
+- [x] Implement `OpenAIClient.complete(messages:)` using URLSession
+- [x] Add error handling for network failures, timeouts, invalid responses
+- [x] Add retry logic with exponential backoff (max 2 retries)
+- [x] Parse `--api` argument format: `model:api_key@base_url`
+- [x] Add `PDF22MD_API` environment variable support
 
-### Performance Testing
-- [ ] Create benchmark suite for performance testing
-- [ ] Add memory usage profiling
-- [ ] Set up automated performance regression detection
+### Phase 4: AI Text Processing Pipeline
 
-## Medium Term (v1.8.0) - User Experience
+- [x] Create `AITextProcessor.swift` with `Provider` enum
+- [x] Implement system prompt template with page number placeholder
+- [x] Implement `processPage()` method for single-page correction
+- [x] Implement sliding window logic in `PDFMarkdownConverter`
+- [x] Handle previous page context passing (Cn-1 to Cn)
+- [x] Add `--ai` flag to `main.swift` CLI arguments
 
-### Progress Indicators
-- [ ] Add ProgressReporter protocol
-- [ ] Implement console progress bar for page processing
-- [ ] Add estimated time remaining calculation
-- [ ] Add verbose mode (-v/--verbose) with detailed logs
-- [ ] Add quiet mode (-q/--quiet) for scripting
+### Phase 5: CLI Updates
 
-### Configuration System
-- [ ] Design configuration file schema (YAML/JSON)
-- [ ] Add configuration file loading (~/.pdf22mdrc)
-- [ ] Implement command-line override system
-- [ ] Add environment variable support (PDF22MD_*)
-- [ ] Create configuration presets (fast, quality, minimal)
+- [x] Add `--fast` flag for fast mode
+- [x] Add `--ai` flag for AI processing
+- [x] Add `--api` option for external API
+- [x] Add `--languages` option for Vision OCR languages
 
-### CLI Enhancements
-- [ ] Add batch processing mode for multiple PDFs
-- [ ] Implement watch mode for automatic conversion
-- [ ] Improve help text with examples
-- [ ] Add version command with build info
-- [ ] Add dry-run mode to preview operations
+### Phase 6: Documentation
 
-## Long Term (v2.0.0) - Professional Deployment
+- [x] Update `pdf22md/README.md` with new CLI options
+- [x] Update `PLAN.md` with implementation details
+- [x] Create this `TODO.md` with task tracking
 
-### Homebrew Distribution
-- [ ] Create homebrew-tap repository
-- [ ] Write Formula with dependencies
-- [ ] Set up Formula auto-update on release
-- [ ] Test installation on clean systems
-- [ ] Document tap installation process
+## Remaining
 
-### macOS Distribution
-- [ ] Obtain Apple Developer ID for code signing
-- [ ] Implement code signing in build process
-- [ ] Add notarization step for Gatekeeper
-- [ ] Create universal binary (x86_64 + arm64)
-- [ ] Design DMG background image
-- [ ] Automate DMG creation with create-dmg
+### Phase 5: Apple Intelligence Integration (optional, requires macOS 26+)
 
-### Release Automation
-- [ ] Enhance GitHub Actions for signed releases
-- [ ] Add changelog generation from commits
-- [ ] Implement semantic version bumping
-- [ ] Create release notes template
-- [ ] Add update checker in CLI
+- [ ] Create `AppleIntelligenceProcessor.swift` with `#if canImport(FoundationModels)`
+- [ ] Implement `@available(macOS 26.0, *)` availability check
+- [ ] Create `LanguageModelSession` wrapper
+- [ ] Test on macOS 26+ hardware (if available)
 
-## Future Enhancements (v2.1.0+)
+### Phase 7: Testing (optional)
 
-### Performance Optimizations
-- [ ] Implement streaming markdown generation
-- [ ] Add page-level caching for large PDFs
-- [ ] Optimize memory usage with autorelease pools
-- [ ] Add parallel asset extraction
-- [ ] Implement image deduplication
+- [ ] Write unit tests for `VisionTextExtractor`
+- [ ] Write unit tests for `OpenAIClient` request/response serialization
+- [ ] Write unit tests for API argument parsing
+- [ ] Write unit tests for text selection logic
+- [ ] Write integration tests for AI processing pipeline
+- [ ] Test with scanned PDF documents (OCR-only)
+- [ ] Test AI mode with external API (OpenAI/Claude/Ollama)
 
-### Advanced Features
-- [ ] Add table detection and conversion
-- [ ] Support for PDF forms extraction
-- [ ] Implement OCR integration for scanned PDFs
-- [ ] Add mathematical formula detection
-- [ ] Support multiple markdown flavors (CommonMark, GFM)
+### Future Enhancements
 
-### Vector Graphics Improvements
-- [ ] Replace grid-based approach with content stream parsing
-- [ ] Implement intelligent bounding box detection
-- [ ] Add SVG export option for vector graphics
-- [ ] Optimize rendering with caching
+- [ ] Add progress reporting for long-running conversions
+- [ ] Add verbose logging mode
+- [ ] Add batch processing for multiple PDFs
+- [ ] Add support for password-protected PDFs
+- [ ] Add caching of OCR results
 
-### API & Extensibility
-- [ ] Create Swift Package library target
-- [ ] Design plugin architecture
-- [ ] Add programmatic API documentation
-- [ ] Create example integrations
-- [ ] Support custom heading detection algorithms
+## Notes
 
-## Maintenance Tasks
-
-### Documentation
-- [ ] Update man page with new features
-- [ ] Create comprehensive user guide
-- [ ] Add troubleshooting section
-- [ ] Document configuration options
-- [ ] Create video tutorials
-
-### Code Quality
-- [ ] Run SwiftLint and fix all warnings
-- [ ] Add SwiftFormat for consistent style
-- [ ] Update code comments and documentation
-- [ ] Remove deprecated code
-- [ ] Optimize import statements
-
-### Community
-- [ ] Set up GitHub Discussions
-- [ ] Create contribution guidelines
-- [ ] Add issue templates
-- [ ] Set up project board
-- [ ] Create security policy
-
-## Version Planning
-
-### v1.6.0 - Consolidation Release
-- Code consolidation
-- Bug fixes
-- Basic error handling
-
-### v1.7.0 - Quality Release  
-- Comprehensive testing
-- Performance benchmarks
-- Reliability improvements
-
-### v1.8.0 - UX Release
-- Progress indicators
-- Configuration system
-- CLI enhancements
-
-### v2.0.0 - Professional Release
-- Homebrew distribution
-- Code signing
-- Universal binary
-
-### v2.1.0+ - Feature Releases
-- Advanced features
-- API development
-- Community features
+- Vision OCR can be slow for multi-page PDFs (processes each page serially)
+- Fast mode (`--fast`) recommended for PDFs with good text layers
+- AI processing requires external API or macOS 26+ for Apple Intelligence
+- Test PDFs available in `testdata/pdf/`
