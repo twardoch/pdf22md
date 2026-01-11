@@ -7,6 +7,26 @@ struct PDF22MDCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "pdf22md",
         abstract: "Converts PDF documents to Markdown format (Swift implementation)",
+        discussion: """
+            EXAMPLES:
+              pdf22md -i doc.pdf -o doc.md
+                  Convert PDF to Markdown (standard mode with Vision OCR)
+
+              pdf22md -i doc.pdf -o doc.md --fast
+                  Fast mode: PDF text only, skip Vision OCR
+
+              pdf22md -i doc.pdf -o doc.md --ai --api gpt-4o:sk-xxx@https://api.openai.com/v1
+                  AI-corrected output using OpenAI API
+
+              pdf22md -i doc.pdf -o doc.md -a ./images
+                  Extract images to ./images folder
+
+              cat doc.pdf | pdf22md > doc.md
+                  Read from stdin, write to stdout
+
+            ENVIRONMENT:
+              PDF22MD_API    API config (same format as --api)
+            """,
         version: Version.fullVersion
     )
 
@@ -49,6 +69,10 @@ struct PDF22MDCommand: AsyncParsableCommand {
         let inputURL: URL
 
         if let inputPath = input {
+            // Validate input file exists
+            guard FileManager.default.fileExists(atPath: inputPath) else {
+                throw ValidationError("Input file not found: \(inputPath)")
+            }
             inputURL = URL(fileURLWithPath: inputPath)
         } else {
             // Read from stdin into a temporary file
@@ -56,6 +80,9 @@ struct PDF22MDCommand: AsyncParsableCommand {
                 .appendingPathComponent(UUID().uuidString)
                 .appendingPathExtension("pdf")
             let inputData = FileHandle.standardInput.readDataToEndOfFile()
+            guard !inputData.isEmpty else {
+                throw ValidationError("No input provided. Use -i <file> or pipe PDF to stdin.")
+            }
             try inputData.write(to: tempFile)
             inputURL = tempFile
         }

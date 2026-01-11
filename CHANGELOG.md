@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Vision Framework OCR**: Added Apple Vision Framework integration for OCR text extraction from PDFs
+  - New `VisionTextExtractor` class using `VNRecognizeTextRequest`
+  - Dual text extraction: PDF text (via PDFKit) + Vision OCR text
+  - Smart text selection: uses Vision text if significantly more content than PDF text
+- **AI Text Correction**: Added AI-powered text correction with sliding window context
+  - New `AITextProcessor` with support for OpenAI-compatible APIs
+  - New `OpenAIClient` for HTTP communication with LLM APIs
+  - Sliding window context: each page corrected with context from previous page
+  - Support for future Apple Intelligence integration (macOS 26+)
+- **New CLI Options**:
+  - `--fast`: Skip Vision OCR, use PDF text extraction only (faster)
+  - `--ai`: Enable AI text correction
+  - `--api <model:key@url>`: Configure external AI API
+  - `--languages <codes>`: Set languages for Vision OCR (e.g., "en,fr,de")
+  - `--verbose`/`-v`: Show progress during conversion
+- **CLI Usage Examples**: Added comprehensive examples in `--help` output
+- **Input Validation**: Clear error messages for missing input files or empty stdin input
+- **Progress Logging**: Enhanced verbose mode with phase-by-phase progress reporting
+- **Environment Variable**: `PDF22MD_API` for API configuration
+- **Unit Tests**: Extended test coverage for API parsing, text selection, OpenAIClient serialization
+
 ### Changed
 - **Documentation**: Complete rewrite of `README.md` with comprehensive project documentation (#2)
   - Added detailed feature descriptions and usage examples
