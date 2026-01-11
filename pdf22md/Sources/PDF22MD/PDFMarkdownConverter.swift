@@ -212,12 +212,17 @@ public final class PDFMarkdownConverter {
             throw PDFConversionError.invalidPDF
         }
 
-        let pageCount = pdfDocument.pageCount
+        let totalPages = pdfDocument.pageCount
+        let pageCount = options.maxPages.map { min($0, totalPages) } ?? totalPages
         var pageContents: [PageTextContent] = []
         var allImageElements: [ImageElement] = []
         var allPdfElements: [PDFElement] = []
 
-        logProgress("Processing \(pageCount) page(s) from \(pdfURL.lastPathComponent)")
+        if let maxPages = options.maxPages, maxPages < totalPages {
+            logProgress("Processing \(pageCount) of \(totalPages) page(s) from \(pdfURL.lastPathComponent)")
+        } else {
+            logProgress("Processing \(pageCount) page(s) from \(pdfURL.lastPathComponent)")
+        }
         let modeDesc = options.fastMode ? "fast (PDF only)" : "standard (PDF + Vision OCR)"
         logProgress("Mode: \(modeDesc)")
 

@@ -126,6 +126,9 @@ public struct ProcessingOptions {
     /// AI API configuration (if provided)
     public var apiConfig: APIConfiguration?
 
+    /// Maximum pages to process (nil = all pages)
+    public var maxPages: Int?
+
     /// Enable verbose progress output to stderr
     public var verbose: Bool = false
 
@@ -139,6 +142,7 @@ public struct ProcessingOptions {
         languages: [String] = ["en"],
         useFastRecognition: Bool = false,
         visionPreferenceThreshold: Double = 1.5,
+        maxPages: Int? = nil,
         apiConfig: APIConfiguration? = nil,
         verbose: Bool = false
     ) {
@@ -148,6 +152,7 @@ public struct ProcessingOptions {
         self.languages = languages
         self.useFastRecognition = useFastRecognition
         self.visionPreferenceThreshold = visionPreferenceThreshold
+        self.maxPages = maxPages
         self.apiConfig = apiConfig
         self.verbose = verbose
     }

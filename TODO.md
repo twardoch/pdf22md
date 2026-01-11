@@ -11,6 +11,8 @@
 - [x] Progress reporting with `--verbose` flag
 - [x] Input validation with clear error messages
 - [x] Unit tests for API parsing, text selection, serialization
+- [x] CLI option: `--max-pages` to limit pages processed
+- [x] CLI option: `--threshold` to customize Vision vs PDF text selection
 
 ## Optional Enhancements
 
