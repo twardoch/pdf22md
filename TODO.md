@@ -11,6 +11,6 @@ All core features implemented. See PLAN.md for details.
 
 ## Future Enhancements
 
+- [x] Progress indicator for batch processing (implemented as [X/N] counter)
 - [ ] OCR result caching
 - [ ] Custom AI prompt templates
-- [ ] Progress bar for batch processing

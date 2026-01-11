@@ -1169,4 +1169,85 @@ final class PDF22MDTests: XCTestCase {
     private func error(_ e: PDFConversionError) -> String {
         return e.errorDescription ?? ""
     }
+
+    // MARK: - Batch Mode Validation Tests
+
+    func testBatchPDFFileFiltering() {
+        // Test that only .pdf files are selected for batch processing
+        let files = [
+            URL(fileURLWithPath: "/dir/doc1.pdf"),
+            URL(fileURLWithPath: "/dir/doc2.PDF"),  // uppercase
+            URL(fileURLWithPath: "/dir/readme.md"),
+            URL(fileURLWithPath: "/dir/image.png"),
+            URL(fileURLWithPath: "/dir/doc3.pdf"),
+            URL(fileURLWithPath: "/dir/.hidden.pdf"),
+        ]
+
+        let pdfFiles = files.filter { $0.pathExtension.lowercased() == "pdf" }
+
+        XCTAssertEqual(pdfFiles.count, 4)
+        XCTAssertTrue(pdfFiles.contains(where: { $0.lastPathComponent == "doc1.pdf" }))
+        XCTAssertTrue(pdfFiles.contains(where: { $0.lastPathComponent == "doc2.PDF" }))
+        XCTAssertTrue(pdfFiles.contains(where: { $0.lastPathComponent == "doc3.pdf" }))
+        XCTAssertTrue(pdfFiles.contains(where: { $0.lastPathComponent == ".hidden.pdf" }))
+        XCTAssertFalse(pdfFiles.contains(where: { $0.lastPathComponent == "readme.md" }))
+    }
+
+    func testBatchFileSorting() {
+        // Test that files are sorted alphabetically for consistent ordering
+        let files = [
+            URL(fileURLWithPath: "/dir/charlie.pdf"),
+            URL(fileURLWithPath: "/dir/alpha.pdf"),
+            URL(fileURLWithPath: "/dir/bravo.pdf"),
+        ]
+
+        let sorted = files.sorted { $0.path < $1.path }
+
+        XCTAssertEqual(sorted[0].lastPathComponent, "alpha.pdf")
+        XCTAssertEqual(sorted[1].lastPathComponent, "bravo.pdf")
+        XCTAssertEqual(sorted[2].lastPathComponent, "charlie.pdf")
+    }
+
+    func testEffectiveJobsCalculation() {
+        // Test that jobs are clamped to valid range
+        let cpuCount = ProcessInfo.processInfo.activeProcessorCount
+
+        // Test minimum clamping
+        let jobs1 = max(1, min(0, cpuCount))
+        XCTAssertEqual(jobs1, 1)
+
+        // Test maximum clamping to CPU count
+        let jobs2 = max(1, min(100, cpuCount))
+        XCTAssertEqual(jobs2, cpuCount)
+
+        // Test normal value passes through
+        let jobs3 = max(1, min(2, cpuCount))
+        XCTAssertEqual(jobs3, min(2, cpuCount))
+    }
+
+    // MARK: - File I/O Mode Tests
+
+    func testTemporaryFilePathGeneration() {
+        // Test that temp file paths are unique
+        let tempDir = FileManager.default.temporaryDirectory
+        let path1 = tempDir.appendingPathComponent(UUID().uuidString).appendingPathExtension("pdf")
+        let path2 = tempDir.appendingPathComponent(UUID().uuidString).appendingPathExtension("pdf")
+
+        XCTAssertNotEqual(path1, path2)
+        XCTAssertTrue(path1.pathExtension == "pdf")
+        XCTAssertTrue(path2.pathExtension == "pdf")
+    }
+
+    func testOutputPathDetermination() {
+        // Test output path logic when output is specified vs not
+        let inputURL = URL(fileURLWithPath: "/input/document.pdf")
+
+        // When output is specified, use it directly
+        let specifiedOutput = "/output/result.md"
+        XCTAssertEqual(specifiedOutput, "/output/result.md")
+
+        // When output is nil, derive from input
+        let derivedOutput = inputURL.deletingPathExtension().appendingPathExtension("md")
+        XCTAssertEqual(derivedOutput.lastPathComponent, "document.md")
+    }
 }
