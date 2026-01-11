@@ -113,6 +113,8 @@ echo "PDF22MD Batch Conversion Test v${VERSION}"
 echo "Timeout: ${TIMEOUT}s per file"
 echo ""
 
+TOTAL_START=$(date +%s)
+
 for method in "${METHODS[@]}"; do
     echo "=== Method: ${method} ==="
     for pdf in "$PDF_DIR"/*.pdf; do
@@ -121,6 +123,8 @@ for method in "${METHODS[@]}"; do
     done
     echo ""
 done
+
+TOTAL_ELAPSED=$(($(date +%s) - TOTAL_START))
 
 echo "Summary:"
 for method in "${METHODS[@]}"; do
@@ -133,3 +137,5 @@ for method in "${METHODS[@]}"; do
         echo "  ${method}: (no output)"
     fi
 done
+echo ""
+echo "Total time: ${TOTAL_ELAPSED}s"
