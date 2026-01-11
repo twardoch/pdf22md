@@ -1,3 +1,3 @@
 # Work Progress
 
-v1.6.0 complete. All features implemented and documented.
+v1.6.0 release finalized. Version updated and tests added.

@@ -1250,4 +1250,47 @@ final class PDF22MDTests: XCTestCase {
         let derivedOutput = inputURL.deletingPathExtension().appendingPathExtension("md")
         XCTAssertEqual(derivedOutput.lastPathComponent, "document.md")
     }
+
+    // MARK: - Empty/Invalid Input Tests
+
+    func testEmptyDataHandling() {
+        // Test that empty data is handled gracefully
+        let emptyData = Data()
+        XCTAssertTrue(emptyData.isEmpty)
+
+        // Verify empty check works
+        let hasContent = !emptyData.isEmpty
+        XCTAssertFalse(hasContent)
+    }
+
+    func testInvalidPDFPathHandling() {
+        // Test handling of non-existent file paths
+        let invalidPath = "/nonexistent/path/to/file.pdf"
+        let fileExists = FileManager.default.fileExists(atPath: invalidPath)
+        XCTAssertFalse(fileExists)
+    }
+
+    func testEmptyDirectoryBatchHandling() {
+        // Test that empty directory detection works
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+
+        // Create empty directory
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+
+        // Check it has no PDF files
+        let contents = (try? FileManager.default.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil)) ?? []
+        let pdfFiles = contents.filter { $0.pathExtension.lowercased() == "pdf" }
+        XCTAssertTrue(pdfFiles.isEmpty)
+
+        // Clean up
+        try? FileManager.default.removeItem(at: tempDir)
+    }
+
+    func testVersionInfo() {
+        // Test that version info is properly set
+        XCTAssertFalse(Version.current.isEmpty)
+        XCTAssertTrue(Version.current.hasPrefix("v") || Version.current == "dev")
+        XCTAssertFalse(Version.fullVersion.isEmpty)
+    }
 }

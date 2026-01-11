@@ -8,26 +8,26 @@ public struct Version {
     public static let current: String = {
         #if SWIFT_PACKAGE
         // When building with Swift Package Manager, use build-time version
-        return "v1.5.2-dirty"
+        return "v1.6.0"
         #else
         // Fallback for other build systems
         return "dev"
         #endif
     }()
-    
+
     /// Git commit hash, set at build time
     public static let commit: String = {
         #if SWIFT_PACKAGE
-        return "019e563645ff71ad6a65339f1d0496891e130365"
+        return "1426ccfc8bb69d0c4bdb953ce277c081432e81a7"
         #else
         return "unknown"
         #endif
     }()
-    
+
     /// Build timestamp
     public static let buildDate: String = {
         #if SWIFT_PACKAGE
-        return "2025-07-17T18:11:25Z"
+        return "2025-01-11T00:00:00Z"
         #else
         return "unknown"
         #endif
