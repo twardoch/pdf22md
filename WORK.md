@@ -130,6 +130,19 @@ Attempted to extract BatchProcessor but hit Swift typing issues with async closu
 | optimized | 0.314s | GCD parallelism |
 | standard | 0.823s | async/await + Vision |
 
+### Test Suite Updated for New APIs
+
+**Updated test methods to match refactored APIs:**
+- `testFontStatistics`: Now uses `FontStatistics.analyze(from:)` static factory instead of old constructor with `registerFont()`
+- `testTextElement`: Updated to use current constructor (removed `fontName`, added `pageIndex`)
+- `testImageElement`: Updated to use `path` instead of `imagePath`, added `isVectorSource`
+- `testAssetExtractor`: Updated to use new `AssetExtractor(assetsPath:pdfBasename:)` constructor
+- `testPDFPageProcessor`: Updated to use `PDFPageProcessor(page:pageIndex:dpi:assetsPath:options:)`
+- Removed duplicate `testVersionInfo` (was at line 47 and 1343)
+- Removed duplicate `testPDFConversionErrorDescriptions` (was at line 1038 and 1201)
+
+**Build verified**: `swift build` succeeds after test updates
+
 ### Next Steps
 
 1. Fix xcode-select configuration (user action required)

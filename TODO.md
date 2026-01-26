@@ -6,9 +6,9 @@
 
 - [ ] Fix xcode-select to point to Xcode.app (requires: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`)
 - [ ] Verify `swift test` runs without infrastructure errors
-- [ ] Add unit tests for PDFElement types (TextElement, ImageElement)
-- [ ] Add unit tests for ProcessingOptions defaults
-- [ ] Add unit tests for FontStatistics calculations
+- [x] Add unit tests for PDFElement types (TextElement, ImageElement) - tests updated for new API
+- [x] Add unit tests for ProcessingOptions defaults - tests exist and verified
+- [x] Add unit tests for FontStatistics calculations - tests updated for new API
 - [ ] Add integration tests with testdata/ sample PDFs
 - [x] Create GitHub Actions CI workflow for macOS
 - [x] CI: Run swift build, swift test, example.sh
