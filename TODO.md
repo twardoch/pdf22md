@@ -18,9 +18,9 @@
 - [x] Extract FontAnalyzer from PDFMarkdownConverter.swift
 - [x] Extract MarkdownGenerator from PDFMarkdownConverter.swift
 - [x] Verify PDFMarkdownConverter.swift is under 200 lines
-- [ ] Extract TextExtractor from PDFPageProcessor.swift
-- [ ] Extract VectorGraphicsExtractor from PDFPageProcessor.swift
-- [ ] Verify PDFPageProcessor.swift is under 150 lines
+- [x] Extract TextExtractor from PDFPageProcessor.swift
+- [x] Extract VectorGraphicsExtractor from PDFPageProcessor.swift
+- [x] Verify PDFPageProcessor.swift is under 150 lines
 - [ ] Extract ProcessingOptionsBuilder from main.swift
 - [ ] Extract BatchProcessor from main.swift
 - [ ] Verify main.swift is under 150 lines

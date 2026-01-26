@@ -80,11 +80,24 @@ Added `.github/workflows/ci.yml`:
 | FontStatistics.swift | 22 | 56 | n/a |
 | MarkdownGenerator.swift | - | 133 | n/a |
 
+### PDFPageProcessor.swift Refactored (318 → 94 lines)
+
+- Created `TextExtractor.swift` (66 lines): PDF text extraction with font/style info
+- Created `VectorGraphicsExtractor.swift` (88 lines): Grid-based vector rendering
+- Removed duplicate `renderPageToImage()` (already exists in VisionTextExtractor)
+
+**Updated file line counts:**
+| File | Before | After | Target |
+|------|--------|-------|--------|
+| PDFPageProcessor.swift | 318 | 94 | <150 |
+| TextExtractor.swift | - | 66 | n/a |
+| VectorGraphicsExtractor.swift | - | 88 | n/a |
+
 ### Next Steps
 
 1. Fix xcode-select configuration (user action required)
 2. Run `swift test` to verify test infrastructure
-3. Continue Epoch 2: Extract TextExtractor from PDFPageProcessor.swift
+3. Continue Epoch 2: Refactor main.swift (<150 lines)
 
 ---
 
