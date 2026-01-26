@@ -10,8 +10,8 @@
 - [ ] Add unit tests for ProcessingOptions defaults
 - [ ] Add unit tests for FontStatistics calculations
 - [ ] Add integration tests with testdata/ sample PDFs
-- [ ] Create GitHub Actions CI workflow for macOS
-- [ ] CI: Run swift build, swift test, example.sh
+- [x] Create GitHub Actions CI workflow for macOS
+- [x] CI: Run swift build, swift test, example.sh
 
 ## Epoch 2: Refactoring (HIGH)
 
