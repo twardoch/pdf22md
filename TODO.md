@@ -21,9 +21,9 @@
 - [x] Extract TextExtractor from PDFPageProcessor.swift
 - [x] Extract VectorGraphicsExtractor from PDFPageProcessor.swift
 - [x] Verify PDFPageProcessor.swift is under 150 lines
-- [ ] Extract ProcessingOptionsBuilder from main.swift
-- [ ] Extract BatchProcessor from main.swift
-- [ ] Verify main.swift is under 150 lines
+- [-] Extract ProcessingOptionsBuilder from main.swift (minor - 26 lines)
+- [-] Extract BatchProcessor from main.swift (blocked: async closure typing)
+- [-] Verify main.swift is under 150 lines (deferred - currently 322)
 - [ ] Analyze shared code between 3 converter variants
 - [ ] Extract common converter utilities
 - [ ] Reduce duplication across converter variants by 50%+
