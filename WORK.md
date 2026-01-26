@@ -66,11 +66,25 @@ Added `.github/workflows/ci.yml`:
 1. Extract `analyzeFonts()` → FontAnalyzer.swift (~35 lines)
 2. Extract `generateMarkdown()` + `generateEnhancedMarkdown()` → MarkdownGenerator.swift (~100 lines)
 
+### Epoch 2 Refactoring Complete
+
+**PDFMarkdownConverter.swift refactored (393 → 199 lines):**
+- Added `FontStatistics.analyze(from:)` static factory method (kept in FontStatistics.swift)
+- Created `MarkdownGenerator.swift` (133 lines) with `generate()` and `generateEnhanced()`
+- PDFMarkdownConverter now delegates font analysis and markdown generation
+
+**File line counts after refactoring:**
+| File | Before | After | Target |
+|------|--------|-------|--------|
+| PDFMarkdownConverter.swift | 393 | 199 | <200 |
+| FontStatistics.swift | 22 | 56 | n/a |
+| MarkdownGenerator.swift | - | 133 | n/a |
+
 ### Next Steps
 
 1. Fix xcode-select configuration (user action required)
 2. Run `swift test` to verify test infrastructure
-3. Begin code refactoring (Epoch 2 tasks)
+3. Continue Epoch 2: Extract TextExtractor from PDFPageProcessor.swift
 
 ---
 

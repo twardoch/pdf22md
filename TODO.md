@@ -15,9 +15,9 @@
 
 ## Epoch 2: Refactoring (HIGH)
 
-- [ ] Extract FontAnalyzer from PDFMarkdownConverter.swift
-- [ ] Extract MarkdownGenerator from PDFMarkdownConverter.swift
-- [ ] Verify PDFMarkdownConverter.swift is under 200 lines
+- [x] Extract FontAnalyzer from PDFMarkdownConverter.swift
+- [x] Extract MarkdownGenerator from PDFMarkdownConverter.swift
+- [x] Verify PDFMarkdownConverter.swift is under 200 lines
 - [ ] Extract TextExtractor from PDFPageProcessor.swift
 - [ ] Extract VectorGraphicsExtractor from PDFPageProcessor.swift
 - [ ] Verify PDFPageProcessor.swift is under 150 lines

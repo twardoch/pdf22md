@@ -133,9 +133,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PDF22MDConstants**: Centralized configuration constants eliminating magic numbers across 15+ files
 - Enhanced error handling with new file system error codes (InvalidPath, DirectoryNotFound, PermissionDenied)
 - Comprehensive codebase analysis using repomix (72,530 tokens, 52 files) for streamlining optimization
-- Detailed PLAN.md for systematic code streamlining approach
+- Detailed TASKS.md for systematic code streamlining approach
 - Updated TODO.md with final 3% streamlining tasks to reach 100% excellence
-- Comprehensive streamlining plan (PLAN.md) for codebase optimization
+- Comprehensive streamlining plan (TASKS.md) for codebase optimization
 - Unified build system using single Makefile and build.sh script
 - Shared component library (shared/ directory) for common algorithms
 - PDF22MDImageFormatDetection utility for optimal image format selection
@@ -161,7 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation script (release.sh) for macOS
 - GitHub Actions workflow for automated releases
 - Package installer (.pkg) generation for macOS
-- **Plan**: Detailed roadmap for robust raster-image extraction across Swift and Objective-C implementations appended to PLAN.md.
+- **Plan**: Detailed roadmap for robust raster-image extraction across Swift and Objective-C implementations appended to TASKS.md.
 - **TODO**: Simplified checklist for the above work inserted into TODO.md.
 
 ### Changed

@@ -105,8 +105,8 @@ Before you generate any response, assume your first instinct is wrong. Apply cha
 
 - `README.md` :  purpose and functionality (keep under 200 lines).
 - `CHANGELOG.md` :  past change release notes (accumulative).
-- `PLAN.md` :  detailed future goals, clear plan that discusses specifics.
-- `TODO.md` :  flat simplified itemized `- []`-prefixed representation of `PLAN.md`.
+- `TASKS.md` :  detailed future goals, clear plan that discusses specifics.
+- `TODO.md` :  flat simplified itemized `- []`-prefixed representation of `TASKS.md`.
 - `WORK.md` :  work progress updates including test results.
 - `DEPENDENCIES.md` :  list of packages used and why each was chosen.
 
@@ -208,7 +208,7 @@ For CLI Python scripts, use `fire` & `rich`, and start with:
 
 - Update `WORK.md` with what you’ve done, test results, and what needs to be done next.
 - Document all changes in `CHANGELOG.md`.
-- Update `TODO.md` and `PLAN.md` accordingly.
+- Update `TODO.md` and `TASKS.md` accordingly.
 - Update `DEPENDENCIES.md` if packages were added/removed.
 
 ## Special commands
@@ -245,7 +245,7 @@ When I say `/plan [requirement]`, you must think hard and:
    - Include edge cases and error handling.
    - Define testing and validation steps.
    - Specify which packages to use for each component.
-6. Deliver to `PLAN.md`:
+6. Deliver to `TASKS.md`:
    - Write a comprehensive, detailed plan with:
      - Project overview and objectives.
      - Technical architecture decisions.
@@ -260,15 +260,15 @@ Break complex requirements into atomic, actionable tasks. Identify and document 
 
 ### /report command
 
-1. Read `./TODO.md` and `./PLAN.md` files.
+1. Read `./TODO.md` and `./TASKS.md` files.
 2. Analyze recent changes.
 3. Run tests.
 4. Document changes in `./CHANGELOG.md`.
-5. Remove completed items from `./TODO.md` and `./PLAN.md`.
+5. Remove completed items from `./TODO.md` and `./TASKS.md`.
 
 #### /work command
 
-1. Read `./TODO.md` and `./PLAN.md` files, think hard and reflect.
+1. Read `./TODO.md` and `./TASKS.md` files, think hard and reflect.
 2. Write down the immediate items in this iteration into `./work.md`.
 3. Write tests for the items first.
 4. Work on these items.
