@@ -107,11 +107,34 @@ Attempted to extract BatchProcessor but hit Swift typing issues with async closu
 | PDFPageProcessor.swift | 318 | 94 | <150 | DONE |
 | main.swift | 322 | 322 | <150 | DEFERRED |
 
+### Additional Epoch 2 Refactoring
+
+**PDFMarkdownConverterOptimized.swift refactored (199 → 80 lines, 60% reduction):**
+- Removed duplicated `analyzeFonts()` - now uses `FontStatistics.analyze()`
+- Removed duplicated `generateMarkdown()` - now uses `MarkdownGenerator`
+- Kept GCD concurrency pattern intact for performance
+
+### Epoch 3: Benchmark Script Created
+
+**benchmark.sh** - Comprehensive benchmark tool:
+- Tests all 4 methods: fast, standard, optimized, ultra
+- Measures wall time, output size
+- CSV output for data analysis
+- Supports single file or batch mode
+
+**Initial benchmark results (test.pdf, 1 iteration):**
+| Method | Time | Notes |
+|--------|------|-------|
+| ultra | 0.143s | NSString + pre-allocation |
+| fast | 0.253s | PDF-only, no Vision |
+| optimized | 0.314s | GCD parallelism |
+| standard | 0.823s | async/await + Vision |
+
 ### Next Steps
 
 1. Fix xcode-select configuration (user action required)
 2. Run `swift test` to verify test infrastructure
-3. Continue with Epoch 3: Performance tasks
+3. Continue Epoch 3: Profile and optimize image extraction
 
 ---
 

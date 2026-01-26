@@ -24,13 +24,13 @@
 - [-] Extract ProcessingOptionsBuilder from main.swift (minor - 26 lines)
 - [-] Extract BatchProcessor from main.swift (blocked: async closure typing)
 - [-] Verify main.swift is under 150 lines (deferred - currently 322)
-- [ ] Analyze shared code between 3 converter variants
-- [ ] Extract common converter utilities
-- [ ] Reduce duplication across converter variants by 50%+
+- [x] Analyze shared code between 3 converter variants
+- [x] Extract common converter utilities
+- [x] Reduce duplication across converter variants by 50%+
 
 ## Epoch 3: Performance (MEDIUM)
 
-- [ ] Create benchmark.sh script for all 4 methods
+- [x] Create benchmark.sh script for all 4 methods
 - [ ] Measure: wall time, CPU time, memory, pages/sec
 - [ ] Profile image extraction performance
 - [ ] Parallelize XObject image extraction
