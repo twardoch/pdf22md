@@ -1,6 +1,8 @@
 # pdf22md: Fast PDF to Markdown Converter for macOS
 
-**pdf22md** extracts text and images from PDF files and converts them into clean Markdown documents. Built with Swift, it uses modern concurrency features like async/await and optimized GCD-based versions to process multi-page documents quickly.
+> **Status**: v1.6.1 — Production-ready with Vision OCR and AI text correction.
+
+**pdf22md** extracts text and images from PDF files and converts them into clean Markdown documents. Built with Swift for macOS, it uses modern concurrency (async/await, GCD) to process multi-page documents quickly. Features include Vision-based OCR for scanned PDFs and optional AI-powered text correction via OpenAI or Apple Intelligence.
 
 ## Who is it for?
 
@@ -16,17 +18,21 @@ This tool is useful for:
 Key features include:
 
 *   **Speed**: Uses all available CPU cores to process pages concurrently. Especially effective on large documents.
+*   **Vision OCR**: Extracts text from scanned PDFs and images using Apple's Vision framework. Works automatically when PDFKit text extraction returns empty content.
+*   **AI Text Correction**: Optional post-processing with OpenAI API or Apple Intelligence to fix OCR errors, improve formatting, and clean up extracted text.
 *   **Smart Heading Detection**: Analyzes font sizes and usage frequency to automatically format titles and headings (`#`, `##`, `###`) in the Markdown output.
 *   **Image Extraction**:
     *   Pulls both raster (JPEG, PNG) and vector images from the PDF's XObject streams.
     *   Saves images into a specified assets folder.
     *   Links images in Markdown using this naming convention: `<pdf-basename>-<page-number>-<asset-number>.<ext>`.
 *   **Intelligent Image Formatting**: Chooses between JPEG and PNG based on image properties like transparency and color complexity to optimize file size and quality.
+*   **Batch Processing**: Process multiple PDFs in parallel with configurable job count.
+*   **Password Support**: Open password-protected PDFs.
 *   **Flexible Input/Output**:
     *   Reads PDFs from file paths or `stdin`.
     *   Writes Markdown to files or `stdout`.
 *   **Custom DPI Rasterization**: Converts vector graphics (charts, diagrams) into bitmaps at user-defined resolution. Default is 144 DPI.
-*   **Multiple Engines**: Includes standard async/await implementation and optimized GCD variants for performance tuning.
+*   **Multiple Engines**: Three processing engines (async/await, GCD-optimized, ultra-optimized) for performance tuning.
 
 ## Installation
 
@@ -64,7 +70,7 @@ Requires Xcode Command Line Tools.
 Basic syntax:
 
 ```
-pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi] [--optimized | --ultra-optimized]
+pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi] [options]
 ```
 
 **Options:**
@@ -73,8 +79,24 @@ pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi] [--optimized |
 *   `-o, --output <path>`: Output Markdown file. If omitted, writes to `stdout`.
 *   `-a, --assets <path>`: Folder to save extracted images. Image extraction is skipped if not provided.
 *   `-d, --dpi <value>`: DPI for rasterizing vector graphics. Default: `144.0`.
+*   `-p, --password <pwd>`: Password for protected PDFs.
+
+**Processing Engines:**
+
+*   `--fast`: Minimal processing, fastest output.
 *   `--optimized`: Use GCD-based engine.
 *   `--ultra-optimized`: Use NSString-based high-performance engine.
+
+**AI Options:**
+
+*   `--ai`: Enable AI-based text correction (requires `--api` or Apple Intelligence).
+*   `--api <key>`: OpenAI API key for AI text correction.
+*   `--apple-intelligence`: Use Apple Intelligence instead of OpenAI.
+
+**Batch Mode:**
+
+*   `--batch`: Enable batch processing of multiple PDFs.
+*   `-j, --jobs <n>`: Number of parallel jobs in batch mode. Default: CPU core count.
 
 **Examples:**
 
@@ -91,6 +113,21 @@ pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi] [--optimized |
 3.  **Custom DPI with optimized engine:**
     ```bash
     pdf22md -i presentation.pdf -o slides.md -a ./images -d 300 --optimized
+    ```
+
+4.  **With AI text correction (OpenAI):**
+    ```bash
+    pdf22md -i scanned.pdf -o cleaned.md --ai --api "sk-..."
+    ```
+
+5.  **Batch process multiple PDFs:**
+    ```bash
+    pdf22md --batch -i "docs/*.pdf" -o ./output/ -a ./assets/ -j 4
+    ```
+
+6.  **Open password-protected PDF:**
+    ```bash
+    pdf22md -i protected.pdf -o output.md -p "secret"
     ```
 
 ## Batch Testing
@@ -172,9 +209,25 @@ Three processing engines:
 *   Optimized versions use GCD with concurrent queues and dispatch groups.
 *   Ultra-optimized version adds aggressive pre-allocation and buffer manipulation.
 
+### Vision OCR Pipeline
+
+*   Automatically activates when PDFKit returns empty text (scanned PDFs).
+*   Uses `VNRecognizeTextRequest` with accurate recognition level.
+*   Processes page images at configurable DPI for optimal accuracy.
+*   Results integrated into the same `TextElement` model.
+
+### AI Text Correction
+
+*   Optional post-processing step using LLM APIs.
+*   OpenAI: GPT-4o-mini for efficient text cleanup.
+*   Apple Intelligence: On-device processing (macOS 15+).
+*   Corrects OCR errors, improves formatting, normalizes whitespace.
+
 ### Integration Points
 
 *   **Content Extraction Layer**: Bridges PDFKit parsing with structured `PDFElement` representation.
+*   **Vision OCR Layer**: Fallback text extraction using Apple's Vision framework.
+*   **AI Processing Layer**: Optional LLM-based text enhancement and correction.
 *   **Asset Management Layer**: Links `CGImage` objects to disk files and manages folder organization.
 
 ## Contributing
