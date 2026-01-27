@@ -32,7 +32,7 @@ Key features include:
     *   Reads PDFs from file paths or `stdin`.
     *   Writes Markdown to files or `stdout`.
 *   **Custom DPI Rasterization**: Converts vector graphics (charts, diagrams) into bitmaps at user-defined resolution. Default is 144 DPI.
-*   **Multiple Engines**: Three processing engines (async/await, GCD-optimized, ultra-optimized) for performance tuning.
+*   **OCR Caching**: Results cached in `~/.cache/pdf22md/ocr/` to avoid re-processing unchanged PDFs.
 
 ## Installation
 
@@ -81,17 +81,27 @@ pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi] [options]
 *   `-d, --dpi <value>`: DPI for rasterizing vector graphics. Default: `144.0`.
 *   `-p, --password <pwd>`: Password for protected PDFs.
 
-**Processing Engines:**
+**Processing Modes:**
 
-*   `--fast`: Minimal processing, fastest output.
-*   `--optimized`: Use GCD-based engine.
-*   `--ultra-optimized`: Use NSString-based high-performance engine.
+*   Default: Standard mode with Vision OCR for enhanced text extraction.
+*   `--fast`: Skip Vision OCR, use PDF text extraction only (faster but less accurate for scanned documents).
 
 **AI Options:**
 
-*   `--ai`: Enable AI-based text correction (requires `--api` or Apple Intelligence).
-*   `--api <key>`: OpenAI API key for AI text correction.
-*   `--apple-intelligence`: Use Apple Intelligence instead of OpenAI.
+*   `--ai`: Enable AI-based text correction (uses Apple Intelligence if --api not specified).
+*   `--api <config>`: AI API in format `model:api_key@base_url` (e.g., `gpt-4o:sk-xxx@https://api.openai.com/v1`).
+*   `--ai-prompt <file>`: Custom AI prompt template (JSON file).
+
+**OCR Options:**
+
+*   `--languages <codes>`: Languages for Vision OCR (comma-separated ISO 639 codes, e.g., `en,fr,de`). Default: `en`.
+*   `--threshold <value>`: Vision text preference threshold (default: 1.5, use Vision if >N times longer than PDF text).
+*   `--no-cache`: Disable OCR result caching.
+
+**Output Control:**
+
+*   `-v, --verbose`: Show additional warnings and debug info.
+*   `-q, --quiet`: Suppress all non-error output.
 
 **Batch Mode:**
 
@@ -110,24 +120,34 @@ pdf22md [-i input.pdf] [-o output.md] [-a assets_folder] [-d dpi] [options]
     cat report.pdf | pdf22md > report.md
     ```
 
-3.  **Custom DPI with optimized engine:**
+3.  **High DPI for better image quality:**
     ```bash
-    pdf22md -i presentation.pdf -o slides.md -a ./images -d 300 --optimized
+    pdf22md -i presentation.pdf -o slides.md -a ./images -d 300
     ```
 
 4.  **With AI text correction (OpenAI):**
     ```bash
-    pdf22md -i scanned.pdf -o cleaned.md --ai --api "sk-..."
+    pdf22md -i scanned.pdf -o cleaned.md --ai --api "gpt-4o:sk-xxx@https://api.openai.com/v1"
     ```
 
-5.  **Batch process multiple PDFs:**
+5.  **Fast mode (PDF text only, no Vision OCR):**
     ```bash
-    pdf22md --batch -i "docs/*.pdf" -o ./output/ -a ./assets/ -j 4
+    pdf22md -i document.pdf -o output.md --fast
     ```
 
-6.  **Open password-protected PDF:**
+6.  **Multi-language OCR:**
     ```bash
-    pdf22md -i protected.pdf -o output.md -p "secret"
+    pdf22md -i french_german.pdf -o output.md --languages fr,de
+    ```
+
+7.  **Batch process multiple PDFs:**
+    ```bash
+    pdf22md --batch -i ./docs/ -o ./output/ -a ./assets/ -j 4
+    ```
+
+8.  **Open password-protected PDF:**
+    ```bash
+    pdf22md -i protected.pdf -o output.md --password "secret"
     ```
 
 ## Batch Testing
@@ -168,11 +188,9 @@ Designed for speed and efficiency:
 
 ### Core Architecture
 
-Three processing engines:
+Single unified converter using Swift's structured concurrency:
 
-1.  **Async/Await (`PDFMarkdownConverter.swift`)**: Standard engine using Swift's structured concurrency (`async/await`, `TaskGroup`).
-2.  **GCD Optimized (`PDFMarkdownConverterOptimized.swift`)**: Alternative engine using Grand Central Dispatch directly.
-3.  **Ultra-Optimized (`PDFMarkdownConverterUltraOptimized.swift`)**: High-speed engine using `NSString` and low-level optimizations.
+*   **`PDFMarkdownConverter.swift`**: Main converter with Vision OCR integration and optional AI processing. Uses `async/await` and `TaskGroup` for parallel page processing.
 
 ### Data Flow
 
@@ -204,10 +222,9 @@ Three processing engines:
 
 ### Concurrency Model
 
-*   Pages processed in parallel for speed.
-*   Standard version uses Swift's `TaskGroup`.
-*   Optimized versions use GCD with concurrent queues and dispatch groups.
-*   Ultra-optimized version adds aggressive pre-allocation and buffer manipulation.
+*   Pages processed in parallel using Swift's `TaskGroup`.
+*   Vision OCR requests execute concurrently per page.
+*   AI text correction processes pages sequentially with sliding window context.
 
 ### Vision OCR Pipeline
 

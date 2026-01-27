@@ -42,11 +42,11 @@
 
 ## Epoch 4: OCR (HIGH)
 
-- [ ] Design OCR cache schema (~/.cache/pdf22md/ocr/)
-- [ ] Implement cache key from PDF hash + page number
-- [ ] Add cache lookup before OCR processing
-- [ ] Add cache write after OCR processing
-- [ ] Add --no-cache CLI flag
+- [x] Design OCR cache schema (~/.cache/pdf22md/ocr/)
+- [x] Implement cache key from PDF hash + page number
+- [x] Add cache lookup before OCR processing
+- [x] Add cache write after OCR processing
+- [x] Add --no-cache CLI flag
 - [ ] Add --ocr-languages flag for language hints
 - [ ] Add --ocr-level flag (fast/accurate)
 - [ ] Implement optional image preprocessing pipeline
@@ -54,9 +54,9 @@
 
 ## Epoch 5: AI (MEDIUM)
 
-- [ ] Design prompt template format
-- [ ] Implement template loading from ~/.config/pdf22md/prompts/
-- [ ] Add --ai-prompt CLI flag
+- [x] Design prompt template format
+- [x] Implement template loading from JSON file
+- [x] Add --ai-prompt CLI flag
 - [ ] Create default prompt templates (default, academic, legal)
 - [ ] Add --ai-endpoint flag for custom endpoints
 - [ ] Add --ai-model flag for local models
