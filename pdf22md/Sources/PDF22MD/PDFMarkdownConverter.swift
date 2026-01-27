@@ -2,13 +2,13 @@
 import Foundation
 import PDFKit
 
-/// Main converter class that orchestrates PDF to Markdown conversion
 public final class PDFMarkdownConverter {
     private let pdfURL: URL
     private let outputPath: String?
     private let assetsPath: String?
     private let dpi: CGFloat
     private let options: ProcessingOptions
+    private var progress: ProgressTracker?
 
     public init(pdfURL: URL, outputPath: String?, assetsPath: String?, dpi: CGFloat = 144.0) {
         self.pdfURL = pdfURL
@@ -98,6 +98,9 @@ public final class PDFMarkdownConverter {
         var allImageElements: [ImageElement] = []
         
         let pdfData = try? Data(contentsOf: pdfURL)
+        
+        progress = ProgressTracker(total: pageCount)
+        progress?.isEnabled = options.showProgress
 
         if let maxPages = options.maxPages, maxPages < totalPages {
             logProgress("Processing \(pageCount) of \(totalPages) page(s) from \(pdfURL.lastPathComponent)")
@@ -107,8 +110,7 @@ public final class PDFMarkdownConverter {
         let modeDesc = options.fastMode ? "fast (PDF only)" : "standard (PDF + Vision OCR)"
         logProgress("Mode: \(modeDesc)")
 
-        logProgress("Phase 1: Extracting text...")
-        var completedPages = 0
+        progress?.start(phase: .extraction)
         var visionPagesCount = 0
         let extractionResults = await withTaskGroup(of: PDFPageProcessor.EnhancedPageResult?.self) { group in
             for pageIndex in 0..<pageCount {
@@ -133,16 +135,12 @@ public final class PDFMarkdownConverter {
             for await result in group {
                 if let result = result {
                     results.append(result)
-                    completedPages += 1
+                    self.progress?.increment()
+                    self.progress?.displayLine()
                     
                     let usedVision = result.visionText != nil && !result.visionText!.isEmpty
                     if usedVision {
                         visionPagesCount += 1
-                    }
-                    
-                    if self.options.showProgress {
-                        let visionIndicator = usedVision ? " (Vision OCR)" : ""
-                        FileHandle.standardError.write(Data("[pdf22md] Extracted page \(completedPages)/\(pageCount)\(visionIndicator)\n".utf8))
                     }
                 }
             }
@@ -165,21 +163,17 @@ public final class PDFMarkdownConverter {
 
         if options.enableAI && !options.apiConfigs.isEmpty {
             let apiNames = options.apiConfigs.map { $0?.model ?? "system" }.joined(separator: ", ")
-            logProgress("Phase 2: AI correction using \(apiNames)...")
+            logProgress("AI correction using \(apiNames)...")
+            progress?.start(phase: .aiProcessing)
             
             let aiProcessor = AITextProcessor(apiConfigs: options.apiConfigs, promptTemplate: options.promptTemplate ?? .default, verbose: options.verbose)
-            var currentProvider = ""
             let (results, partial) = try await aiProcessor.processPagesV3(
                 pages: pageContents,
                 progressCallback: { completed, total in
-                    if self.options.showProgress {
-                        let providerInfo = currentProvider.isEmpty ? "" : " [\(currentProvider)]"
-                        FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)\(providerInfo)...\n".utf8))
-                    }
+                    self.progress?.update(completed: completed)
+                    self.progress?.displayLine()
                 },
-                providerCallback: { provider in
-                    currentProvider = provider
-                },
+                providerCallback: nil,
                 retryCallback: { provider, attempt in
                     if self.options.showProgress {
                         FileHandle.standardError.write(Data("[pdf22md] Retrying \(provider) (attempt \(attempt))...\n".utf8))
@@ -205,14 +199,14 @@ public final class PDFMarkdownConverter {
                 logProgress("AI correction complete")
             }
         } else if options.enableAI, let apiConfig = options.apiConfig {
-            logProgress("Phase 2: AI correction using \(apiConfig.model) (multi-pass)...")
+            logProgress("AI correction using \(apiConfig.model) (multi-pass)...")
+            progress?.start(phase: .aiProcessing)
             let aiProcessor = AITextProcessor(apiConfig: apiConfig, promptTemplate: options.promptTemplate, verbose: options.verbose)
             let (results, partial) = try await aiProcessor.processPagesV3(
                 pages: pageContents,
                 progressCallback: { completed, total in
-                    if self.options.showProgress {
-                        FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)...\n".utf8))
-                    }
+                    self.progress?.update(completed: completed)
+                    self.progress?.displayLine()
                 }
             )
             if let partial = partial {
@@ -223,15 +217,15 @@ public final class PDFMarkdownConverter {
                 logProgress("AI correction complete")
             }
         } else if options.enableAI {
-            logProgress("Phase 2: AI correction using Apple Intelligence (multi-pass)...")
+            logProgress("AI correction using Apple Intelligence (multi-pass)...")
+            progress?.start(phase: .aiProcessing)
             let template = options.promptTemplate ?? .default
             let aiProcessor = AITextProcessor(provider: .appleIntelligence, promptTemplate: template, verbose: options.verbose)
             let (results, partial) = try await aiProcessor.processPagesV3(
                 pages: pageContents,
                 progressCallback: { completed, total in
-                    if self.options.showProgress {
-                        FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)...\n".utf8))
-                    }
+                    self.progress?.update(completed: completed)
+                    self.progress?.displayLine()
                 }
             )
             if let partial = partial {
@@ -245,16 +239,14 @@ public final class PDFMarkdownConverter {
             finalTexts = pageContents.map { $0.bestText }
         }
 
-        // Phase 3: Generate Markdown
-        logProgress("Phase 3: Generating Markdown...")
+        progress?.start(phase: .generation)
         let generator = MarkdownGenerator(pdfURL: pdfURL, assetsPath: assetsPath)
         let markdown = generator.generateEnhanced(texts: finalTexts, imageElements: allImageElements)
 
         try writeOutput(markdown)
+        progress?.finish()
         if let outputPath = outputPath {
             logProgress("Saved \(outputPath)")
-        } else {
-            logProgress("Done!")
         }
     }
 
