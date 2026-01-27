@@ -196,11 +196,9 @@ struct PDF22MDCommand: AsyncParsableCommand {
         FileHandle.standardError.write(Data("[pdf22md] \(message)\n".utf8))
     }
 
-    /// Log error to stderr (always shown unless quiet)
+    /// Log error to stderr (always shown)
     private func logError(_ message: String) {
-        if !quiet {
-            FileHandle.standardError.write(Data("[pdf22md] Error: \(message)\n".utf8))
-        }
+        FileHandle.standardError.write(Data("[pdf22md] Error: \(message)\n".utf8))
     }
 
     /// Process all PDFs in a directory (batch mode)
