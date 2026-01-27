@@ -7,10 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **AI Workflow V3 (Multi-Pass Pipeline)**: Complete redesign for improved accuracy
+  - New `TextValidator` with word frequency cosine similarity (0.85 threshold)
+  - New `ParagraphChunker` for sentence-aware splitting (≤3500 chars)
+  - New `PassPrompts` with 3 simple prompts: dehyphenation, OCR correction, cleanup
+  - New `MultiPassProcessor` orchestrating 3-pass pipeline with validation fallback
+  - Word retention improved from 78% (V2) to 93% (V3), char retention 97%
+  - Validation rejects hallucinated AI output, falls back to input text
+- **AI Workflow V2 (Issue 405 Fix)**: Complete redesign of AI processing chain
+  - New `TokenBudget` for per-provider token limits (Apple: 3500, OpenAI: 13000)
+  - New `PageGrouper` groups COMPLETE pages, never splits across chunks
+  - New `PageFormatter` wraps content in `<page num="N">` tags
+  - New `PromptTemplateV2` with simplified instructions, no `<IMPROVED_PREVIOUS>` poison
+  - Previous page is now READ-ONLY context (no recursive contamination)
+  - Adaptive splitting: on context overflow, groups split in half
+- **AI Context Window Management**: Automatic chunking for large pages to prevent context overflow
+  - New `ContextLimits` configuration for provider-specific token limits
+  - New `TokenEstimator` for pre-flight token estimation (4 chars/token heuristic with 20% safety margin)
+  - New `TextChunker` with sentence-aware splitting and 15% overlap for continuity
+  - Automatic chunking in `AppleIntelligenceProcessor` when text exceeds context limits
+  - OpenAI context error detection mapping HTTP errors to `contextWindowExceeded`
+- **Verbose AI Logging**: New `--verbose` output shows AI request/response content
+  - `[System]` prefix shows system prompt (first call only)
+  - `[AI→]` prefix shows input sent to AI with character count
+  - `[←AI]` prefix shows response received with character count
+  - Smart truncation: 300 chars start + 300 chars end, elide middle if >600
+  - `[Chunk N/M]` prefix when text is chunked for context limits
+  - New `AILogger` utility for consistent AI logging format
+- **Code Refactoring**: Extracted components for maintainability
+  - New `FontAnalyzer` extracted from PDFMarkdownConverter
+  - New `MarkdownGenerator` extracted from PDFMarkdownConverter
+  - New `TextExtractor` extracted from PDFPageProcessor
+  - New `VectorGraphicsExtractor` extracted from PDFPageProcessor
+  - PDFMarkdownConverter.swift: 393→199 lines
+  - PDFPageProcessor.swift: 317→150 lines
+
 ### Changed
 - **CLI Simplification (Issue #402)**: Removed `--optimized` and `--ultra-optimized` flags. Vision OCR is now enabled by default (use `--fast` to skip). Updated `--verbose` to show warnings instead of progress.
 - CLI output: suppress noisy PDFKit/CoreText stderr lines; show progress by default.
 - ProcessingOptions: added `showProgress` flag for CLI-controlled progress output.
+- **Apple Intelligence Response Tokens**: Reduced `maximumResponseTokens` from 4000 → 1000 (leaves 3096 tokens for input in 4096 limit)
+- **OpenAI Default Tokens**: Changed `maxTokens` from `nil` → `4000`
+- **Retry Logic**: Context window errors and guardrail violations no longer retry (deterministic failures)
+- **AI Processing**: All 3 AI code paths now use V3 multi-pass processor
+
+### Fixed
+- **Apple Intelligence Context Overflow**: Pages with large text content (>4096 tokens) no longer fail with "context limit exceeded" errors
+- Proactive chunking prevents context errors before they occur
+- Unused variable warnings in `AppleIntelligenceProcessor` and `TextChunker`
+- **PromptTemplateV2 parseResponse()**: Fixed handling of unclosed tags in AI responses
 
 ### Removed
 - `PDFMarkdownConverterOptimized` class - consolidated into main converter

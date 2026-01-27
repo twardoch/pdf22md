@@ -2,113 +2,100 @@
 
 > Flat list of actionable items for MVP 2.0. See [TASKS.md](TASKS.md) for full roadmap.
 
-## Epoch 1: Foundation (CRITICAL)
+## P0: Critical (Blocks Development)
 
-- [ ] Fix xcode-select to point to Xcode.app (requires: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`)
+- [ ] Fix xcode-select: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
 - [ ] Verify `swift test` runs without infrastructure errors
-- [x] Add unit tests for PDFElement types (TextElement, ImageElement) - tests updated for new API
-- [x] Add unit tests for ProcessingOptions defaults - tests exist and verified
-- [x] Add unit tests for FontStatistics calculations - tests updated for new API
 - [ ] Add integration tests with testdata/ sample PDFs
-- [x] Create GitHub Actions CI workflow for macOS
-- [x] CI: Run swift build, swift test, example.sh
 
-## Epoch 2: Refactoring (HIGH)
+## P1: High Impact
 
-- [x] Extract FontAnalyzer from PDFMarkdownConverter.swift
-- [x] Extract MarkdownGenerator from PDFMarkdownConverter.swift
-- [x] Verify PDFMarkdownConverter.swift is under 200 lines
-- [x] Extract TextExtractor from PDFPageProcessor.swift
-- [x] Extract VectorGraphicsExtractor from PDFPageProcessor.swift
-- [x] Verify PDFPageProcessor.swift is under 150 lines
-- [-] Extract ProcessingOptionsBuilder from main.swift (minor - 26 lines)
-- [-] Extract BatchProcessor from main.swift (blocked: async closure typing)
-- [-] Verify main.swift is under 150 lines (deferred - currently 322)
-- [x] Analyze shared code between 3 converter variants
-- [x] Extract common converter utilities
-- [x] Reduce duplication across converter variants by 50%+
-
-## Epoch 3: Performance (MEDIUM)
-
-- [x] Create benchmark.sh script for all 4 methods
-- [ ] Measure: wall time, CPU time, memory, pages/sec
-- [ ] Profile image extraction performance
+### Performance
+- [ ] Replace VectorGraphicsExtractor O(n²) grid scanning with content stream analysis
 - [ ] Parallelize XObject image extraction
 - [ ] Implement streaming writes for images
 - [ ] Profile memory for 100+ page PDFs
-- [ ] Implement page-by-page streaming
-- [ ] Add autoreleasepool in processing loops
-- [ ] Target: stable memory regardless of PDF size
 
-## Epoch 4: OCR (HIGH)
+### CLI/UX
+- [ ] Implement progress bar with ETA for multi-page PDFs
+- [ ] Add `--dry-run` flag to preview conversion
+- [ ] Add `--json` output flag for scripting
 
-- [x] Design OCR cache schema (~/.cache/pdf22md/ocr/)
-- [x] Implement cache key from PDF hash + page number
-- [x] Add cache lookup before OCR processing
-- [x] Add cache write after OCR processing
-- [x] Add --no-cache CLI flag
-- [x] Add --languages flag for language hints (existing --languages flag)
-- [ ] Add --ocr-level flag (fast/accurate)
-- [ ] Implement optional image preprocessing pipeline
-- [ ] Add --ocr-preprocess flag
+### Error Handling
+- [ ] Audit all catch blocks for empty handlers
+- [ ] Ensure all errors have actionable messages
+- [ ] Validate PDF magic bytes before processing
 
-## Epoch 5: AI (MEDIUM)
+## P2: Medium Impact
 
-- [x] Design prompt template format
-- [x] Implement template loading from JSON file
-- [x] Add --ai-prompt CLI flag
-- [x] Create default prompt templates (default, academic, legal)
-- [ ] Add --ai-endpoint flag for custom endpoints
-- [ ] Add --ai-model flag for local models
+### AI Improvements
+- [ ] Add `--ai-endpoint` flag for custom endpoints
+- [ ] Add `--ai-model` flag for local models
 - [ ] Implement Ollama API format detection
-- [ ] Implement llama.cpp server format detection
-- [ ] Implement intelligent text chunking for large docs
-- [x] Handle partial AI failures gracefully (returns processed + unprocessed)
+- [ ] Better token estimation (consider tiktoken)
 
-## Epoch 6: CLI/UX (MEDIUM)
-
-- [ ] Implement progress bar for multi-page PDFs
-- [ ] Show page count, elapsed time, ETA
-- [x] Suppress progress in quiet mode (-q)
-- [x] Add batch mode progress (file X of Y) - implemented in runBatch()
-- [ ] Add --format flag (markdown, html, plain, json)
+### Output Formats
+- [ ] Add `--format` flag (markdown, html, plain, json)
 - [ ] Implement HTMLGenerator
 - [ ] Implement PlainTextGenerator
 - [ ] Implement JSONGenerator
+
+### Configuration
 - [ ] Design config file format (TOML)
 - [ ] Implement config loading from ~/.config/pdf22md/config.toml
-- [ ] Add --config flag for custom location
-- [ ] Implement config + CLI flag precedence
+- [ ] Add `--config` flag for custom location
 
-## Epoch 7: Robustness (HIGH)
+### OCR
+- [ ] Add `--ocr-level` flag (fast/accurate)
+- [ ] Implement optional image preprocessing pipeline
+- [ ] Add `--ocr-preprocess` flag
 
-- [ ] Audit all catch blocks for empty handlers
-- [ ] Ensure all errors have actionable messages
-- [ ] Standardize user-facing error format
-- [ ] Implement graceful OCR failure fallback
-- [x] Implement graceful AI failure fallback (multi-provider failover)
-- [ ] Implement graceful image extraction failure fallback
-- [ ] Continue processing on single page failure
-- [ ] Report all warnings at conversion end
-- [ ] Validate PDF magic bytes before processing
-- [ ] Validate output path is writable
-- [x] Validate DPI range (1-1200)
-- [x] Validate job count (1-256)
+## P3: Nice to Have
 
-## Epoch 8: Documentation (MEDIUM)
-
-- [x] Update README with all CLI flags
-- [x] Add troubleshooting section to README
-- [ ] Add performance tips section to README
-- [ ] Keep README under 300 lines
+### Documentation
 - [ ] Add DocC documentation to public APIs
 - [ ] Generate documentation site
 - [ ] Create examples/batch-convert.sh
 - [ ] Create examples/ocr-workflow.sh
 - [ ] Create examples/python-integration.py
 
-## Epoch 9: Future (DEFERRED)
-
+### Future
 - [ ] Evaluate web interface demand
 - [ ] Research table detection approaches
 - [ ] Evaluate Linux support feasibility
+
+---
+
+## Recently Completed (v1.7.0)
+
+### AI V3 Multi-Pass
+- [x] TextValidator with word frequency cosine similarity (0.85 threshold)
+- [x] ParagraphChunker for sentence-aware splitting (≤3500 chars)
+- [x] PassPrompts: 3 simple passes (dehyphenation, OCR correction, cleanup)
+- [x] MultiPassProcessor orchestrating pipeline with validation fallback
+- [x] Word retention improved from 78% (V2) to 93% (V3)
+
+### Code Refactoring
+- [x] Extract FontAnalyzer from PDFMarkdownConverter.swift
+- [x] Extract MarkdownGenerator from PDFMarkdownConverter.swift
+- [x] Extract TextExtractor from PDFPageProcessor.swift
+- [x] Extract VectorGraphicsExtractor from PDFPageProcessor.swift
+- [x] Consolidate converter variants (removed Optimized/UltraOptimized)
+- [x] PDFMarkdownConverter.swift: 393→199 lines
+- [x] PDFPageProcessor.swift: 317→150 lines
+
+### Infrastructure
+- [x] GitHub Actions CI workflow (swift build, swift test)
+- [x] example.sh benchmark script
+- [x] Unit tests for PDFElement, ProcessingOptions, FontStatistics
+
+### OCR
+- [x] OCR result caching (~/.cache/pdf22md/ocr/)
+- [x] --no-cache CLI flag
+- [x] --languages flag for language hints
+
+### Robustness
+- [x] AI multi-provider failover
+- [x] Validation fallback (reject bad AI output)
+- [x] DPI range validation (1-1200)
+- [x] Job count validation (1-256)
