@@ -8,7 +8,7 @@ public struct Version {
     public static let current: String = {
         #if SWIFT_PACKAGE
         // When building with Swift Package Manager, use build-time version
-        return "v1.7.0-dirty"
+        return "v1.7.0-3-g0c0a82c-dirty"
         #else
         // Fallback for other build systems
         return "dev"
@@ -18,7 +18,7 @@ public struct Version {
     /// Git commit hash, set at build time
     public static let commit: String = {
         #if SWIFT_PACKAGE
-        return "196ebf54d93cdef5dab30ab595771bee47eb4530"
+        return "0c0a82c4f2ee1fcfaf64f93f9ccff71fe4f9ae6b"
         #else
         return "unknown"
         #endif
@@ -27,7 +27,7 @@ public struct Version {
     /// Build timestamp
     public static let buildDate: String = {
         #if SWIFT_PACKAGE
-        return "2026-01-27T20:08:03Z"
+        return "2026-01-27T20:24:09Z"
         #else
         return "unknown"
         #endif
