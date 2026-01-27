@@ -907,8 +907,7 @@ final class PDF22MDTests: XCTestCase {
     }
 
     func testAppleIntelligenceProcessorInit() {
-        // Should be able to create instance even when unavailable
-        let processor = AppleIntelligenceProcessor()
+        let processor = AppleIntelligenceProcessor(systemPrompt: "Test system prompt", verbose: false)
         XCTAssertNotNil(processor)
     }
 
