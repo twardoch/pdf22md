@@ -218,9 +218,46 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
 Designed for speed and efficiency:
 
-*   **Parallel Processing**: Uses Swift's `async/await` or Grand Central Dispatch (GCD) to process PDF pages concurrently across all CPU cores.
-*   **Memory Efficient**: Handles large documents without excessive memory usage. Further optimized in alternative engines.
+*   **Parallel Processing**: Uses Swift's `async/await` and `TaskGroup` to process PDF pages concurrently across all CPU cores.
+*   **Memory Efficient**: Handles large documents without excessive memory usage.
 *   **Smart Algorithms**: Applies intelligent font analysis and image processing to minimize overhead.
+
+### Performance Tips
+
+**For fastest processing:**
+```bash
+# Digital PDFs with embedded text - skip Vision OCR
+pdf22md -i document.pdf -o output.md --fast
+
+# Lower DPI for smaller images (default: 144)
+pdf22md -i document.pdf -o output.md -a ./images --dpi 72
+```
+
+**For batch processing:**
+```bash
+# Process multiple PDFs with 4 parallel jobs
+pdf22md --batch -i ./pdfs/ -o ./output/ -j 4
+
+# Preview large PDFs - process first 3 pages only
+pdf22md -i large.pdf -o preview.md --max-pages 3
+```
+
+**For scanned PDFs (OCR-heavy):**
+```bash
+# OCR results are cached by default (~/.cache/pdf22md/ocr/)
+# Second run on same PDF is instant
+
+# Disable cache for fresh OCR
+pdf22md -i scanned.pdf -o output.md --no-cache
+
+# Specify languages for better accuracy
+pdf22md -i multilingual.pdf -o output.md --languages de,fr,en
+```
+
+**Memory considerations:**
+*   Large PDFs (100+ pages) process incrementally
+*   Use `--max-pages` to limit processing for previews
+*   Image extraction at high DPI uses more memory
 
 ## Technical Overview
 
