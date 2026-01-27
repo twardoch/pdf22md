@@ -3,7 +3,6 @@ import Foundation
 import PDFKit
 import CoreGraphics
 
-/// Extracts vector graphics from PDF pages by rendering sections
 struct VectorGraphicsExtractor {
     private let pdfPage: PDFPage
     private let pageIndex: Int
@@ -15,11 +14,12 @@ struct VectorGraphicsExtractor {
         self.dpi = dpi
     }
 
-    /// Extract vector graphics as rendered image elements
     func extractElements() -> [ImageElement] {
         var elements: [ImageElement] = []
         let pageRect = pdfPage.bounds(for: .mediaBox)
-        let sectionSize: CGFloat = 100.0
+        let sectionSize: CGFloat = 200.0
+        
+        let textBounds = extractTextBounds()
 
         let gridX = Int(ceil(pageRect.size.width / sectionSize))
         let gridY = Int(ceil(pageRect.size.height / sectionSize))
@@ -34,11 +34,15 @@ struct VectorGraphicsExtractor {
                 )
 
                 sectionRect = sectionRect.intersection(pageRect)
-                if sectionRect.isEmpty || sectionRect.size.width < 20 || sectionRect.size.height < 20 {
+                if sectionRect.isEmpty || sectionRect.size.width < 40 || sectionRect.size.height < 40 {
+                    continue
+                }
+                
+                if overlapsTextRegion(sectionRect, textBounds: textBounds) {
                     continue
                 }
 
-                if sectionContainsImageContent(sectionRect) {
+                if sectionContainsNonTextContent(sectionRect) {
                     if let sectionImage = renderSection(sectionRect) {
                         elements.append(ImageElement(
                             image: sectionImage,
@@ -53,11 +57,52 @@ struct VectorGraphicsExtractor {
 
         return elements
     }
+    
+    private func extractTextBounds() -> [CGRect] {
+        var bounds: [CGRect] = []
+        
+        for pageNum in 0..<pdfPage.numberOfCharacters {
+            let charBounds = pdfPage.characterBounds(at: pageNum)
+            if !charBounds.isEmpty {
+                bounds.append(charBounds)
+            }
+        }
+        
+        return mergeOverlappingRects(bounds)
+    }
+    
+    private func mergeOverlappingRects(_ rects: [CGRect], threshold: CGFloat = 10.0) -> [CGRect] {
+        guard !rects.isEmpty else { return [] }
+        
+        var merged: [CGRect] = []
+        var current = rects[0]
+        
+        for rect in rects.dropFirst() {
+            if current.insetBy(dx: -threshold, dy: -threshold).intersects(rect) {
+                current = current.union(rect)
+            } else {
+                merged.append(current)
+                current = rect
+            }
+        }
+        merged.append(current)
+        
+        return merged
+    }
+    
+    private func overlapsTextRegion(_ rect: CGRect, textBounds: [CGRect]) -> Bool {
+        for textRect in textBounds {
+            if rect.intersects(textRect.insetBy(dx: -20, dy: -20)) {
+                return true
+            }
+        }
+        return false
+    }
 
-    private func sectionContainsImageContent(_ rect: CGRect) -> Bool {
+    private func sectionContainsNonTextContent(_ rect: CGRect) -> Bool {
         guard let selection = pdfPage.selection(for: rect) else { return true }
         let text = selection.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return text.count < 10
+        return text.count < 20
     }
 
     private func renderSection(_ rect: CGRect) -> CGImage? {
