@@ -1,5 +1,41 @@
 # Work Progress
 
+## CLI Flag Refactoring (2026-01-27, Issue #402)
+
+### Changes Made
+
+1. **Removed legacy converter flags** from `PDF22MDCommand.swift`:
+   - Removed `--optimized` flag
+   - Removed `--ultra-optimized` flag
+
+2. **Simplified `processSinglePDF()`** to always use `PDFMarkdownConverter.convertEnhanced()`
+
+3. **Updated `--verbose` help text**: "Show additional warnings and debug info" (was "Show progress during conversion")
+
+4. **Deleted unused file**: `PDFPageProcessorOptimized.swift`
+
+5. **Updated tests**:
+   - `testOptimizedConversion` → `testFastModeConversion` (async)
+   - `testConversionPerformance` → now uses `PDFMarkdownConverter` with fast mode
+   - `testEmptyPDF` → now uses `PDFMarkdownConverter` with fast mode
+
+### Verification
+
+- `swift build` succeeded
+- All 12 requirements from issue #402 addressed
+
+### CLI Behavior Summary
+
+| Flags | Behavior |
+|-------|----------|
+| (default) | Vision OCR enabled, progress shown |
+| `--fast` | Vision OCR disabled (PDF text only) |
+| `--ai` | AI text correction enabled |
+| `--verbose` | Show warnings and debug info |
+| `--quiet` | Suppress progress and warnings |
+
+---
+
 ## Output Logging Cleanup (2026-01-27)
 
 - Added stderr noise filtering for PDFKit/CoreText debug lines in CLI output.

@@ -61,13 +61,7 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "DPI for rasterizing vector graphics (default: 144)")
     var dpi: Double = 144.0
 
-    @Flag(name: .long, help: "Use optimized GCD implementation instead of async/await")
-    var optimized: Bool = false
-
-    @Flag(name: .long, help: "Use ultra-optimized implementation with NSString")
-    var ultraOptimized: Bool = false
-
-    // MARK: - New options for Vision OCR and AI processing
+    // MARK: - Vision OCR and AI processing options
 
     @Flag(name: .long, help: "Fast mode: use PDF text extraction only, skip Vision OCR")
     var fast: Bool = false
@@ -99,7 +93,7 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Parallel jobs for batch mode (default: 1)")
     var jobs: Int = 1
 
-    @Flag(name: .shortAndLong, help: "Show progress during conversion")
+    @Flag(name: .shortAndLong, help: "Show additional warnings and debug info")
     var verbose: Bool = false
 
     @Flag(name: .shortAndLong, help: "Suppress all non-error output")
@@ -145,49 +139,15 @@ struct PDF22MDCommand: AsyncParsableCommand {
         }
     }
 
-    /// Process a single PDF file
     private func processSinglePDF(inputURL: URL, outputPath: String?) async throws {
-        // Determine if we should use enhanced mode
-        let useEnhancedMode = !fast || ai || api != nil
-
-        if useEnhancedMode && !optimized && !ultraOptimized {
-            // Use enhanced converter with Vision OCR and optional AI
-            let options = try buildProcessingOptions()
-            let converter = PDFMarkdownConverter(
-                pdfURL: inputURL,
-                outputPath: outputPath,
-                assetsPath: assets,
-                options: options
-            )
-            try await converter.convertEnhanced()
-        } else if ultraOptimized {
-            // Legacy ultra-optimized mode
-            let converter = PDFMarkdownConverterUltraOptimized(
-                pdfURL: inputURL,
-                outputPath: outputPath,
-                assetsPath: assets,
-                dpi: CGFloat(dpi)
-            )
-            try converter.convert()
-        } else if optimized {
-            // Legacy optimized mode
-            let converter = PDFMarkdownConverterOptimized(
-                pdfURL: inputURL,
-                outputPath: outputPath,
-                assetsPath: assets,
-                dpi: CGFloat(dpi)
-            )
-            try converter.convert()
-        } else {
-            // Legacy standard mode (fast by default for backward compatibility)
-            let converter = PDFMarkdownConverter(
-                pdfURL: inputURL,
-                outputPath: outputPath,
-                assetsPath: assets,
-                dpi: CGFloat(dpi)
-            )
-            try await converter.convert()
-        }
+        let options = try buildProcessingOptions()
+        let converter = PDFMarkdownConverter(
+            pdfURL: inputURL,
+            outputPath: outputPath,
+            assetsPath: assets,
+            options: options
+        )
+        try await converter.convertEnhanced()
     }
 
     /// Log progress to stderr (respects quiet flag)

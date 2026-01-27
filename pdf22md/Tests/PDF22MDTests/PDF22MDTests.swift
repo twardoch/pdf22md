@@ -303,63 +303,63 @@ final class PDF22MDTests: XCTestCase {
         }
     }
     
-    func testOptimizedConversion() {
+    func testFastModeConversion() async {
         guard let testPDFPath = getTestResourcePath("README.pdf") else {
             XCTFail("Could not find test PDF file")
             return
         }
-        
+
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("pdf22md-tests")
-        let outputPath = tempDir.appendingPathComponent("output-optimized.md")
-        let assetsPath = tempDir.appendingPathComponent("assets-optimized")
-        
-        let converter = PDFMarkdownConverterOptimized(
+        let outputPath = tempDir.appendingPathComponent("output-fast.md")
+        let assetsPath = tempDir.appendingPathComponent("assets-fast")
+
+        let options = ProcessingOptions(fastMode: true, dpi: 144.0)
+        let converter = PDFMarkdownConverter(
             pdfURL: testPDFPath,
             outputPath: outputPath.path,
             assetsPath: assetsPath.path,
-            dpi: 144.0
+            options: options
         )
-        
+
         do {
-            try converter.convert()
-            
+            try await converter.convertEnhanced()
+
             // Verify output file exists
-            XCTAssertTrue(FileManager.default.fileExists(atPath: outputPath.path), "Optimized output file should exist")
-            
+            XCTAssertTrue(FileManager.default.fileExists(atPath: outputPath.path), "Fast mode output file should exist")
+
             // Verify content
             let content = try String(contentsOf: outputPath)
-            XCTAssertFalse(content.isEmpty, "Optimized output content should not be empty")
-            
+            XCTAssertFalse(content.isEmpty, "Fast mode output content should not be empty")
+
         } catch {
-            XCTFail("Optimized conversion failed with error: \(error)")
+            XCTFail("Fast mode conversion failed with error: \(error)")
         }
     }
     
     // MARK: - Performance Tests
-    
-    func testConversionPerformance() {
+
+    func testConversionPerformance() async {
         guard let testPDFPath = getTestResourcePath("README.pdf") else {
             XCTFail("Could not find test PDF file")
             return
         }
-        
+
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("pdf22md-tests")
         let outputPath = tempDir.appendingPathComponent("perf-output.md")
         let assetsPath = tempDir.appendingPathComponent("perf-assets")
-        
-        measure {
-            let converter = PDFMarkdownConverterOptimized(
-                pdfURL: testPDFPath,
-                outputPath: outputPath.path,
-                assetsPath: assetsPath.path,
-                dpi: 144.0
-            )
-            
-            do {
-                try converter.convert()
-            } catch {
-                XCTFail("Performance test conversion failed: \(error)")
-            }
+
+        let options = ProcessingOptions(fastMode: true, dpi: 144.0)
+        let converter = PDFMarkdownConverter(
+            pdfURL: testPDFPath,
+            outputPath: outputPath.path,
+            assetsPath: assetsPath.path,
+            options: options
+        )
+
+        do {
+            try await converter.convertEnhanced()
+        } catch {
+            XCTFail("Performance test conversion failed: \(error)")
         }
     }
     
@@ -412,26 +412,27 @@ final class PDF22MDTests: XCTestCase {
     
     // MARK: - Edge Case Tests
     
-    func testEmptyPDF() {
+    func testEmptyPDF() async {
         // Create a minimal PDF with no content
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("pdf22md-tests")
         let emptyPDFPath = tempDir.appendingPathComponent("empty.pdf")
         let outputPath = tempDir.appendingPathComponent("empty-output.md")
-        
+
         // Create minimal PDF data
         let pdfData = Data()
-        
+
         do {
             try pdfData.write(to: emptyPDFPath)
-            
-            let converter = PDFMarkdownConverterOptimized(
+
+            let options = ProcessingOptions(fastMode: true, dpi: 144.0)
+            let converter = PDFMarkdownConverter(
                 pdfURL: emptyPDFPath,
                 outputPath: outputPath.path,
                 assetsPath: nil,
-                dpi: 144.0
+                options: options
             )
-            
-            try converter.convert()
+
+            try await converter.convertEnhanced()
             XCTFail("Should have thrown an error for empty PDF")
         } catch {
             // Expected to throw an error
