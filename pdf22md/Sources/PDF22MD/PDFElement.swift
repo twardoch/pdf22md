@@ -158,8 +158,9 @@ public struct ProcessingOptions {
     /// Disable OCR result caching
     public var disableCache: Bool = false
 
-    /// Custom AI prompt template
     public var promptTemplate: PromptTemplate?
+
+    public var dryRun: Bool = false
 
     public static let `default` = ProcessingOptions()
     public static let fast = ProcessingOptions(fastMode: true)
@@ -178,7 +179,8 @@ public struct ProcessingOptions {
         verbose: Bool = false,
         password: String? = nil,
         disableCache: Bool = false,
-        promptTemplate: PromptTemplate? = nil
+        promptTemplate: PromptTemplate? = nil,
+        dryRun: Bool = false
     ) {
         self.fastMode = fastMode
         self.enableAI = enableAI
@@ -194,6 +196,7 @@ public struct ProcessingOptions {
         self.password = password
         self.disableCache = disableCache
         self.promptTemplate = promptTemplate
+        self.dryRun = dryRun
     }
 }
 

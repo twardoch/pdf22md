@@ -99,6 +99,9 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Flag(name: .shortAndLong, help: "Suppress all non-error output")
     var quiet: Bool = false
 
+    @Flag(name: .long, help: "Preview conversion without writing output (shows page count, text stats, AI cost estimate)")
+    var dryRun: Bool = false
+
     func validate() throws {
         // Validate DPI range
         guard dpi >= 1 && dpi <= 1200 else {
@@ -313,7 +316,8 @@ struct PDF22MDCommand: AsyncParsableCommand {
             verbose: showWarnings,
             password: password,
             disableCache: noCache,
-            promptTemplate: promptTemplate
+            promptTemplate: promptTemplate,
+            dryRun: dryRun
         )
     }
 }

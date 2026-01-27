@@ -161,7 +161,9 @@ public final class PDFMarkdownConverter {
 
         var finalTexts: [String] = []
 
-        if options.enableAI && !options.apiConfigs.isEmpty {
+        if options.dryRun {
+            finalTexts = pageContents.map { $0.bestText }
+        } else if options.enableAI && !options.apiConfigs.isEmpty {
             let apiNames = options.apiConfigs.map { $0?.model ?? "system" }.joined(separator: ", ")
             logProgress("AI correction using \(apiNames)...")
             progress?.start(phase: .aiProcessing)
@@ -188,17 +190,13 @@ public final class PDFMarkdownConverter {
                     logWarning("AI processing partially failed:")
                     logWarning("  - Processed: \(partial.processedPages.count) pages")
                     logWarning("  - Remaining: \(partial.unprocessedPages.count) pages (will use raw text)")
-                    logWarning("  - Error: \(partial.error.localizedDescription)")
-                } else {
-                    logWarning("AI processing failed after \(partial.processedPages.count)/\(pageContents.count) pages: \(partial.error.localizedDescription)")
-                    logWarning("Outputting processed pages + unprocessed raw text")
                 }
                 finalTexts = partial.processedPages + partial.unprocessedPages.map { $0.bestText }
             } else {
                 finalTexts = results
                 logProgress("AI correction complete")
             }
-        } else if options.enableAI, let apiConfig = options.apiConfig {
+        } else if !options.dryRun && options.enableAI, let apiConfig = options.apiConfig {
             logProgress("AI correction using \(apiConfig.model) (multi-pass)...")
             progress?.start(phase: .aiProcessing)
             let aiProcessor = AITextProcessor(apiConfig: apiConfig, promptTemplate: options.promptTemplate, verbose: options.verbose)
@@ -216,7 +214,7 @@ public final class PDFMarkdownConverter {
                 finalTexts = results
                 logProgress("AI correction complete")
             }
-        } else if options.enableAI {
+        } else if !options.dryRun && options.enableAI {
             logProgress("AI correction using Apple Intelligence (multi-pass)...")
             progress?.start(phase: .aiProcessing)
             let template = options.promptTemplate ?? .default
@@ -242,6 +240,18 @@ public final class PDFMarkdownConverter {
         progress?.start(phase: .generation)
         let generator = MarkdownGenerator(pdfURL: pdfURL, assetsPath: assetsPath)
         let markdown = generator.generateEnhanced(texts: finalTexts, imageElements: allImageElements)
+
+        if options.dryRun {
+            progress?.finish()
+            showDryRunStats(
+                pageCount: pageContents.count,
+                visionPages: visionPagesCount,
+                imageCount: allImageElements.count,
+                markdownSize: markdown.count,
+                aiEnabled: options.enableAI
+            )
+            return
+        }
 
         try writeOutput(markdown)
         progress?.finish()
@@ -269,5 +279,62 @@ public final class PDFMarkdownConverter {
         } else {
             print(markdown)
         }
+    }
+
+    private func showDryRunStats(
+        pageCount: Int,
+        visionPages: Int,
+        imageCount: Int,
+        markdownSize: Int,
+        aiEnabled: Bool
+    ) {
+        let stats = """
+        
+        [pdf22md] DRY RUN PREVIEW
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        Input:  \(pdfURL.lastPathComponent)
+        Pages:  \(pageCount) (\(visionPages) with Vision OCR)
+        Images: \(imageCount) extracted
+        Output: ~\(formatBytes(markdownSize)) Markdown
+        """
+        
+        FileHandle.standardError.write(Data((stats + "\n").utf8))
+        
+        if aiEnabled {
+            let estimatedCost = estimateAICost(pageCount: pageCount)
+            FileHandle.standardError.write(Data("[pdf22md] AI Cost Estimate: \(estimatedCost)\n".utf8))
+        }
+        
+        if let outputPath = outputPath {
+            FileHandle.standardError.write(Data("[pdf22md] Would write to: \(outputPath)\n".utf8))
+        } else {
+            FileHandle.standardError.write(Data("[pdf22md] Would write to: stdout\n".utf8))
+        }
+        
+        FileHandle.standardError.write(Data("[pdf22md] Run without --dry-run to execute\n".utf8))
+    }
+    
+    private func formatBytes(_ bytes: Int) -> String {
+        if bytes < 1024 { return "\(bytes) bytes" }
+        if bytes < 1024 * 1024 { return String(format: "%.1f KB", Double(bytes) / 1024) }
+        return String(format: "%.1f MB", Double(bytes) / (1024 * 1024))
+    }
+    
+    private func estimateAICost(pageCount: Int) -> String {
+        let tokensPerPage = 1000
+        let totalTokens = pageCount * tokensPerPage
+        
+        if let config = options.apiConfig {
+            if config.model.contains("gpt-4") {
+                let cost = Double(totalTokens) * 0.00003
+                return String(format: "$%.4f (%d tokens @ $0.03/1K)", cost, totalTokens)
+            } else if config.model.contains("gpt-3.5") {
+                let cost = Double(totalTokens) * 0.000002
+                return String(format: "$%.4f (%d tokens @ $0.002/1K)", cost, totalTokens)
+            }
+            return "~\(totalTokens) tokens (pricing varies by model)"
+        }
+        
+        return "Apple Intelligence (free, ~\(totalTokens) tokens)"
     }
 }
