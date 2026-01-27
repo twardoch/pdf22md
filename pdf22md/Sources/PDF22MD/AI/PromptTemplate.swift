@@ -12,14 +12,15 @@ public struct PromptTemplate: Codable {
     public static let `default` = PromptTemplate(
         systemPrompt: """
             You are a text correction assistant specializing in cleaning up text extracted from PDF documents.
-            Your task is to produce clean, well-formatted Markdown output.
+            Your task is to produce simple, well-formatted HTML output.
 
             Guidelines:
             - Fix obvious spelling and typographic errors
-            - Combine broken lines into logical paragraphs
-            - Identify and format headings using Markdown (# for main headings, ## for subheadings, etc.)
-            - Preserve important formatting (bold, italic) using Markdown syntax
-            - Move image captions, footnotes, and margin notes to the end of the page
+            - Combine broken lines into logical paragraphs and wrap them in <p> tags
+            - Identify headings and wrap them into <h2> and <h3> tags
+            - Identify important formatting and wrap bolds in <b>, italics in <i>.
+            - Wrap sentences in <s> tags.
+            - Move image captions, footnotes, and margin notes to the end of the page and wrap them in <figcaption>, <footer>, and <aside> tags respectively.
             - Remove running headers, page numbers, and other artifacts
             - Remove garbled text, noise, and garbage characters
             - Maintain the original meaning and content
@@ -37,7 +38,7 @@ public struct PromptTemplate: Codable {
             {{PDF_TEXT}}
             ---
 
-            Please correct and format the text. Output the corrected text in <CORRECTED></CORRECTED> tags.
+            Please correct and format the text as simple HTML. Output the corrected HTML in <CORRECTED></CORRECTED> tags.
             """,
         previousContextTemplate: """
             Previous page (for context and flow):

@@ -167,10 +167,10 @@ public final class PDFMarkdownConverter {
             let apiNames = options.apiConfigs.map { $0?.model ?? "system" }.joined(separator: ", ")
             logProgress("Phase 2: AI correction using \(apiNames)...")
             
-            let aiProcessor = AITextProcessor(apiConfigs: options.apiConfigs, promptTemplate: options.promptTemplate ?? .default)
+            let aiProcessor = AITextProcessor(apiConfigs: options.apiConfigs, promptTemplate: options.promptTemplate ?? .default, verbose: options.verbose)
             var currentProvider = ""
-            let (results, partial) = await aiProcessor.processPages(
-                pageContents,
+            let (results, partial) = try await aiProcessor.processPagesV3(
+                pages: pageContents,
                 progressCallback: { completed, total in
                     if self.options.showProgress {
                         let providerInfo = currentProvider.isEmpty ? "" : " [\(currentProvider)]"
@@ -181,25 +181,34 @@ public final class PDFMarkdownConverter {
                     currentProvider = provider
                 },
                 retryCallback: { provider, attempt in
-                    if self.options.showProgress || self.options.verbose {
+                    if self.options.showProgress {
                         FileHandle.standardError.write(Data("[pdf22md] Retrying \(provider) (attempt \(attempt))...\n".utf8))
+                    } else if self.options.verbose {
+                        FileHandle.standardError.write(Data("[pdf22md] Retry attempt \(attempt) for \(provider) - will wait 10 seconds before retry\n".utf8))
                     }
                 }
             )
             
             if let partial = partial {
-                logWarning("AI processing failed after \(partial.processedPages.count)/\(pageContents.count) pages: \(partial.error.localizedDescription)")
-                logWarning("Outputting processed pages + unprocessed raw text")
+                if options.verbose {
+                    logWarning("AI processing partially failed:")
+                    logWarning("  - Processed: \(partial.processedPages.count) pages")
+                    logWarning("  - Remaining: \(partial.unprocessedPages.count) pages (will use raw text)")
+                    logWarning("  - Error: \(partial.error.localizedDescription)")
+                } else {
+                    logWarning("AI processing failed after \(partial.processedPages.count)/\(pageContents.count) pages: \(partial.error.localizedDescription)")
+                    logWarning("Outputting processed pages + unprocessed raw text")
+                }
                 finalTexts = partial.processedPages + partial.unprocessedPages.map { $0.bestText }
             } else {
                 finalTexts = results
                 logProgress("AI correction complete")
             }
         } else if options.enableAI, let apiConfig = options.apiConfig {
-            logProgress("Phase 2: AI correction using \(apiConfig.model)...")
-            let aiProcessor = AITextProcessor(apiConfig: apiConfig, promptTemplate: options.promptTemplate)
-            let (results, partial) = await aiProcessor.processPages(
-                pageContents,
+            logProgress("Phase 2: AI correction using \(apiConfig.model) (multi-pass)...")
+            let aiProcessor = AITextProcessor(apiConfig: apiConfig, promptTemplate: options.promptTemplate, verbose: options.verbose)
+            let (results, partial) = try await aiProcessor.processPagesV3(
+                pages: pageContents,
                 progressCallback: { completed, total in
                     if self.options.showProgress {
                         FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)...\n".utf8))
@@ -214,11 +223,11 @@ public final class PDFMarkdownConverter {
                 logProgress("AI correction complete")
             }
         } else if options.enableAI {
-            logProgress("Phase 2: AI correction using Apple Intelligence...")
+            logProgress("Phase 2: AI correction using Apple Intelligence (multi-pass)...")
             let template = options.promptTemplate ?? .default
-            let aiProcessor = AITextProcessor(provider: .appleIntelligence, promptTemplate: template)
-            let (results, partial) = await aiProcessor.processPages(
-                pageContents,
+            let aiProcessor = AITextProcessor(provider: .appleIntelligence, promptTemplate: template, verbose: options.verbose)
+            let (results, partial) = try await aiProcessor.processPagesV3(
+                pages: pageContents,
                 progressCallback: { completed, total in
                     if self.options.showProgress {
                         FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)...\n".utf8))
@@ -242,7 +251,11 @@ public final class PDFMarkdownConverter {
         let markdown = generator.generateEnhanced(texts: finalTexts, imageElements: allImageElements)
 
         try writeOutput(markdown)
-        logProgress("Done!")
+        if let outputPath = outputPath {
+            logProgress("Saved \(outputPath)")
+        } else {
+            logProgress("Done!")
+        }
     }
 
     /// Write markdown to output file or stdout

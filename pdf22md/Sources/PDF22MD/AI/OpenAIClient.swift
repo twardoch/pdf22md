@@ -127,8 +127,8 @@ final class OpenAIClient {
     /// Default temperature for generation
     var temperature: Double = 0.3
 
-    /// Default max tokens (nil = no limit)
-    var maxTokens: Int? = nil
+    /// Default max tokens
+    var maxTokens: Int? = 4000
 
     /// Maximum retry attempts
     var maxRetries: Int = 2
@@ -243,12 +243,19 @@ final class OpenAIClient {
 
         // Handle other errors
         if httpResponse.statusCode >= 400 {
-            // Try to decode error response
             let errorMessage: String?
             if let errorResponse = try? JSONDecoder().decode(APIErrorResponse.self, from: data) {
                 errorMessage = errorResponse.error.message
+                
+                if isContextLimitError(errorResponse.error) {
+                    throw AIProcessingError.contextWindowExceeded
+                }
             } else {
                 errorMessage = String(data: data, encoding: .utf8)
+                
+                if let msg = errorMessage, isContextLimitError(msg) {
+                    throw AIProcessingError.contextWindowExceeded
+                }
             }
             throw OpenAIClientError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
         }
@@ -267,6 +274,22 @@ final class OpenAIClient {
         }
 
         return content
+    }
+    
+    private func isContextLimitError(_ error: APIErrorResponse.APIError) -> Bool {
+        let message = error.message.lowercased()
+        let code = error.code?.lowercased() ?? ""
+        let type = error.type?.lowercased() ?? ""
+        
+        return message.contains("context") && (message.contains("length") || message.contains("limit") || message.contains("exceeded") || message.contains("token"))
+            || code.contains("context_length_exceeded")
+            || type.contains("context_length_exceeded")
+    }
+    
+    private func isContextLimitError(_ message: String) -> Bool {
+        let lowercased = message.lowercased()
+        return (lowercased.contains("context") || lowercased.contains("token")) 
+            && (lowercased.contains("limit") || lowercased.contains("length") || lowercased.contains("exceeded") || lowercased.contains("maximum"))
     }
 
     /// Simple completion with a single user message

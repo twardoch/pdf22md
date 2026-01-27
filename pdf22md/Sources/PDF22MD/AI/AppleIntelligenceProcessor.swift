@@ -1,143 +1,170 @@
-// this_file: pdf22md/Sources/PDF22MD/AI/AppleIntelligenceProcessor.swift
-
 import Foundation
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
 
-// MARK: - Apple Intelligence Processor
-
-/// Processor for on-device AI text correction using Apple's Foundation Models framework
-/// Available on macOS 26+ (Tahoe) with Apple Intelligence support
-///
-/// Note: This is a stub implementation that will be fully enabled when:
-/// 1. macOS 26 (Tahoe) is released
-/// 2. The FoundationModels framework is available in the SDK
-/// 3. The device supports Apple Intelligence (Apple Silicon required)
-///
-/// When FoundationModels becomes available, uncomment the #if canImport(FoundationModels)
-/// section and update the implementation.
-
-public final class AppleIntelligenceProcessor {
-    public init() {}
-
+/// Apple Intelligence integration using Foundation Models framework
+public struct AppleIntelligenceProcessor {
+    private let systemPrompt: String
+    private let verbose: Bool
+    private let tokenBudget: TokenBudget
+    
+    public init(systemPrompt: String, verbose: Bool = false, tokenBudget: TokenBudget = .appleIntelligence) {
+        self.systemPrompt = systemPrompt
+        self.verbose = verbose
+        self.tokenBudget = tokenBudget
+    }
+    
     /// Check if Apple Intelligence is available on this device
-    /// Currently always returns false until macOS 26 is released
     public static var isAvailable: Bool {
-        // Will be enabled when FoundationModels is available
-        // #if canImport(FoundationModels)
-        // if #available(macOS 26.0, *) {
-        //     return true
-        // }
-        // #endif
+        #if canImport(FoundationModels)
+        if #available(macOS 26.0, *) {
+            switch SystemLanguageModel.default.availability {
+            case .available:
+                return true
+            case .unavailable:
+                return false
+            }
+        }
+        #endif
         return false
     }
-
-    /// Process a single page of text with AI correction
-    /// - Parameters:
-    ///   - pdfText: Text extracted from PDF
-    ///   - visionText: Text extracted via Vision OCR (optional)
-    ///   - previousContext: Context from previous page for continuity
-    ///   - pageNumber: Current page number (1-based)
-    /// - Returns: Corrected text
-    /// - Throws: AIProcessingError.appleIntelligenceUnavailable until macOS 26
-    public func processPage(
-        pdfText: String,
-        visionText: String?,
-        previousContext: String?,
-        pageNumber: Int
-    ) async throws -> String {
-        // When FoundationModels is available, this will use:
-        // - SystemLanguageModel.shared[.default] to get the on-device model
-        // - LanguageModelSession for stateful conversations
-        // - Prompt with Instructions for system prompts
-        // - session.generate() for text generation
+    
+    /// Get detailed availability status for error messages
+    public static var availabilityStatus: String {
+        #if canImport(FoundationModels)
+        if #available(macOS 26.0, *) {
+            switch SystemLanguageModel.default.availability {
+            case .available:
+                return "available"
+            case .unavailable(.appleIntelligenceNotEnabled):
+                return "not enabled - enable in System Settings → Apple Intelligence & Siri"
+            case .unavailable(.deviceNotEligible):
+                return "device not eligible - Apple Silicon Mac required"
+            case .unavailable(.modelNotReady):
+                return "model assets downloading - try again in a few minutes"
+            case .unavailable(let reason):
+                return "unavailable: \(reason)"
+            }
+        } else {
+            return "requires macOS 26.0 or later"
+        }
+        #else
+        return "FoundationModels framework not available"
+        #endif
+    }
+    
+    /// Process text using Apple Intelligence (V2 - for page groups)
+    public func processText(_ prompt: String) async throws -> String {
+        guard Self.isAvailable else {
+            throw AIProcessingError.appleIntelligenceUnavailable
+        }
+        
+        #if canImport(FoundationModels)
+        guard #available(macOS 26.0, *) else {
+            throw AIProcessingError.appleIntelligenceUnavailable
+        }
+        
+        return try await processSingleRequest(prompt)
+        #else
         throw AIProcessingError.appleIntelligenceUnavailable
+        #endif
     }
-
-    /// Process multiple pages sequentially with sliding window context
-    /// - Parameter pages: Array of page content to process
-    /// - Returns: Array of corrected text strings
-    /// - Throws: AIProcessingError.appleIntelligenceUnavailable until macOS 26
-    func processPages(_ pages: [PageTextContent]) async throws -> [String] {
+    
+    /// Process a page of text using Apple Intelligence with automatic chunking
+    public func processPage(_ text: String, pageNumber: Int) async throws -> String {
+        guard Self.isAvailable else {
+            throw AIProcessingError.appleIntelligenceUnavailable
+        }
+        
+        #if canImport(FoundationModels)
+        guard #available(macOS 26.0, *) else {
+            throw AIProcessingError.appleIntelligenceUnavailable
+        }
+        
+        let limits = ContextLimits.appleIntelligence
+        let systemTokens = TokenEstimator.estimate(systemPrompt)
+        
+        let userPrompt = """
+        <OCR_TEXT>
+        \(text)
+        </OCR_TEXT>
+        """
+        
+        let totalTokens = TokenEstimator.estimate(userPrompt) + systemTokens
+        
+        if totalTokens + limits.maxOutputTokens > limits.totalContextWindow {
+            let numChunks = TokenEstimator.suggestedChunkCount(
+                text: text,
+                systemPrompt: systemPrompt,
+                limits: limits
+            )
+            return try await processInChunks(text, numChunks: numChunks)
+        }
+        
+        return try await processSingleRequest(userPrompt)
+        #else
         throw AIProcessingError.appleIntelligenceUnavailable
+        #endif
     }
-
-    /// Reset the session (clears conversation history)
-    public func resetSession() {
-        // No-op until FoundationModels is available
+    
+    #if canImport(FoundationModels)
+    @available(macOS 26.0, *)
+    private func processSingleRequest(_ userPrompt: String, chunkInfo: String? = nil) async throws -> String {
+        let instructions = Instructions(systemPrompt)
+        let session = LanguageModelSession(instructions: instructions)
+        
+        do {
+            let options = GenerationOptions(
+                temperature: 0.3,
+                maximumResponseTokens: 1000
+            )
+            
+            let response = try await session.respond(to: userPrompt, options: options)
+            let content = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            if verbose && chunkInfo != nil {
+                AILogger.log(AILogger.formatAIOutput(content), verbose: true)
+            }
+            
+            return content
+        } catch let error as LanguageModelSession.GenerationError {
+            switch error {
+            case .exceededContextWindowSize:
+                throw AIProcessingError.contextWindowExceeded
+            default:
+                throw AIProcessingError.processingFailed("Apple Intelligence error: \(error)")
+            }
+        } catch {
+            throw AIProcessingError.processingFailed("Apple Intelligence error: \(error.localizedDescription)")
+        }
     }
+    
+    @available(macOS 26.0, *)
+    private func processInChunks(_ text: String, numChunks: Int) async throws -> String {
+        let chunker = TextChunker(overlapPercentage: 0.15)
+        let chunks = chunker.chunk(text, into: numChunks)
+        
+        var processedChunks: [(chunk: TextChunk, response: String)] = []
+        
+        for chunk in chunks {
+            let chunkPrompt = """
+            <OCR_TEXT>
+            [Part \(chunk.chunkIndex + 1) of \(chunk.totalChunks)]
+            \(chunk.text)
+            </OCR_TEXT>
+            """
+            
+            let chunkInfo = "Chunk \(chunk.chunkIndex + 1)/\(chunk.totalChunks)"
+            if verbose {
+                AILogger.log(AILogger.formatAIInput(chunkPrompt, systemPrompt: nil, chunkInfo: chunkInfo), verbose: true)
+            }
+            
+            let response = try await processSingleRequest(chunkPrompt, chunkInfo: chunkInfo)
+            processedChunks.append((chunk, response))
+        }
+        
+        return TextChunker.reassemble(processedChunks)
+    }
+    #endif
 }
-
-// MARK: - Future Implementation (macOS 26+)
-
-/*
- When FoundationModels becomes available in the SDK, replace the class above with:
-
- #if canImport(FoundationModels)
- import FoundationModels
-
- @available(macOS 26.0, *)
- public final class AppleIntelligenceProcessor {
-     private var session: LanguageModelSession?
-
-     public init() {}
-
-     public static var isAvailable: Bool { true }
-
-     private func ensureSession() async throws -> LanguageModelSession {
-         if let session = session {
-             return session
-         }
-         let model = try await SystemLanguageModel.shared[.default]
-         let newSession = LanguageModelSession(model: model)
-         self.session = newSession
-         return newSession
-     }
-
-     public func processPage(
-         pdfText: String,
-         visionText: String?,
-         previousContext: String?,
-         pageNumber: Int
-     ) async throws -> String {
-         let session = try await ensureSession()
-
-         let instructions = Instructions("""
-             You are an expert OCR text corrector. Fix OCR errors while preserving
-             the original meaning and structure. Do NOT add commentary.
-             """)
-
-         var userMessage = "Page \(pageNumber) text to correct:\n\n"
-         if let visionText = visionText, !visionText.isEmpty {
-             userMessage += "PDF: \(pdfText)\n\nOCR: \(visionText)"
-         } else {
-             userMessage += pdfText
-         }
-         if let context = previousContext {
-             userMessage += "\n\nPrevious page ended with: \(String(context.suffix(500)))"
-         }
-
-         let prompt = Prompt(instructions: instructions, messages: [.user(userMessage)])
-         let result = try await session.generate(prompt: prompt, options: GenerationOptions(temperature: 0.3))
-
-         return result.output.text ?? (visionText ?? pdfText)
-     }
-
-     public func processPages(_ pages: [PageTextContent]) async throws -> [String] {
-         var results: [String] = []
-         var previousContext: String? = nil
-         for page in pages {
-             let corrected = try await processPage(
-                 pdfText: page.pdfText,
-                 visionText: page.visionText,
-                 previousContext: previousContext,
-                 pageNumber: page.pageIndex + 1
-             )
-             results.append(corrected)
-             previousContext = corrected
-         }
-         return results
-     }
-
-     public func resetSession() { session = nil }
- }
- #endif
- */
