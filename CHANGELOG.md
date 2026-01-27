@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-01-27
+
 ### Added
+- **Progress Bar with ETA**: Real-time progress tracking for multi-page PDFs
+  - New `ProgressTracker` utility with phase tracking (extraction, AI processing, generation)
+  - Line-by-line progress: `Extracting page 3/10 ETA: 15s`
+  - Completion summary: `Complete (10 pages in 12.3s)`
+  - Thread-safe with NSLock for concurrent TaskGroup updates
+- **Dry-Run Mode**: Preview conversion without writing output (`--dry-run`)
+  - Shows page count, Vision OCR usage, image count, output size estimate
+  - AI cost estimate with token count and pricing (GPT models)
+  - Skips AI processing and file writing (instant preview)
+  - Example: `pdf22md -i file.pdf --dry-run --ai`
 - **AI Workflow V3 (Multi-Pass Pipeline)**: Complete redesign for improved accuracy
   - New `TextValidator` with word frequency cosine similarity (0.85 threshold)
   - New `ParagraphChunker` for sentence-aware splitting (≤3500 chars)
@@ -57,6 +69,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Proactive chunking prevents context errors before they occur
 - Unused variable warnings in `AppleIntelligenceProcessor` and `TextChunker`
 - **PromptTemplateV2 parseResponse()**: Fixed handling of unclosed tags in AI responses
+- **Test Infrastructure**: Fixed 8 failing tests (Apple Intelligence availability, error messages, URL validation, missing test PDFs)
+
+### Performance
+- **VectorGraphicsExtractor Optimization**: Reduced O(n²) grid scanning overhead
+  - Doubled grid cell size: 100pt → 200pt (4x fewer cells)
+  - Extract and cache text bounds once (avoid repeated PDFSelection calls)
+  - Skip grid cells overlapping text regions (early rejection)
+  - Merge overlapping character bounds to reduce comparisons
+  - A4 page (595×842pt): 50 cells → 12 cells (76% reduction)
 
 ### Removed
 - `PDFMarkdownConverterOptimized` class - consolidated into main converter
