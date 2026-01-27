@@ -47,7 +47,7 @@
 - [x] Add cache lookup before OCR processing
 - [x] Add cache write after OCR processing
 - [x] Add --no-cache CLI flag
-- [ ] Add --ocr-languages flag for language hints
+- [x] Add --languages flag for language hints (existing --languages flag)
 - [ ] Add --ocr-level flag (fast/accurate)
 - [ ] Implement optional image preprocessing pipeline
 - [ ] Add --ocr-preprocess flag
@@ -57,20 +57,20 @@
 - [x] Design prompt template format
 - [x] Implement template loading from JSON file
 - [x] Add --ai-prompt CLI flag
-- [ ] Create default prompt templates (default, academic, legal)
+- [x] Create default prompt templates (default, academic, legal)
 - [ ] Add --ai-endpoint flag for custom endpoints
 - [ ] Add --ai-model flag for local models
 - [ ] Implement Ollama API format detection
 - [ ] Implement llama.cpp server format detection
 - [ ] Implement intelligent text chunking for large docs
-- [ ] Handle partial AI failures gracefully
+- [x] Handle partial AI failures gracefully (returns processed + unprocessed)
 
 ## Epoch 6: CLI/UX (MEDIUM)
 
 - [ ] Implement progress bar for multi-page PDFs
 - [ ] Show page count, elapsed time, ETA
 - [x] Suppress progress in quiet mode (-q)
-- [ ] Add batch mode progress (file X of Y)
+- [x] Add batch mode progress (file X of Y) - implemented in runBatch()
 - [ ] Add --format flag (markdown, html, plain, json)
 - [ ] Implement HTMLGenerator
 - [ ] Implement PlainTextGenerator
@@ -86,19 +86,19 @@
 - [ ] Ensure all errors have actionable messages
 - [ ] Standardize user-facing error format
 - [ ] Implement graceful OCR failure fallback
-- [ ] Implement graceful AI failure fallback
+- [x] Implement graceful AI failure fallback (multi-provider failover)
 - [ ] Implement graceful image extraction failure fallback
 - [ ] Continue processing on single page failure
 - [ ] Report all warnings at conversion end
 - [ ] Validate PDF magic bytes before processing
 - [ ] Validate output path is writable
-- [ ] Validate DPI range (1-1200)
-- [ ] Validate job count (1-256)
+- [x] Validate DPI range (1-1200)
+- [x] Validate job count (1-256)
 
 ## Epoch 8: Documentation (MEDIUM)
 
-- [ ] Update README with all CLI flags
-- [ ] Add troubleshooting section to README
+- [x] Update README with all CLI flags
+- [x] Add troubleshooting section to README
 - [ ] Add performance tips section to README
 - [ ] Keep README under 300 lines
 - [ ] Add DocC documentation to public APIs

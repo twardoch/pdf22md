@@ -176,6 +176,44 @@ Results are stored in `testdata/{fast,standard,optimized,ultra}/` with extracted
 *   **Swift**: 5.7 or later (for building from source)
 *   **Xcode Command Line Tools** (for building)
 
+## Troubleshooting
+
+### "No such module 'XCTest'" when running tests
+
+This occurs when `xcode-select` points to Command Line Tools instead of Xcode.app:
+
+```bash
+# Check current setting
+xcode-select -p
+
+# Fix (requires admin)
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+```
+
+### Vision OCR returns empty text
+
+*   Ensure the PDF contains actual scanned images, not digital text
+*   Try increasing DPI: `--dpi 300`
+*   Check language setting: `--languages en,fr` for multi-language documents
+
+### AI API errors
+
+*   Verify API key format: `model:api_key@base_url`
+*   Test with curl: `curl -H "Authorization: Bearer YOUR_KEY" https://api.openai.com/v1/models`
+*   For local models (Ollama): use empty key: `llama3:@http://localhost:11434/v1`
+
+### High memory usage on large PDFs
+
+*   Process fewer pages at once: `--max-pages 10`
+*   Use `--fast` mode to skip Vision OCR
+*   Close other applications to free memory
+
+### Slow processing
+
+*   Use `--fast` for digital PDFs (skips Vision OCR)
+*   Reduce DPI for images: `--dpi 72`
+*   Use batch mode with parallel jobs: `--batch -j 4`
+
 ## Performance
 
 Designed for speed and efficiency:

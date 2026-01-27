@@ -99,6 +99,28 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Flag(name: .shortAndLong, help: "Suppress all non-error output")
     var quiet: Bool = false
 
+    func validate() throws {
+        // Validate DPI range
+        guard dpi >= 1 && dpi <= 1200 else {
+            throw ValidationError("DPI must be between 1 and 1200 (got \(dpi))")
+        }
+
+        // Validate jobs count
+        guard jobs >= 1 && jobs <= 256 else {
+            throw ValidationError("Jobs must be between 1 and 256 (got \(jobs))")
+        }
+
+        // Validate threshold
+        guard threshold >= 0.1 && threshold <= 100 else {
+            throw ValidationError("Threshold must be between 0.1 and 100 (got \(threshold))")
+        }
+
+        // Validate max-pages if provided
+        if let maxPages = maxPages, maxPages < 1 {
+            throw ValidationError("Max pages must be at least 1 (got \(maxPages))")
+        }
+    }
+
     func run() async throws {
         if Self.stderrFilter == nil {
             Self.stderrFilter = StderrFilter(patterns: StderrNoiseFilter.defaultPatterns)
