@@ -140,10 +140,10 @@ public struct ProcessingOptions {
     /// If Vision text length > PDF text length * threshold, use Vision
     public var visionPreferenceThreshold: Double = 1.5
 
-    /// AI API configuration (if provided)
     public var apiConfig: APIConfiguration?
 
-    /// Maximum pages to process (nil = all pages)
+    public var apiConfigs: [APIConfiguration?] = []
+
     public var maxPages: Int?
 
     /// Show progress output to stderr
@@ -173,6 +173,7 @@ public struct ProcessingOptions {
         visionPreferenceThreshold: Double = 1.5,
         maxPages: Int? = nil,
         apiConfig: APIConfiguration? = nil,
+        apiConfigs: [APIConfiguration?] = [],
         showProgress: Bool = false,
         verbose: Bool = false,
         password: String? = nil,
@@ -187,6 +188,7 @@ public struct ProcessingOptions {
         self.visionPreferenceThreshold = visionPreferenceThreshold
         self.maxPages = maxPages
         self.apiConfig = apiConfig
+        self.apiConfigs = apiConfigs
         self.showProgress = showProgress
         self.verbose = verbose
         self.password = password
@@ -207,12 +209,17 @@ public struct APIConfiguration {
         self.baseURL = baseURL
     }
 
-    /// Parse API configuration from string format: model:api_key@base_url
-    /// Examples:
-    ///   gpt-4o:sk-xxx@https://api.openai.com/v1
-    ///   llama3:@http://localhost:11434/v1  (no key needed)
+    public static func parseMultiple(_ string: String) throws -> [APIConfiguration?] {
+        let apiStrings = string.split(separator: ";").map { String($0).trimmingCharacters(in: .whitespaces) }
+        return try apiStrings.map { apiString in
+            if apiString.lowercased() == "system" {
+                return nil
+            }
+            return try parse(apiString)
+        }
+    }
+
     public static func parse(_ string: String) throws -> APIConfiguration {
-        // Format: model:api_key@base_url
         guard let atIndex = string.lastIndex(of: "@") else {
             throw APIConfigurationError.invalidFormat("Missing '@' separator for base URL")
         }

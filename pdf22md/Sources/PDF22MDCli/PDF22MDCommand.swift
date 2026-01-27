@@ -260,11 +260,12 @@ struct PDF22MDCommand: AsyncParsableCommand {
 
     private func buildProcessingOptions() throws -> ProcessingOptions {
         var apiConfig: APIConfiguration? = nil
+        var apiConfigs: [APIConfiguration?] = []
 
-        if let apiString = api {
-            apiConfig = try APIConfiguration.parse(apiString)
-        } else if let envApi = ProcessInfo.processInfo.environment["PDF22MD_API"] {
-            apiConfig = try APIConfiguration.parse(envApi)
+        let apiString = api ?? ProcessInfo.processInfo.environment["PDF22MD_API"]
+        if let apiString = apiString {
+            apiConfigs = try APIConfiguration.parseMultiple(apiString)
+            apiConfig = apiConfigs.first(where: { $0 != nil }) ?? nil
         }
 
         var promptTemplate: PromptTemplate? = nil
@@ -285,6 +286,7 @@ struct PDF22MDCommand: AsyncParsableCommand {
             visionPreferenceThreshold: threshold,
             maxPages: maxPages,
             apiConfig: apiConfig,
+            apiConfigs: apiConfigs,
             showProgress: !quiet,
             verbose: showWarnings,
             password: password,

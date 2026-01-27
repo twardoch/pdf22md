@@ -1,28 +1,46 @@
-// this_file: pdf22md/Sources/PDF22MD/AI/AITextProcessor.swift
-
 import Foundation
 
-/// AI-powered text correction processor for PDF content
 final class AITextProcessor {
 
-    /// AI provider type
     enum Provider {
         case openAICompatible(OpenAIClient)
         case appleIntelligence
+        
+        var displayName: String {
+            switch self {
+            case .openAICompatible(let client):
+                return client.model
+            case .appleIntelligence:
+                return "Apple Intelligence"
+            }
+        }
     }
 
-    /// Result from processing a single page
     struct PageResult {
         let correctedText: String
         let improvedPreviousText: String?
     }
+    
+    struct PartialResult {
+        let processedPages: [String]
+        let unprocessedPages: [PageTextContent]
+        let error: Error
+    }
 
-    private let provider: Provider
+    private let providers: [Provider]
     private let promptTemplate: PromptTemplate
+    private let maxRetries: Int
+    private let retryDelaySeconds: UInt64
 
-    init(provider: Provider, promptTemplate: PromptTemplate = .default) {
-        self.provider = provider
+    init(providers: [Provider], promptTemplate: PromptTemplate = .default, maxRetries: Int = 1, retryDelaySeconds: UInt64 = 10) {
+        self.providers = providers
         self.promptTemplate = promptTemplate
+        self.maxRetries = maxRetries
+        self.retryDelaySeconds = retryDelaySeconds
+    }
+
+    convenience init(provider: Provider, promptTemplate: PromptTemplate = .default) {
+        self.init(providers: [provider], promptTemplate: promptTemplate)
     }
 
     convenience init(apiConfig: APIConfiguration, promptTemplate: PromptTemplate? = nil) {
@@ -30,18 +48,25 @@ final class AITextProcessor {
         self.init(provider: .openAICompatible(client), promptTemplate: promptTemplate ?? .default)
     }
 
-    /// Process a single page with context from the previous page
-    /// - Parameters:
-    ///   - pdfText: Text extracted from PDF (Fn)
-    ///   - visionText: Text extracted from Vision OCR (Vn), optional
-    ///   - previousContext: Corrected text from previous page (Cn-1), nil for first page
-    ///   - pageNumber: 1-based page number for prompt
-    /// - Returns: Corrected text and optionally improved previous page text
-    func processPage(
+    convenience init(apiConfigs: [APIConfiguration?], promptTemplate: PromptTemplate? = nil) {
+        let providers: [Provider] = apiConfigs.map { config in
+            if let config = config {
+                return .openAICompatible(OpenAIClient(config: config))
+            } else {
+                return .appleIntelligence
+            }
+        }
+        self.init(providers: providers, promptTemplate: promptTemplate ?? .default)
+    }
+
+    func processPageWithFallback(
         pdfText: String,
         visionText: String?,
         previousContext: String?,
-        pageNumber: Int
+        pageNumber: Int,
+        fullRetryCount: Int = 0,
+        providerCallback: ((String) -> Void)? = nil,
+        retryCallback: ((String, Int) -> Void)? = nil
     ) async throws -> PageResult {
         let prompt = promptTemplate.buildPrompt(
             pdfText: pdfText,
@@ -50,24 +75,79 @@ final class AITextProcessor {
             pageNumber: pageNumber
         )
 
-        let response: String
-        switch provider {
-        case .openAICompatible(let client):
-            response = try await client.complete(
-                systemPrompt: promptTemplate.systemPrompt,
-                userMessage: prompt
-            )
-        case .appleIntelligence:
-            throw AIProcessingError.appleIntelligenceUnavailable
+        var lastError: Error = AIProcessingError.processingFailed("No providers available")
+        
+        for (providerIndex, provider) in providers.enumerated() {
+            let providerName: String
+            switch provider {
+            case .openAICompatible(let client):
+                providerName = client.model
+            case .appleIntelligence:
+                providerName = "Apple Intelligence"
+            }
+            
+            for attemptWithinProvider in 0..<2 {
+                do {
+                    let response: String
+                    switch provider {
+                    case .openAICompatible(let client):
+                        providerCallback?(client.model)
+                        response = try await client.complete(
+                            systemPrompt: promptTemplate.systemPrompt,
+                            userMessage: prompt
+                        )
+                    case .appleIntelligence:
+                        providerCallback?("Apple Intelligence")
+                        throw AIProcessingError.appleIntelligenceUnavailable
+                    }
+                    return parseResponse(response, hasPreviousContext: previousContext != nil)
+                } catch {
+                    lastError = error
+                    if attemptWithinProvider == 0 {
+                        retryCallback?(providerName, providerIndex + 1)
+                        try await Task.sleep(nanoseconds: retryDelaySeconds * 1_000_000_000)
+                    }
+                }
+            }
         }
-
-        return parseResponse(response, hasPreviousContext: previousContext != nil)
+        
+        if fullRetryCount < maxRetries {
+            retryCallback?("all providers", 0)
+            try await Task.sleep(nanoseconds: retryDelaySeconds * 1_000_000_000)
+            return try await processPageWithFallback(
+                pdfText: pdfText,
+                visionText: visionText,
+                previousContext: previousContext,
+                pageNumber: pageNumber,
+                fullRetryCount: fullRetryCount + 1,
+                providerCallback: providerCallback,
+                retryCallback: retryCallback
+            )
+        }
+        
+        throw lastError
     }
 
-    /// Process all pages with sliding window context
-    /// - Parameter pages: Array of page text content
-    /// - Returns: Array of corrected text strings
-    func processPages(_ pages: [PageTextContent], progressCallback: ((Int, Int) -> Void)? = nil) async throws -> [String] {
+    func processPage(
+        pdfText: String,
+        visionText: String?,
+        previousContext: String?,
+        pageNumber: Int
+    ) async throws -> PageResult {
+        return try await processPageWithFallback(
+            pdfText: pdfText,
+            visionText: visionText,
+            previousContext: previousContext,
+            pageNumber: pageNumber
+        )
+    }
+
+    func processPages(
+        _ pages: [PageTextContent],
+        progressCallback: ((Int, Int) -> Void)? = nil,
+        providerCallback: ((String) -> Void)? = nil,
+        retryCallback: ((String, Int) -> Void)? = nil
+    ) async -> (results: [String], partial: PartialResult?) {
         var results: [String] = []
         var previousCorrected: String? = nil
 
@@ -75,44 +155,51 @@ final class AITextProcessor {
             let pdfText = page.pdfText
             let visionText = page.visionText
 
-            let pageResult = try await processPage(
-                pdfText: pdfText,
-                visionText: visionText,
-                previousContext: previousCorrected,
-                pageNumber: index + 1
-            )
+            do {
+                let pageResult = try await processPageWithFallback(
+                    pdfText: pdfText,
+                    visionText: visionText,
+                    previousContext: previousCorrected,
+                    pageNumber: index + 1,
+                    providerCallback: providerCallback,
+                    retryCallback: retryCallback
+                )
 
-            if let improvedPrev = pageResult.improvedPreviousText, !results.isEmpty {
-                results[results.count - 1] = improvedPrev
+                if let improvedPrev = pageResult.improvedPreviousText, !results.isEmpty {
+                    results[results.count - 1] = improvedPrev
+                }
+
+                results.append(pageResult.correctedText)
+                previousCorrected = pageResult.correctedText
+                
+                progressCallback?(index + 1, pages.count)
+            } catch {
+                let unprocessed = Array(pages[index...])
+                let partial = PartialResult(
+                    processedPages: results,
+                    unprocessedPages: unprocessed,
+                    error: error
+                )
+                return (results, partial)
             }
-
-            results.append(pageResult.correctedText)
-            previousCorrected = pageResult.correctedText
-            
-            progressCallback?(index + 1, pages.count)
         }
 
-        return results
+        return (results, nil)
     }
-
-    // MARK: - Private
 
     private func parseResponse(_ response: String, hasPreviousContext: Bool) -> PageResult {
         var correctedText = ""
         var improvedPrevious: String? = nil
 
-        // Extract improved previous page if present
         if hasPreviousContext {
             if let improvedMatch = extractTagContent(from: response, tag: "IMPROVED_PREVIOUS") {
                 improvedPrevious = improvedMatch.trimmingCharacters(in: .whitespacesAndNewlines)
             }
         }
 
-        // Extract corrected text
         if let correctedMatch = extractTagContent(from: response, tag: "CORRECTED") {
             correctedText = correctedMatch.trimmingCharacters(in: .whitespacesAndNewlines)
         } else {
-            // Fallback: use the entire response if no tags found
             correctedText = response.trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
@@ -138,8 +225,6 @@ final class AITextProcessor {
     }
 }
 
-// MARK: - Errors
-
 enum AIProcessingError: Error, LocalizedError {
     case invalidAPIConfiguration(String)
     case networkError(Error)
@@ -148,6 +233,7 @@ enum AIProcessingError: Error, LocalizedError {
     case contextWindowExceeded
     case guardrailViolation
     case processingFailed(String)
+    case partialFailure(processed: Int, total: Int, error: Error)
 
     var errorDescription: String? {
         switch self {
@@ -165,19 +251,13 @@ enum AIProcessingError: Error, LocalizedError {
             return "Content was blocked by AI safety guardrails"
         case .processingFailed(let message):
             return "AI processing failed: \(message)"
+        case .partialFailure(let processed, let total, let error):
+            return "AI processing failed after \(processed)/\(total) pages: \(error.localizedDescription)"
         }
     }
 }
 
-// MARK: - Text Selection
-
 extension AITextProcessor {
-    /// Select the best text between PDF and Vision extraction
-    /// - Parameters:
-    ///   - pdfText: Text from PDF parsing
-    ///   - visionText: Text from Vision OCR
-    ///   - threshold: Ratio threshold (default 1.5 = 50% more)
-    /// - Returns: Selected text and source
     static func selectBestText(
         pdfText: String,
         visionText: String?,
@@ -190,12 +270,10 @@ extension AITextProcessor {
         let pdfLength = pdfText.count
         let visionLength = vision.count
 
-        // Use Vision if significantly more content
         if Double(visionLength) > Double(pdfLength) * threshold {
             return (vision, .vision)
         }
 
-        // Use Vision if PDF has very little text but Vision has some
         if pdfLength < 50 && visionLength > 100 {
             return (vision, .vision)
         }

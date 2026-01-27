@@ -161,35 +161,78 @@ public final class PDFMarkdownConverter {
             logProgress("Extraction complete: \(pageContents.count) pages")
         }
 
-        // Phase 2: AI processing (sequential, sliding window)
         var finalTexts: [String] = []
 
-        if options.enableAI, let apiConfig = options.apiConfig {
+        if options.enableAI && !options.apiConfigs.isEmpty {
+            let apiNames = options.apiConfigs.map { $0?.model ?? "system" }.joined(separator: ", ")
+            logProgress("Phase 2: AI correction using \(apiNames)...")
+            
+            let aiProcessor = AITextProcessor(apiConfigs: options.apiConfigs, promptTemplate: options.promptTemplate ?? .default)
+            var currentProvider = ""
+            let (results, partial) = await aiProcessor.processPages(
+                pageContents,
+                progressCallback: { completed, total in
+                    if self.options.showProgress {
+                        let providerInfo = currentProvider.isEmpty ? "" : " [\(currentProvider)]"
+                        FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)\(providerInfo)...\n".utf8))
+                    }
+                },
+                providerCallback: { provider in
+                    currentProvider = provider
+                },
+                retryCallback: { provider, attempt in
+                    if self.options.showProgress || self.options.verbose {
+                        FileHandle.standardError.write(Data("[pdf22md] Retrying \(provider) (attempt \(attempt))...\n".utf8))
+                    }
+                }
+            )
+            
+            if let partial = partial {
+                logWarning("AI processing failed after \(partial.processedPages.count)/\(pageContents.count) pages: \(partial.error.localizedDescription)")
+                logWarning("Outputting processed pages + unprocessed raw text")
+                finalTexts = partial.processedPages + partial.unprocessedPages.map { $0.bestText }
+            } else {
+                finalTexts = results
+                logProgress("AI correction complete")
+            }
+        } else if options.enableAI, let apiConfig = options.apiConfig {
             logProgress("Phase 2: AI correction using \(apiConfig.model)...")
             let aiProcessor = AITextProcessor(apiConfig: apiConfig, promptTemplate: options.promptTemplate)
-            finalTexts = try await aiProcessor.processPages(pageContents) { completed, total in
-                if self.options.showProgress {
-                    FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)...\n".utf8))
-                }
-            }
-            logProgress("AI correction complete")
-        } else if options.enableAI {
-            logProgress("Phase 2: AI correction using Apple Intelligence...")
-            do {
-                let template = options.promptTemplate ?? .default
-                let aiProcessor = AITextProcessor(provider: .appleIntelligence, promptTemplate: template)
-                finalTexts = try await aiProcessor.processPages(pageContents) { completed, total in
+            let (results, partial) = await aiProcessor.processPages(
+                pageContents,
+                progressCallback: { completed, total in
                     if self.options.showProgress {
                         FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)...\n".utf8))
                     }
                 }
+            )
+            if let partial = partial {
+                logWarning("AI processing failed: \(partial.error.localizedDescription)")
+                finalTexts = partial.processedPages + partial.unprocessedPages.map { $0.bestText }
+            } else {
+                finalTexts = results
                 logProgress("AI correction complete")
-            } catch AIProcessingError.appleIntelligenceUnavailable {
-                logWarning("Apple Intelligence unavailable, using extracted text")
-                finalTexts = pageContents.map { $0.bestText }
+            }
+        } else if options.enableAI {
+            logProgress("Phase 2: AI correction using Apple Intelligence...")
+            let template = options.promptTemplate ?? .default
+            let aiProcessor = AITextProcessor(provider: .appleIntelligence, promptTemplate: template)
+            let (results, partial) = await aiProcessor.processPages(
+                pageContents,
+                progressCallback: { completed, total in
+                    if self.options.showProgress {
+                        FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)...\n".utf8))
+                    }
+                }
+            )
+            if let partial = partial {
+                logWarning("Apple Intelligence failed: \(partial.error.localizedDescription)")
+                finalTexts = partial.processedPages + partial.unprocessedPages.map { $0.bestText }
+            } else {
+                finalTexts = results
+                logProgress("AI correction complete")
             }
         } else {
-            // No AI: use best available text (PDF or Vision)
             finalTexts = pageContents.map { $0.bestText }
         }
 
