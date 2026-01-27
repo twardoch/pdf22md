@@ -9,13 +9,15 @@ final class PDFPageProcessor {
     private let dpi: CGFloat
     private let assetsPath: String?
     private let options: ProcessingOptions
+    private let pdfData: Data?
 
-    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0, assetsPath: String? = nil, options: ProcessingOptions = .default) {
+    init(page: PDFPage, pageIndex: Int, dpi: CGFloat = 144.0, assetsPath: String? = nil, options: ProcessingOptions = .default, pdfData: Data? = nil) {
         self.pdfPage = page
         self.pageIndex = pageIndex
         self.dpi = dpi
         self.assetsPath = assetsPath
         self.options = options
+        self.pdfData = pdfData
     }
 
     // MARK: - Legacy API
@@ -67,12 +69,19 @@ final class PDFPageProcessor {
     }
 
     private func extractVisionText() async -> String? {
-        let config = VisionTextExtractor.Configuration(
+        var config = VisionTextExtractor.Configuration(
             languages: options.languages,
             useFastRecognition: options.useFastRecognition
         )
+        config.useCache = !options.disableCache
+        config.dpi = dpi
         let extractor = VisionTextExtractor(configuration: config)
-        return try? await extractor.extractTextAsString(from: pdfPage, dpi: dpi)
+        
+        guard let cacheKeyData = pdfData else {
+            return try? await extractor.extractTextAsString(from: pdfPage, dpi: dpi)
+        }
+        let results = try? await extractor.extractText(from: pdfPage, dpi: dpi, pdfData: cacheKeyData, pageIndex: pageIndex)
+        return results?.map { $0.text }.joined(separator: "\n")
     }
 
     static func createPageContent(from result: EnhancedPageResult, options: ProcessingOptions) -> PageTextContent {

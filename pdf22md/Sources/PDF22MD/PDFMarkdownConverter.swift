@@ -109,6 +109,7 @@ public final class PDFMarkdownConverter {
 
         logProgress("Phase 1: Extracting text...")
         var completedPages = 0
+        var visionPagesCount = 0
         let extractionResults = await withTaskGroup(of: PDFPageProcessor.EnhancedPageResult?.self) { group in
             for pageIndex in 0..<pageCount {
                 group.addTask {
@@ -133,21 +134,32 @@ public final class PDFMarkdownConverter {
                 if let result = result {
                     results.append(result)
                     completedPages += 1
+                    
+                    let usedVision = result.visionText != nil && !result.visionText!.isEmpty
+                    if usedVision {
+                        visionPagesCount += 1
+                    }
+                    
                     if self.options.showProgress {
-                        FileHandle.standardError.write(Data("[pdf22md] Extracted page \(completedPages)/\(pageCount)\n".utf8))
+                        let visionIndicator = usedVision ? " (Vision OCR)" : ""
+                        FileHandle.standardError.write(Data("[pdf22md] Extracted page \(completedPages)/\(pageCount)\(visionIndicator)\n".utf8))
                     }
                 }
             }
             return results.sorted { $0.pageIndex < $1.pageIndex }
         }
 
-        // Convert extraction results to PageTextContent
         for result in extractionResults {
             let content = PDFPageProcessor.createPageContent(from: result, options: options)
             pageContents.append(content)
             allImageElements.append(contentsOf: result.imageElements)
         }
-        logProgress("Extraction complete: \(pageContents.count) pages")
+        
+        if visionPagesCount > 0 {
+            logProgress("Extraction complete: \(pageContents.count) pages (\(visionPagesCount) with Vision OCR)")
+        } else {
+            logProgress("Extraction complete: \(pageContents.count) pages")
+        }
 
         // Phase 2: AI processing (sequential, sliding window)
         var finalTexts: [String] = []
@@ -155,14 +167,22 @@ public final class PDFMarkdownConverter {
         if options.enableAI, let apiConfig = options.apiConfig {
             logProgress("Phase 2: AI correction using \(apiConfig.model)...")
             let aiProcessor = AITextProcessor(apiConfig: apiConfig, promptTemplate: options.promptTemplate)
-            finalTexts = try await aiProcessor.processPages(pageContents)
+            finalTexts = try await aiProcessor.processPages(pageContents) { completed, total in
+                if self.options.showProgress {
+                    FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)...\n".utf8))
+                }
+            }
             logProgress("AI correction complete")
         } else if options.enableAI {
             logProgress("Phase 2: AI correction using Apple Intelligence...")
             do {
                 let template = options.promptTemplate ?? .default
                 let aiProcessor = AITextProcessor(provider: .appleIntelligence, promptTemplate: template)
-                finalTexts = try await aiProcessor.processPages(pageContents)
+                finalTexts = try await aiProcessor.processPages(pageContents) { completed, total in
+                    if self.options.showProgress {
+                        FileHandle.standardError.write(Data("[pdf22md] AI processing page \(completed)/\(total)...\n".utf8))
+                    }
+                }
                 logProgress("AI correction complete")
             } catch AIProcessingError.appleIntelligenceUnavailable {
                 logWarning("Apple Intelligence unavailable, using extracted text")

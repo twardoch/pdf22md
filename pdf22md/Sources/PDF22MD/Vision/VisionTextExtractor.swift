@@ -43,15 +43,24 @@ final class VisionTextExtractor {
         var usesLanguageCorrection: Bool = true
         var minimumConfidence: Float = 0.0
         var customWords: [String] = []
+        var useCache: Bool = true
+        var dpi: CGFloat = 144
 
         static let `default` = Configuration()
         static let fast = Configuration(useFastRecognition: true)
+        static func noCache() -> Configuration {
+            var config = Configuration()
+            config.useCache = false
+            return config
+        }
     }
 
     private let configuration: Configuration
+    private let cache: OCRCache?
 
     init(configuration: Configuration = .default) {
         self.configuration = configuration
+        self.cache = configuration.useCache ? OCRCache() : nil
     }
 
     /// Extract text from a CGImage using Vision Framework
@@ -130,24 +139,28 @@ final class VisionTextExtractor {
         }
     }
 
-    /// Extract text from a PDF page by rendering it to an image first
-    /// - Parameters:
-    ///   - pdfPage: The PDF page to extract text from
-    ///   - dpi: Resolution for rendering (default 144 dpi)
-    /// - Returns: Array of recognized text results
-    func extractText(from pdfPage: PDFPage, dpi: CGFloat = 144) async throws -> [VisionTextResult] {
+    func extractText(from pdfPage: PDFPage, dpi: CGFloat = 144, pdfData: Data? = nil, pageIndex: Int = 0) async throws -> [VisionTextResult] {
+        if let cache = cache, let data = pdfData,
+           let cachedText = cache.getCachedText(pdfData: data, pageIndex: pageIndex, dpi: Double(dpi), languages: configuration.languages) {
+            return [VisionTextResult(text: cachedText, confidence: 1.0, boundingBox: .zero)]
+        }
+        
         guard let cgImage = renderPageToImage(pdfPage, dpi: dpi) else {
             throw VisionExtractionError.imageRenderingFailed
         }
 
         let pageRect = pdfPage.bounds(for: .mediaBox)
         let scale = dpi / 72.0
-        let scaledSize = CGSize(
-            width: pageRect.size.width * scale,
-            height: pageRect.size.height * scale
-        )
+        let scaledSize = CGSize(width: pageRect.size.width * scale, height: pageRect.size.height * scale)
 
-        return try await extractText(from: cgImage, imageSize: scaledSize)
+        let results = try await extractText(from: cgImage, imageSize: scaledSize)
+        
+        if let cache = cache, let data = pdfData {
+            let combinedText = results.map { $0.text }.joined(separator: "\n")
+            cache.cacheText(combinedText, resultCount: results.count, pdfData: data, pageIndex: pageIndex, dpi: Double(dpi), languages: configuration.languages)
+        }
+        
+        return results
     }
 
     /// Render a PDF page to a CGImage at the specified DPI

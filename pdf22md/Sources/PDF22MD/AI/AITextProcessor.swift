@@ -18,15 +18,16 @@ final class AITextProcessor {
     }
 
     private let provider: Provider
+    private let promptTemplate: PromptTemplate
 
-    init(provider: Provider) {
+    init(provider: Provider, promptTemplate: PromptTemplate = .default) {
         self.provider = provider
+        self.promptTemplate = promptTemplate
     }
 
-    /// Initialize with API configuration
-    convenience init(apiConfig: APIConfiguration) {
+    convenience init(apiConfig: APIConfiguration, promptTemplate: PromptTemplate? = nil) {
         let client = OpenAIClient(config: apiConfig)
-        self.init(provider: .openAICompatible(client))
+        self.init(provider: .openAICompatible(client), promptTemplate: promptTemplate ?? .default)
     }
 
     /// Process a single page with context from the previous page
@@ -42,7 +43,7 @@ final class AITextProcessor {
         previousContext: String?,
         pageNumber: Int
     ) async throws -> PageResult {
-        let prompt = buildPrompt(
+        let prompt = promptTemplate.buildPrompt(
             pdfText: pdfText,
             visionText: visionText,
             previousContext: previousContext,
@@ -53,11 +54,10 @@ final class AITextProcessor {
         switch provider {
         case .openAICompatible(let client):
             response = try await client.complete(
-                systemPrompt: systemPrompt,
+                systemPrompt: promptTemplate.systemPrompt,
                 userMessage: prompt
             )
         case .appleIntelligence:
-            // Apple Intelligence integration will be added in Phase 5
             throw AIProcessingError.appleIntelligenceUnavailable
         }
 
@@ -67,7 +67,7 @@ final class AITextProcessor {
     /// Process all pages with sliding window context
     /// - Parameter pages: Array of page text content
     /// - Returns: Array of corrected text strings
-    func processPages(_ pages: [PageTextContent]) async throws -> [String] {
+    func processPages(_ pages: [PageTextContent], progressCallback: ((Int, Int) -> Void)? = nil) async throws -> [String] {
         var results: [String] = []
         var previousCorrected: String? = nil
 
@@ -82,92 +82,20 @@ final class AITextProcessor {
                 pageNumber: index + 1
             )
 
-            // Update previous page if AI suggested improvements
             if let improvedPrev = pageResult.improvedPreviousText, !results.isEmpty {
                 results[results.count - 1] = improvedPrev
             }
 
             results.append(pageResult.correctedText)
             previousCorrected = pageResult.correctedText
+            
+            progressCallback?(index + 1, pages.count)
         }
 
         return results
     }
 
     // MARK: - Private
-
-    private let systemPrompt = """
-        You are a text correction assistant specializing in cleaning up text extracted from PDF documents.
-        Your task is to produce clean, well-formatted Markdown output.
-
-        Guidelines:
-        - Fix obvious spelling and typographic errors
-        - Combine broken lines into logical paragraphs
-        - Identify and format headings using Markdown (# for main headings, ## for subheadings, etc.)
-        - Preserve important formatting (bold, italic) using Markdown syntax
-        - Move image captions, footnotes, and margin notes to the end of the page
-        - Remove running headers, page numbers, and other artifacts
-        - Remove garbled text, noise, and garbage characters
-        - Maintain the original meaning and content
-        - Do not add information that wasn't in the original text
-
-        Output format:
-        - If previous page context was provided, first output any improvements to the previous page text between <IMPROVED_PREVIOUS> and </IMPROVED_PREVIOUS> tags
-        - Then output the corrected text for the current page between <CORRECTED> and </CORRECTED> tags
-        """
-
-    private func buildPrompt(
-        pdfText: String,
-        visionText: String?,
-        previousContext: String?,
-        pageNumber: Int
-    ) -> String {
-        var prompt = "Page \(pageNumber) of PDF document.\n\n"
-
-        // Add previous page context if available
-        if let previous = previousContext {
-            prompt += """
-                Previous page (for context and flow):
-                ---
-                \(previous)
-                ---
-
-                If the previous page text could be improved to better connect with the current page, include improvements in <IMPROVED_PREVIOUS> tags.
-
-
-                """
-        }
-
-        // Add PDF text
-        prompt += """
-            PDF-extracted text:
-            ---
-            \(pdfText)
-            ---
-
-            """
-
-        // Add Vision text if available and different
-        if let vision = visionText, !vision.isEmpty {
-            // Only include Vision text if it's meaningfully different
-            if vision.count > pdfText.count / 2 || pdfText.count < 100 {
-                prompt += """
-                    OCR-extracted text (from Vision):
-                    ---
-                    \(vision)
-                    ---
-
-                    """
-            }
-        }
-
-        prompt += """
-            Please correct and format the text. Use the OCR text to fill in any gaps or fix errors in the PDF text.
-            Output the corrected text in <CORRECTED></CORRECTED> tags.
-            """
-
-        return prompt
-    }
 
     private func parseResponse(_ response: String, hasPreviousContext: Bool) -> PageResult {
         var correctedText = ""
