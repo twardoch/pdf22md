@@ -8,8 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- CLI output: suppress noisy PDFKit/CoreText stderr lines; show progress by default and keep verbose for warning-level messages.
+- **CLI Simplification (Issue #402)**: Removed `--optimized` and `--ultra-optimized` flags. Vision OCR is now enabled by default (use `--fast` to skip). Updated `--verbose` to show warnings instead of progress.
+- CLI output: suppress noisy PDFKit/CoreText stderr lines; show progress by default.
 - ProcessingOptions: added `showProgress` flag for CLI-controlled progress output.
+
+### Removed
+- `PDFMarkdownConverterOptimized` class - consolidated into main converter
+- `PDFMarkdownConverterUltraOptimized` class - consolidated into main converter
+- `PDFPageProcessorOptimized` class - unused after consolidation
 
 ## [1.6.1] - 2026-01-11
 
