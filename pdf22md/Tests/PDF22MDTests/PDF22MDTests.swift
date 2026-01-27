@@ -602,6 +602,7 @@ final class PDF22MDTests: XCTestCase {
         XCTAssertFalse(options.useFastRecognition)
         XCTAssertEqual(options.visionPreferenceThreshold, 1.5)
         XCTAssertNil(options.apiConfig)
+        XCTAssertFalse(options.showProgress)
     }
 
     func testProcessingOptionsFast() {
@@ -633,6 +634,14 @@ final class PDF22MDTests: XCTestCase {
 
         let defaultOptions = ProcessingOptions.default
         XCTAssertFalse(defaultOptions.verbose)
+    }
+
+    func testProcessingOptionsShowProgress() {
+        let options = ProcessingOptions(showProgress: true)
+        XCTAssertTrue(options.showProgress)
+
+        let defaultOptions = ProcessingOptions.default
+        XCTAssertFalse(defaultOptions.showProgress)
     }
 
     func testProcessingOptionsMaxPages() {
@@ -1103,6 +1112,7 @@ final class PDF22MDTests: XCTestCase {
             visionPreferenceThreshold: 2.5,
             maxPages: 10,
             apiConfig: apiConfig,
+            showProgress: true,
             verbose: true,
             password: "secret123"
         )
@@ -1117,6 +1127,7 @@ final class PDF22MDTests: XCTestCase {
         XCTAssertEqual(options.maxPages, 10)
         XCTAssertNotNil(options.apiConfig)
         XCTAssertEqual(options.apiConfig?.model, "gpt-4o")
+        XCTAssertTrue(options.showProgress)
         XCTAssertTrue(options.verbose)
         XCTAssertEqual(options.password, "secret123")
     }
@@ -1132,6 +1143,7 @@ final class PDF22MDTests: XCTestCase {
         XCTAssertEqual(defaultOptions.visionPreferenceThreshold, 1.5)
         XCTAssertNil(defaultOptions.maxPages)
         XCTAssertNil(defaultOptions.apiConfig)
+        XCTAssertFalse(defaultOptions.showProgress)
         XCTAssertFalse(defaultOptions.verbose)
         XCTAssertNil(defaultOptions.password)
 

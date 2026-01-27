@@ -4,6 +4,7 @@ import PDF22MD
 
 @main
 struct PDF22MDCommand: AsyncParsableCommand {
+    private static var stderrFilter: StderrFilter?
     static let configuration = CommandConfiguration(
         commandName: "pdf22md",
         abstract: "Converts PDF documents to Markdown format (Swift implementation)",
@@ -77,6 +78,9 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Option(name: .long, help: "AI API in format model:api_key@base_url (or use PDF22MD_API env)")
     var api: String?
 
+    @Option(name: .long, help: "Custom AI prompt template (JSON file)")
+    var aiPrompt: String?
+
     @Option(name: .long, help: "Languages for Vision OCR (comma-separated ISO 639 codes, default: en)")
     var languages: String = "en"
 
@@ -89,6 +93,9 @@ struct PDF22MDCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Password for encrypted PDF files")
     var password: String?
 
+    @Flag(name: .long, help: "Disable OCR result caching")
+    var noCache: Bool = false
+
     @Option(name: .shortAndLong, help: "Parallel jobs for batch mode (default: 1)")
     var jobs: Int = 1
 
@@ -99,6 +106,9 @@ struct PDF22MDCommand: AsyncParsableCommand {
     var quiet: Bool = false
 
     func run() async throws {
+        if Self.stderrFilter == nil {
+            Self.stderrFilter = StderrFilter(patterns: StderrNoiseFilter.defaultPatterns)
+        }
         // Check for batch mode
         if batch {
             try await runBatch()
@@ -180,12 +190,10 @@ struct PDF22MDCommand: AsyncParsableCommand {
         }
     }
 
-    /// Log message to stderr (respects quiet flag)
+    /// Log progress to stderr (respects quiet flag)
     private func log(_ message: String) {
         guard !quiet else { return }
-        if verbose {
-            FileHandle.standardError.write(Data("[pdf22md] \(message)\n".utf8))
-        }
+        FileHandle.standardError.write(Data("[pdf22md] \(message)\n".utf8))
     }
 
     /// Log error to stderr (always shown unless quiet)
@@ -292,9 +300,7 @@ struct PDF22MDCommand: AsyncParsableCommand {
         log("Batch complete: \(successCount) succeeded, \(failCount) failed")
     }
 
-    /// Build ProcessingOptions from CLI arguments
     private func buildProcessingOptions() throws -> ProcessingOptions {
-        // Parse API configuration from argument or environment
         var apiConfig: APIConfiguration? = nil
 
         if let apiString = api {
@@ -303,8 +309,14 @@ struct PDF22MDCommand: AsyncParsableCommand {
             apiConfig = try APIConfiguration.parse(envApi)
         }
 
-        // Parse languages
+        var promptTemplate: PromptTemplate? = nil
+        if let promptPath = aiPrompt {
+            let promptURL = URL(fileURLWithPath: promptPath)
+            promptTemplate = try PromptTemplate.load(from: promptURL)
+        }
+
         let languageList = languages.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }
+        let showWarnings = verbose && !quiet
 
         return ProcessingOptions(
             fastMode: fast,
@@ -315,8 +327,11 @@ struct PDF22MDCommand: AsyncParsableCommand {
             visionPreferenceThreshold: threshold,
             maxPages: maxPages,
             apiConfig: apiConfig,
-            verbose: verbose,
-            password: password
+            showProgress: !quiet,
+            verbose: showWarnings,
+            password: password,
+            disableCache: noCache,
+            promptTemplate: promptTemplate
         )
     }
-} 
+}

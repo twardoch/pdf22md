@@ -50,4 +50,4 @@ let package = Package(
             ]
         )
     ]
-) 
+)

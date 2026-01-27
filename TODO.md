@@ -69,7 +69,7 @@
 
 - [ ] Implement progress bar for multi-page PDFs
 - [ ] Show page count, elapsed time, ETA
-- [ ] Suppress progress in quiet mode (-q)
+- [x] Suppress progress in quiet mode (-q)
 - [ ] Add batch mode progress (file X of Y)
 - [ ] Add --format flag (markdown, html, plain, json)
 - [ ] Implement HTMLGenerator

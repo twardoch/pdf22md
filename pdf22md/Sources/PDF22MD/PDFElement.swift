@@ -146,11 +146,20 @@ public struct ProcessingOptions {
     /// Maximum pages to process (nil = all pages)
     public var maxPages: Int?
 
-    /// Enable verbose progress output to stderr
+    /// Show progress output to stderr
+    public var showProgress: Bool = false
+
+    /// Enable verbose warning output to stderr
     public var verbose: Bool = false
 
     /// Password for encrypted PDFs
     public var password: String?
+
+    /// Disable OCR result caching
+    public var disableCache: Bool = false
+
+    /// Custom AI prompt template
+    public var promptTemplate: PromptTemplate?
 
     public static let `default` = ProcessingOptions()
     public static let fast = ProcessingOptions(fastMode: true)
@@ -164,8 +173,11 @@ public struct ProcessingOptions {
         visionPreferenceThreshold: Double = 1.5,
         maxPages: Int? = nil,
         apiConfig: APIConfiguration? = nil,
+        showProgress: Bool = false,
         verbose: Bool = false,
-        password: String? = nil
+        password: String? = nil,
+        disableCache: Bool = false,
+        promptTemplate: PromptTemplate? = nil
     ) {
         self.fastMode = fastMode
         self.enableAI = enableAI
@@ -175,8 +187,11 @@ public struct ProcessingOptions {
         self.visionPreferenceThreshold = visionPreferenceThreshold
         self.maxPages = maxPages
         self.apiConfig = apiConfig
+        self.showProgress = showProgress
         self.verbose = verbose
         self.password = password
+        self.disableCache = disableCache
+        self.promptTemplate = promptTemplate
     }
 }
 

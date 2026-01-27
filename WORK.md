@@ -1,5 +1,18 @@
 # Work Progress
 
+## Output Logging Cleanup (2026-01-27)
+
+- Added stderr noise filtering for PDFKit/CoreText debug lines in CLI output.
+- Added `showProgress` option; progress now shown by default unless `-q`, verbose reserved for warnings.
+- Renamed CLI entry file to `PDF22MDCommand.swift` to avoid `@main` + `main.swift` conflicts.
+
+### Tests
+
+- `swift test` (failed)
+  - `testAPIConfigurationParseInvalid` did not throw as expected
+  - Missing test PDFs caused failures: `testBasicConversion`, `testOptimizedConversion`, `testConversionPerformance`, `testInvalidOutputPathHandling`, `testCustomDPI`
+  - Warning: `Version.swift.template` is unhandled resource
+
 ## v2.0 Development Started (2025-01-26)
 
 ### Project Analysis Complete
