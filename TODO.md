@@ -42,6 +42,10 @@
 ### Documentation
 - [ ] Add DocC documentation to public APIs
 - [ ] Create example scripts (batch-convert, python-integration)
+- [ ] Write a "When to use AI cleanup" guide (what broken line joins look like, and when the AI pass fixes them)
+- [ ] Add a "Performance" section with benchmarks on typical document sizes (10/50/100 pages)
+- [ ] Document the `--dpi` trade-off (rasterisation quality vs. output file size) and Vision OCR limits on math/tables
+- [ ] Trim README toward the ≤200-line house style, moving deep-dive prose into the docs site
 
 ### Future
 - [ ] Evaluate web interface demand

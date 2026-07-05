@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so `git describe` resolves the tag
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build universal release binary
+        working-directory: pdf22md
+        run: swift build -c release --arch arm64 --arch x86_64
+
+      - name: Package binary
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          BIN="pdf22md/.build/apple/Products/Release/pdf22md"
+          test -x "$BIN"
+          "$BIN" --version
+          TARBALL="pdf22md-${VERSION}-macos-universal.tar.gz"
+          tar -czf "$TARBALL" -C "$(dirname "$BIN")" pdf22md
+          shasum -a 256 "$TARBALL" > "${TARBALL}.sha256"
+          echo "TARBALL=$TARBALL" >> "$GITHUB_ENV"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ env.TARBALL }}
+            ${{ env.TARBALL }}.sha256
+          generate_release_notes: true

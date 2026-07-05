@@ -69,3 +69,7 @@ external/
 
 # Private/local
 _private/
+
+# OCR cache (default location is ~/.cache/pdf22md/; guard any in-repo cache dir)
+.cache/
+*.ocrcache/

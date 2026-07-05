@@ -1,0 +1,50 @@
+site_name: pdf22md
+site_description: Fast PDF to Markdown converter for macOS using PDFKit, Vision OCR, and optional AI correction
+site_url: https://twardoch.github.io/pdf22md/
+repo_url: https://github.com/twardoch/pdf22md
+repo_name: twardoch/pdf22md
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Usage: usage.md
+  - Conversion Quality: quality.md
+  - Technical Reports:
+      - PDF Parsing: Report_PDF_Parsing.md
+      - Parallel Processing: Report_Parallel_Processing.md
+
+plugins:
+  - search

@@ -28,6 +28,7 @@ let package = Package(
             name: "PDF22MD",
             dependencies: [],
             path: "Sources/PDF22MD",
+            exclude: ["Version.swift.template"],
             swiftSettings: [
                 .define("SWIFT_PACKAGE", .when(platforms: [.macOS]))
             ]

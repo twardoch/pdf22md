@@ -1,6 +1,6 @@
 # pdf22md: Fast PDF to Markdown Converter for macOS
 
-> **Status**: v1.6.1 — Production-ready with Vision OCR and AI text correction.
+> **Status**: v1.7.1 — Production-ready with Vision OCR, AI text correction (V3 multi-pass pipeline), and dry-run mode. Full documentation at [twardoch.github.io/pdf22md](https://twardoch.github.io/pdf22md/).
 
 **pdf22md** extracts text and images from PDF files and converts them into clean Markdown documents. Built with Swift for macOS, it uses modern concurrency (async/await, GCD) to process multi-page documents quickly. Features include Vision-based OCR for scanned PDFs and optional AI-powered text correction via OpenAI or Apple Intelligence.
 
@@ -373,6 +373,17 @@ We welcome contributions. Follow these guidelines for smooth collaboration.
 9.  Open PR to `main` branch of original repository.
 
 For full details, see `CONTRIBUTING.md`.
+
+## Documentation
+
+Full documentation including conversion quality notes and API reference is available at [twardoch.github.io/pdf22md](https://twardoch.github.io/pdf22md/).
+
+To build docs locally:
+
+```bash
+pip install mkdocs-material
+mkdocs serve
+```
 
 ### Changelog and TODO
 

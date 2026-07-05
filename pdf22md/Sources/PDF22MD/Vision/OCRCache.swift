@@ -161,6 +161,15 @@ final class OCRCache {
     
     // MARK: - Private
     
+    /// Build the on-disk cache path for one OCR'd page.
+    ///
+    /// Layout: `<cacheDir>/<sha256(pdfData)>/page_NNNN.json`. The cache key is the
+    /// SHA-256 of the *entire* PDF file, so cache invalidation is content-addressed:
+    /// editing the PDF by even one byte yields a different hash and therefore a fresh
+    /// cache namespace — stale entries are never served, only orphaned (clear them
+    /// with `clearCache()`). Note the DPI and OCR languages are recorded in each
+    /// entry's metadata but are *not* part of the key, so re-OCRing the same PDF at a
+    /// different DPI reuses the existing per-page files rather than regenerating them.
     private func cacheFilePath(hash: String, pageIndex: Int) -> URL {
         cacheDirectory
             .appendingPathComponent(hash)
