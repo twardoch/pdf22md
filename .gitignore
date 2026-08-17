@@ -73,3 +73,10 @@ _private/
 # OCR cache (default location is ~/.cache/pdf22md/; guard any in-repo cache dir)
 .cache/
 *.ocrcache/
+.swarm/
+pdf22md/.build/
+coverage.xml
+.coverage
+htmlcov/
+*.pyc
+__pycache__/
